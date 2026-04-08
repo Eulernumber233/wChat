@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wChat_client", "wChat_client.vcxproj", "{761D0EF7-BF2A-3F58-9AC7-31A87916E01E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{761D0EF7-BF2A-3F58-9AC7-31A87916E01E}.Debug|x64.ActiveCfg = Debug|x64
+		{761D0EF7-BF2A-3F58-9AC7-31A87916E01E}.Debug|x64.Build.0 = Debug|x64
+		{761D0EF7-BF2A-3F58-9AC7-31A87916E01E}.Release|x64.ActiveCfg = Release|x64
+		{761D0EF7-BF2A-3F58-9AC7-31A87916E01E}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9D9C0D30-35EB-4F49-BC67-B3D86D17C20E}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,59 @@
+# ===== 编译产物目录 =====
+build/
+Build/
+Debug/
+debug/
+Release/
+release/
+x64/
+x86/
+bin/
+obj/
+
+# ===== Qt 生成的中间文件 =====
+*.o
+*.obj
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+Makefile
+Makefile.*
+.qmake.stash
+.qm/
+*.pro.user
+*.pro.user.*
+
+# ===== Visual Studio =====
+.vs/
+*.vcxproj.user
+*.suo
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+*.ipdb
+*.iobj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.dll
+*.exe
+
+# ===== CMake =====
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CMakeLists.txt.user
+
+# ===== 其他 =====
+*.log
+*.tmp
+*.swp
+Thumbs.db
+.DS_Store
+
+# ===== Qt VS Tools 缓存（较大，通常不需要上传）=====
+*.qtvscr
