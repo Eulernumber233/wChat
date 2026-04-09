@@ -21,9 +21,10 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{744290f6-c664-4ea3-90a9-a4705fa3b2d1}</ProjectGuid>
-    <RootNamespace>StatusServer</RootNamespace>
+    <ProjectGuid>{98b7377f-172f-43a3-be0b-a870982c97fb}</ProjectGuid>
+    <RootNamespace>wChatservertcp</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>wChat_server_tcp_1</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -126,40 +127,42 @@
   <ItemGroup>
     <ClCompile Include="AsioIOContextPool.cpp" />
     <ClCompile Include="ChatGrpcClient.cpp" />
+    <ClCompile Include="ChatServiceImpl.cpp" />
     <ClCompile Include="ConfigMgr.cpp" />
     <ClCompile Include="CServer.cpp" />
-    <ClCompile Include="HttpConnection.cpp" />
+    <ClCompile Include="CSession.cpp" />
     <ClCompile Include="LogicSystem.cpp" />
     <ClCompile Include="..\..\proto\message.grpc.pb.cc" />
     <ClCompile Include="..\..\proto\message.pb.cc" />
+    <ClCompile Include="MsgNode.cpp" />
     <ClCompile Include="MysqlDao.cpp" />
     <ClCompile Include="MysqlMgr.cpp" />
     <ClCompile Include="RedisMgr.cpp" />
     <ClCompile Include="StatusGrpcClient.cpp" />
-    <ClCompile Include="StatusServer.cpp" />
-    <ClCompile Include="StatusServiceImpl.cpp" />
-    <ClCompile Include="VerifyGrpcClient.cpp" />
+    <ClCompile Include="UserMgr.cpp" />
+    <ClCompile Include="wChat_server_tcp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AsioIOContextPool.h" />
     <ClInclude Include="ChatGrpcClient.h" />
+    <ClInclude Include="ChatServiceImpl.h" />
     <ClInclude Include="ConfigMgr.h" />
     <ClInclude Include="core.h" />
     <ClInclude Include="CServer.h" />
-    <ClInclude Include="HttpConnection.h" />
+    <ClInclude Include="CSession.h" />
+    <ClInclude Include="data.h" />
     <ClInclude Include="LogicSystem.h" />
     <ClInclude Include="..\..\proto\message.grpc.pb.h" />
     <ClInclude Include="..\..\proto\message.pb.h" />
+    <ClInclude Include="MsgNode.h" />
     <ClInclude Include="MysqlDao.h" />
     <ClInclude Include="MysqlMgr.h" />
     <ClInclude Include="RedisMgr.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="StatusGrpcClient.h" />
-    <ClInclude Include="StatusServiceImpl.h" />
-    <ClInclude Include="VerifyGrpcClient.h" />
+    <ClInclude Include="UserMgr.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="config.ini" />
     <None Include="..\..\proto\message.proto" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

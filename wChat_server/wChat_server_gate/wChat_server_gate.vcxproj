@@ -136,8 +136,8 @@
     <ClCompile Include="CServer.cpp" />
     <ClCompile Include="HttpConnection.cpp" />
     <ClCompile Include="LogicSystem.cpp" />
-    <ClCompile Include="message.grpc.pb.cc" />
-    <ClCompile Include="message.pb.cc" />
+    <ClCompile Include="..\..\proto\message.grpc.pb.cc" />
+    <ClCompile Include="..\..\proto\message.pb.cc" />
     <ClCompile Include="MysqlDao.cpp" />
     <ClCompile Include="MysqlMgr.cpp" />
     <ClCompile Include="RedisMgr.cpp" />
@@ -152,8 +152,8 @@
     <ClInclude Include="CServer.h" />
     <ClInclude Include="HttpConnection.h" />
     <ClInclude Include="LogicSystem.h" />
-    <ClInclude Include="message.grpc.pb.h" />
-    <ClInclude Include="message.pb.h" />
+    <ClInclude Include="..\..\proto\message.grpc.pb.h" />
+    <ClInclude Include="..\..\proto\message.pb.h" />
     <ClInclude Include="MysqlDao.h" />
     <ClInclude Include="MysqlMgr.h" />
     <ClInclude Include="RedisMgr.h" />
@@ -163,7 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="config.ini" />
-    <None Include="message.proto" />
+    <None Include="..\..\proto\message.proto" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
