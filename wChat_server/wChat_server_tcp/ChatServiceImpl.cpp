@@ -9,7 +9,6 @@ ChatServiceImpl::ChatServiceImpl()
 
 Status ChatServiceImpl::NotifyAddFriend(ServerContext* context, const AddFriendReq* request, AddFriendRsp* reply)
 {
-	//查找用户是否在本服务器
 	auto touid = request->touid();
 	auto session = UserMgr::GetInstance()->GetSession(touid);
 
@@ -19,12 +18,10 @@ Status ChatServiceImpl::NotifyAddFriend(ServerContext* context, const AddFriendR
 		reply->set_touid(request->touid());
 		});
 
-	//用户不在内存中则直接返回
 	if (session == nullptr) {
 		return Status::OK;
 	}
 
-	//在内存中则直接发送通知对方
 	Json::Value  rtvalue;
 	rtvalue["error"] = ErrorCodes::Success;
 	rtvalue["applyuid"] = request->applyuid();
@@ -42,9 +39,8 @@ Status ChatServiceImpl::NotifyAddFriend(ServerContext* context, const AddFriendR
 
 Status ChatServiceImpl::NotifyAuthFriend(ServerContext* context, const AuthFriendReq* request, AuthFriendRsp* reply)
 {
-	//查找用户是否在本服务器
-	auto touid = request->touid();    // 邀请方uid
-	auto fromuid = request->fromuid();// 受邀方uid
+	auto touid = request->touid();
+	auto fromuid = request->fromuid();
 	auto session = UserMgr::GetInstance()->GetSession(touid);
 
 	Defer defer([request, reply]() {
@@ -53,12 +49,10 @@ Status ChatServiceImpl::NotifyAuthFriend(ServerContext* context, const AuthFrien
 		reply->set_touid(request->touid());
 		});
 
-	//用户不在内存中则直接返回
 	if (session == nullptr) {
 		return Status::OK;
 	}
 
-	//在内存中则直接发送通知对方
 	Json::Value  notify;
 	notify["error"] = ErrorCodes::Success;
 	notify["fromuid"] = request->fromuid();
@@ -91,24 +85,29 @@ Status ChatServiceImpl::NotifyAuthFriend(ServerContext* context, const AuthFrien
 Status ChatServiceImpl::NotifyTextChatMsg(::grpc::ServerContext* context, const TextChatMsgReq* request, TextChatMsgRsp* reply)
 {
 	std::cout << "------using text grpc -----\n";
-	//查找用户是否在本服务器
 	auto touid = request->touid();
 	auto session = UserMgr::GetInstance()->GetSession(touid);
 	reply->set_error(ErrorCodes::Success);
 
-	//用户不在内存中则直接返回
 	if (session == nullptr) {
 		return Status::OK;
 	}
 
-	//在内存中则直接发送通知对方
+	// Check if this is a cross-server file message (marked by HandleFileUploadDone)
+	if (request->textmsgs_size() == 1 && request->textmsgs(0).msgid() == "__file_msg__") {
+		// msgcontent contains the complete file notification JSON,
+		// forward it with ID_FILE_MSG_NOTIFY so client handles it as a file
+		std::string file_notify = request->textmsgs(0).msgcontent();
+		session->Send(file_notify, ID_FILE_MSG_NOTIFY);
+		std::cout << "Forwarded file msg via ID_FILE_MSG_NOTIFY to uid=" << touid << std::endl;
+		return Status::OK;
+	}
+
 	Json::Value  rtvalue;
 	rtvalue["error"] = ErrorCodes::Success;
 	rtvalue["fromuid"] = request->fromuid();
 	rtvalue["touid"] = request->touid();
 
-
-	//将聊天数据组织为数组
 	Json::Value text_array;
 	for (auto& msg : request->textmsgs()) {
 		Json::Value element;
@@ -129,7 +128,6 @@ void ChatServiceImpl::RegisterServer(std::shared_ptr<CServer> pServer) {
 }
 
 bool ChatServiceImpl::GetBaseInfo(std::string base_key, int uid, std::shared_ptr<UserInfo>& userinfo) {
-	//优先查redis中查询用户信息
 	std::string info_str = "";
 	bool b_base = RedisMgr::GetInstance()->Get(base_key, info_str);
 	if (b_base) {
@@ -148,8 +146,6 @@ bool ChatServiceImpl::GetBaseInfo(std::string base_key, int uid, std::shared_ptr
 			<< userinfo->name << " pwd is " << userinfo->pwd << " email is " << userinfo->email << std::endl;
 	}
 	else {
-		//redis中没有则查询mysql
-		//查询数据库
 		std::shared_ptr<UserInfo> user_info = nullptr;
 		user_info = MysqlMgr::GetInstance()->GetUser(uid);
 		if (user_info == nullptr) {
@@ -158,7 +154,6 @@ bool ChatServiceImpl::GetBaseInfo(std::string base_key, int uid, std::shared_ptr
 
 		userinfo = user_info;
 
-		//将数据库内容写入redis缓存
 		Json::Value redis_root;
 		redis_root["uid"] = uid;
 		redis_root["pwd"] = userinfo->pwd;

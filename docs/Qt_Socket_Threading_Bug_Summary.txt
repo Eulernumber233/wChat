@@ -1,0 +1,358 @@
+================================================================================
+  wChat 图片发送间歇性失败 —— 问题总结与修复记录
+  日期: 2026-04-10
+================================================================================
+
+一、现象描述
+================================================================================
+
+发送图片时:
+  - 发送方: 本地磁盘存储正常
+  - 服务端: 接收正常, 数据库写入正常, 服务端磁盘存储正常
+  - 接收方: 能收到文件描述信息 (file_id, 文件服务器地址/端口等),
+            但聊天窗口有约 50% 概率不显示图片
+  - 无明显规律, 有时连续成功, 有时连续失败
+
+
+二、涉及文件
+================================================================================
+
+  wChat_client/tcpmgr.cpp        — TCP 消息解析 (Bug #1)
+  wChat_client/filemgr.cpp       — 文件上传/下载线程 (Bug #2, Bug #3)
+
+
+三、Bug #1: QDataStream 与 QByteArray 重赋值导致帧解析错乱
+================================================================================
+
+【错误代码】
+
+  void TcpMgr::slot_read_data()
+  {
+      _buffer.append(_socket.readAll());
+
+      QDataStream stream(&_buffer, QIODevice::ReadOnly);   // <-- stream 绑定 _buffer
+      stream.setVersion(QDataStream::Qt_5_0);
+
+      forever {
+          if (!_b_recv_pending) {
+              if (_buffer.size() < sizeof(quint16) * 2)
+                  return;
+
+              stream >> _message_id >> _message_len;        // <-- stream 内部 pos 前进 4
+
+              _buffer = _buffer.mid(sizeof(quint16) * 2);   // <-- _buffer 被替换为新对象!
+              //
+              // 问题: stream 创建时绑定的是旧 _buffer 的内存地址.
+              // _buffer = _buffer.mid(...) 会构造一个全新的 QByteArray,
+              // 但 stream 内部保存的指针和偏移量仍然指向旧的内存.
+              //
+              // 如果这次 readyRead 中只到达了一条完整消息, 循环只走一次,
+              // 下次进入 slot_read_data 时 stream 会重新构造, 没有问题.
+              //
+              // 但如果一次到达了多条消息 (TCP 粘包), 第二次循环时 stream
+              // 的读取位置已经完全错乱 -- _message_id 和 _message_len
+              // 读出的是垃圾值, 后续所有消息的帧边界全部错位.
+          }
+
+          if (_buffer.size() < _message_len) {
+              _b_recv_pending = true;
+              return;
+          }
+
+          _b_recv_pending = false;
+          QByteArray messageBody = _buffer.mid(0, _message_len);
+          _buffer = _buffer.mid(_message_len);              // <-- 又一次替换 _buffer
+          handleMsg(ReqId(_message_id), _message_len, messageBody);
+          // 下一轮循环: stream 已彻底失效
+      }
+  }
+
+【问题本质】
+
+  QDataStream 在 forever 循环外创建, 内部维护了一个读取位置 (pos).
+  循环体内每次 _buffer = _buffer.mid(...) 都会把 _buffer 替换为全新对象,
+  但 stream 的内部状态 (绑定的 QIODevice / 读取偏移) 没有跟着更新.
+
+  当一次 readyRead 信号中到达了多条 TCP 消息 (文件传输场景下非常常见,
+  因为 ID_FILE_UPLOAD_RSP / ID_FILE_NOTIFY_COMPLETE / ID_FILE_MSG_NOTIFY
+  几乎同时从服务端发出), 第二条消息的解析就会从错误的偏移读取, 导致:
+    - _message_id 读到错误值 -> handler 找不到, 消息被丢弃
+    - _message_len 读到错误值 -> 后续所有消息帧边界全部错位, 连环故障
+
+【修复方法】
+
+  去掉 QDataStream, 直接用 qFromBigEndian 从 _buffer 首部手动解析:
+
+  void TcpMgr::slot_read_data()
+  {
+      _buffer.append(_socket.readAll());
+
+      forever {
+          if (!_b_recv_pending) {
+              if (_buffer.size() < static_cast<int>(sizeof(quint16) * 2))
+                  return;
+
+              // 直接从 _buffer 首部按大端字节序读取, 不依赖任何有状态的 stream
+              _message_id = qFromBigEndian<quint16>(
+                  reinterpret_cast<const uchar*>(_buffer.constData()));
+              _message_len = qFromBigEndian<quint16>(
+                  reinterpret_cast<const uchar*>(_buffer.constData() + sizeof(quint16)));
+
+              _buffer = _buffer.mid(sizeof(quint16) * 2);
+          }
+
+          if (_buffer.size() < _message_len) {
+              _b_recv_pending = true;
+              return;
+          }
+
+          _b_recv_pending = false;
+          QByteArray messageBody = _buffer.mid(0, _message_len);
+          _buffer = _buffer.mid(_message_len);
+          handleMsg(ReqId(_message_id), _message_len, messageBody);
+      }
+  }
+
+  每次 _buffer 被替换后, 下一轮循环总是从新 _buffer 的首部重新解析,
+  不存在任何有状态的读取游标, 彻底消除了偏移漂移问题.
+
+
+四、Bug #2: QThread::create 创建的线程没有事件循环,
+           导致 waitForReadyRead() 在 Windows 上随机失败 (核心 Bug)
+================================================================================
+
+【错误代码】
+
+  void FileMgr::StartDownload(std::shared_ptr<FileChatData> file_data) {
+      // ...
+      QThread* thread = QThread::create([this, ...]() {
+          DoDownload(...);
+          // QThread::create 创建的线程直接运行 lambda 后结束,
+          // 不会调用 exec(), 即没有事件循环.
+      });
+      connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+      thread->start();
+  }
+
+  void FileMgr::DoDownload(...) {
+      QTcpSocket socket;                          // 在无事件循环的线程中创建
+      socket.connectToHost(host, port);
+      if (!socket.waitForConnected(5000)) { ... } // 可能随机失败
+      // ...
+      if (!RecvFrame(&socket, ...)) { ... }       // 内部调用 waitForReadyRead
+      // waitForReadyRead 在无事件循环的线程中随机返回 false
+  }
+
+【问题本质】
+
+  Qt 官方文档明确指出:
+
+    "On Windows, the waitForReadyRead() function has been reported to
+     randomly fail, even after the peer has written data."
+
+  这个问题在没有事件循环的线程中尤为严重. QTcpSocket 的内部实现依赖
+  Windows 的 I/O 通知机制, 而 waitForReadyRead() 在没有事件循环的线程
+  中使用的是一个退化的 busy-wait + WaitForSingleObject 路径. 这个路径
+  存在已知的竞态条件: 当数据到达的时机恰好在 "检查是否有数据" 和 "开始
+  等待" 之间时, 通知会丢失, waitForReadyRead 直接超时返回 false.
+
+  QThread::create 创建的线程只执行传入的 lambda, 执行完就结束, 不会
+  调用 QThread::exec() 启动事件循环. 因此:
+    - waitForReadyRead() 依赖的内部事件分发机制没有运行
+    - socket 的底层通知可能被错过
+    - 表现为随机约 50% 的概率返回 false, 即使数据已经到达
+
+  这导致 RecvFrame() 随机失败 -> sig_download_done 被以 error!=0 触发
+  -> 图片不显示.
+
+【为什么是约 50% 概率】
+
+  失败率取决于多个时序因素:
+    1. 网络延迟: 数据到达的精确时机与 waitForReadyRead 内部检查的时机
+    2. 系统负载: CPU 调度影响线程的唤醒时机
+    3. 数据大小: 大文件需要多次 RecvFrame, 每次都有概率失败, 累积起来
+       失败概率更高
+    4. TCP 缓冲: 数据可能已在内核缓冲区但 Qt 的通知机制没有感知到
+
+  这些因素组合起来, 产生了 "毫无规律, 有时连续成功有时连续失败" 的表现.
+
+【修复方法】
+
+  使用标准的 QThread + moveToThread 模式, 确保线程有事件循环:
+
+  void FileMgr::StartDownload(std::shared_ptr<FileChatData> file_data) {
+      // ...
+      QThread* thread = new QThread();
+      auto* worker = new QObject();
+      worker->moveToThread(thread);
+
+      connect(thread, &QThread::started, worker,
+          [this, file_id, file_token, host, port, file_name, worker]() {
+              DoDownload(file_id, file_token, host, port, file_name);
+              worker->thread()->quit();  // 下载完成后退出事件循环
+          });
+
+      connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+      connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+      thread->start();
+      // thread->start() 会调用 run(), 默认的 run() 调用 exec() 启动事件循环.
+      // 由于 worker 已 moveToThread 到该线程, started 信号触发的 lambda
+      // 会在该线程的事件循环中执行, 此时 waitForReadyRead 可以正常工作.
+  }
+
+  关键区别:
+    - QThread::create:  线程执行 lambda -> 结束, 无事件循环
+    - new QThread + moveToThread:  线程执行 exec() -> 处理事件队列中的任务
+                                   -> quit() -> 结束, 有完整事件循环
+
+  上传 (StartUpload) 也做了同样的修复.
+
+
+五、Bug #3: RecvFrame 中 read() 返回空数据时的潜在死循环
+================================================================================
+
+【错误代码】
+
+  // 原始版本
+  while (remaining > 0) {
+      if (sock->bytesAvailable() == 0 && !sock->waitForReadyRead(30000))
+          return false;
+      QByteArray chunk = sock->read(remaining);
+      payload.append(chunk);
+      remaining -= chunk.size();
+      // 如果 chunk 为空 (size == 0):
+      //   remaining 不变, bytesAvailable() 可能仍 > 0 (已被标记为可读但
+      //   实际读不出), 导致不会进入 waitForReadyRead, 直接死循环.
+  }
+
+【修复方法】
+
+  while (remaining > 0) {
+      if (sock->bytesAvailable() == 0) {
+          if (!sock->waitForReadyRead(30000)) return false;
+      }
+      QByteArray chunk = sock->read(remaining);
+      if (chunk.isEmpty()) {
+          // read 返回空 -> 显式等待新数据到达后重试
+          if (!sock->waitForReadyRead(30000)) return false;
+          continue;
+      }
+      payload.append(chunk);
+      remaining -= chunk.size();
+  }
+
+  header 读取部分也做了同样的保护.
+
+
+六、三个 Bug 的关系与触发条件
+================================================================================
+
+  Bug #1 (QDataStream 帧解析错乱):
+    触发条件: 一次 readyRead 中到达多条 TCP 消息 (粘包)
+    影响范围: 所有 TCP 消息, 但文件传输场景最容易触发 (消息密集)
+    失败表现: 后续消息全部解析错误, handler 找不到或数据损坏
+
+  Bug #2 (waitForReadyRead 在 Windows 无事件循环线程中随机失败):
+    触发条件: 在 QThread::create 线程中使用 QTcpSocket 阻塞 I/O
+    影响范围: 仅文件上传/下载
+    失败表现: 下载随机中断, sig_download_done 报 error, 图片不显示
+    >>> 这是 "50% 概率不显示" 的最主要原因 <<<
+
+  Bug #3 (RecvFrame 空读死循环):
+    触发条件: read() 在特定平台/时序下返回空 QByteArray
+    影响范围: 文件上传/下载
+    失败表现: 线程卡死, 下载永远不完成, 信号永远不触发
+
+
+七、经验教训 —— 将来如何避免
+================================================================================
+
+  1. QDataStream 不要跨 QByteArray 重赋值使用
+  ---------------------------------------------------------------------------
+     QDataStream 绑定一个 QByteArray 后, 内部持有的是对该对象的引用.
+     如果你用 _buffer = _buffer.mid(...) 替换了 _buffer, stream 持有的
+     引用指向的对象实际上已经无效 (或变成了旧的拷贝).
+
+     规则: 如果你需要在循环中反复修改 buffer 并从头解析, 不要使用
+     QDataStream, 改用 qFromBigEndian/qFromLittleEndian + 手动偏移.
+     或者每次修改 buffer 后重新构造 QDataStream (但开销较大).
+
+  2. 在子线程中使用 QTcpSocket 时, 必须确保线程有事件循环
+  ---------------------------------------------------------------------------
+     这是 Qt 网络编程最常见的陷阱之一:
+
+     错误做法:
+       QThread::create([](){ QTcpSocket s; s.waitForReadyRead(); })
+       // 无事件循环, waitFor* 在 Windows 上随机失败
+
+     正确做法 (方案 A: moveToThread):
+       QThread* thread = new QThread();
+       auto* worker = new QObject();
+       worker->moveToThread(thread);
+       connect(thread, &QThread::started, worker, [](){ /* 网络操作 */ });
+       thread->start();  // 启动事件循环
+
+     正确做法 (方案 B: 使用原生 socket API):
+       如果不想依赖 Qt 的事件循环, 直接使用 WinSock2 / POSIX socket
+       的 recv/send + select/poll. 这在任何线程中都能可靠工作.
+
+     正确做法 (方案 C: 异步 I/O, 推荐):
+       不使用子线程, 直接在主线程中用 QTcpSocket 的信号槽异步模式:
+       connect(socket, &QTcpSocket::readyRead, this, &MyClass::onData);
+       这是 Qt 网络编程的推荐方式, 完全避免线程问题.
+
+  3. 阻塞式 socket 读取必须处理 read() 返回空的情况
+  ---------------------------------------------------------------------------
+     即使 bytesAvailable() > 0, read() 也可能返回空的 QByteArray.
+     在循环读取中必须检查返回值, 否则可能死循环.
+
+  4. TCP 是字节流, 不是消息流 —— 永远要考虑粘包
+  ---------------------------------------------------------------------------
+     任何基于 TCP 的自定义协议, 必须假设:
+       - 一次 read 可能返回多条完整消息 (粘包)
+       - 一次 read 可能只返回半条消息 (拆包)
+       - 一次 read 可能恰好一条消息 (幸运情况, 不要依赖)
+
+     消息解析代码必须在循环中处理多条消息, 并正确处理不完整消息
+     的暂存和拼接. 任何有状态的解析器 (如 QDataStream) 的状态
+     必须与 buffer 保持严格同步.
+
+  5. 跨线程信号-槽的连接类型要明确
+  ---------------------------------------------------------------------------
+     当 emit 发生在工作线程、connect 的接收者在主线程时:
+       - 默认 AutoConnection 会自动选择 QueuedConnection, 通常没问题
+       - 但要注意: 信号通过事件队列投递, 有延迟
+       - 在 lambda 中访问主线程状态 (如 _cur_chat_uid) 时,
+         读到的是 "lambda 执行时" 的值, 不是 "connect 时" 的值
+
+  6. 跨平台开发时, 阻塞式网络 I/O 要格外小心 Windows 平台
+  ---------------------------------------------------------------------------
+     Qt 的 waitFor* 系列函数在 Linux/macOS 上通常可靠 (基于 select/poll),
+     但在 Windows 上有已知的可靠性问题 (特别是无事件循环时).
+     如果必须用阻塞式 I/O, 确保:
+       - 线程有事件循环, 或
+       - 使用原生 API (WinSock2) 代替 Qt 的 waitFor*, 或
+       - 改用异步模式
+
+
+八、修复文件清单
+================================================================================
+
+  文件                          修复内容
+  -----------------------------------------------------------------------
+  wChat_client/tcpmgr.cpp       去掉 QDataStream, 用 qFromBigEndian
+                                手动解析消息头, 避免帧边界错乱 (Bug #1)
+
+  wChat_client/filemgr.cpp      StartUpload/StartDownload: QThread::create
+                                改为 QThread + moveToThread, 确保线程有
+                                事件循环 (Bug #2)
+
+                                RecvFrame: 增加 read() 返回空时的重试
+                                保护, 防止死循环 (Bug #3)
+
+
+================================================================================
+  总结: 根因是 Qt 的 QTcpSocket::waitForReadyRead() 在 Windows 上无事件循环
+  的线程中存在已知的随机失败问题. 叠加 QDataStream 帧解析错乱和 RecvFrame
+  空读死循环, 共同导致了 "50% 概率收不到图片" 的现象.
+================================================================================

@@ -4,9 +4,30 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QFile>
+#ifdef Q_OS_WIN
+#include <Windows.h>
+#endif
+
+void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    QString txt;
+    switch (type) {
+    case QtDebugMsg:    txt = QString("[DEBUG] %1").arg(msg); break;
+    case QtWarningMsg:  txt = QString("[WARN]  %1").arg(msg); break;
+    case QtCriticalMsg: txt = QString("[ERROR] %1").arg(msg); break;
+    case QtFatalMsg:    txt = QString("[FATAL] %1").arg(msg); break;
+    default:            txt = msg; break;
+    }
+#ifdef Q_OS_WIN
+    OutputDebugStringW(reinterpret_cast<const wchar_t*>(txt.utf16()));
+    OutputDebugStringW(L"\n");
+#endif
+    fprintf(stderr, "%s\n", txt.toLocal8Bit().constData());
+}
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    qInstallMessageHandler(customMessageHandler);
     QFile qss(":/style/stylesheet.qss");
     if(qss.open(QFile::ReadOnly)){
         qDebug("Open success");
@@ -26,6 +47,11 @@ int main(int argc, char *argv[])
     QString gate_domain = settings.value("GateServer/domain").toString();
     gate_url_prefix ="http://"+gate_host+":"+gate_port;
     gate_url_prefix_domain = "https://"+gate_domain;
+    // mode = "local" uses http://host:port, "domain" uses https://domain
+    QString gate_mode = settings.value("GateServer/mode", "local").toString();
+    if (gate_mode == "domain") {
+        gate_url_prefix = gate_url_prefix_domain;
+    }
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
     for (const QString &locale : uiLanguages) {

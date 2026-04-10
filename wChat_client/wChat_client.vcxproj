@@ -233,6 +233,7 @@
     <ClCompile Include="chatdialog.cpp" />
     <ClCompile Include="chatitembase.cpp" />
     <ClCompile Include="chatpage.cpp" />
+    <ClCompile Include="filemgr.cpp" />
     <ClCompile Include="chatuserlist.cpp" />
     <ClCompile Include="chatuserwid.cpp" />
     <ClCompile Include="chatview.cpp" />
@@ -277,6 +278,7 @@
     <QtMoc Include="chatdialog.h" />
     <QtMoc Include="chatitembase.h" />
     <QtMoc Include="chatpage.h" />
+    <QtMoc Include="filemgr.h" />
     <QtMoc Include="chatuserlist.h" />
     <QtMoc Include="chatuserwid.h" />
     <QtMoc Include="chatview.h" />

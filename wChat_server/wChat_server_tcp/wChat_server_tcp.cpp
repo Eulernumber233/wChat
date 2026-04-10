@@ -5,6 +5,7 @@
 #include "ConfigMgr.h"
 #include "RedisMgr.h"
 #include "ChatServiceImpl.h"
+#include "FileServiceImpl.h"
 bool bstop = false;
 std::condition_variable cond_quit;
 std::mutex mutex_quit;
@@ -25,11 +26,13 @@ int main(int argc, char* argv[])
         RedisMgr::GetInstance()->HSet(LOGIN_COUNT, server_name, "0");
 
         std::string server_address(cfg["SelfServer"]["Host"] + ":" + cfg["SelfServer"]["RPCPort"]);
-        ChatServiceImpl service;
+        ChatServiceImpl chat_service;
+        FileServiceImpl file_service;
         grpc::ServerBuilder builder;
         // 监听端口和添加服务
         builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-        builder.RegisterService(&service);
+        builder.RegisterService(&chat_service);
+        builder.RegisterService(&file_service);
         // 构建并启动gRPC服务器
         std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
         std::cout << "RPC Server listening on " << server_address << std::endl;

@@ -12,6 +12,12 @@ wChat 是一个 **C++ / Qt 实现的分布式即时通讯系统**。客户端是
 
 技术栈：C++17、Qt5/6、Boost.Asio (Beast for HTTP)、gRPC + Protobuf、MySQL Connector/C++、hiredis、Node.js（仅 VarifyServer）、jsoncpp。
 
+**外部库版本**（选型和 API 兼容性有关时参照）：
+- **Boost** 1.81.0（头文件路径 `boost-1_88`，实际版本 1.81）
+- **jsoncpp**（libjson）— 旧版，**不支持** `Json::Int64` / `asInt64()`，大整数需要走 `asDouble()` 或字符串中转
+- **MySQL Connector/C++** 8.3.0 (winx64)
+- **gRPC** + **Protobuf** — 本地编译版本位于 `D:\library\grpc\`
+
 设计模式高频出现：**单例（CRTP `Singleton<T>`）**、**线程池 + IO 上下文池**、**连接池**、**生产者-消费者（LogicSystem 任务队列）**。
 
 ---
@@ -37,6 +43,8 @@ wChat/
 │   │   └── start_cluster.bat     一键启动多实例集群的脚本
 │   ├── wchatmysql.sql            数据库脚本（含存储过程 reg_user）
 │   └── wChat_server_diagram.png  架构图
+├── docs/
+│   └── FileServer_Design.md      文件服务器设计文档（完整协议、流程、实施计划）
 ├── wChat_LabReport.txt           实验报告（最权威的设计说明，有疑问先查这里）
 ├── wChat_LabReport.docx          同上 Word 版
 ├── README.md                     面向人类的项目介绍
@@ -59,6 +67,7 @@ wChat/
 | StatusServer | gRPC | 50052 | 接收 Gate 的 `GetChatServer` 请求，按负载分配某个 ChatServer 的 (Host, Port)，生成与 uid 绑定的 Token 写入 Redis。 |
 | VarifyServer (Node.js) | gRPC | 50051 | 收到 `GetVarifyCode` → 生成 4 位验证码 → 写 Redis（带 TTL）→ 用 nodemailer 发邮件。 |
 | ChatServer（多实例） | TCP + gRPC | 实例 1：TCP 8090 / RPC 50055；实例 2：TCP 8091 / RPC 50056；… | 与客户端长连接，处理好友 / 消息业务。同时作为 gRPC server 接收其他 ChatServer 的转发请求。同一份可执行文件通过 `configs/chatserverN.ini` 启动多个实例。`[PeerServer]` 小节列出其他对端。 |
+| FileServer（规划中） | TCP + gRPC | TCP 8100 | 文件上传 / 下载。ChatServer 生成一次性 file_token 授权上传下载。完成设计见 `docs/FileServer_Design.md`。 |
 
 > 端口、密码、数据库名都在各服务的 ini 里。ChatServer 实例样例见 `wChat_server/wChat_server_tcp/configs/chatserver1.ini`；Gate / Status / Varify 的配置仍在各自目录下的 `config.ini`。
 

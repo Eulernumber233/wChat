@@ -72,3 +72,22 @@ bool MysqlMgr::GetFriendList(int self_id, std::vector<std::shared_ptr<UserInfo> 
 	return _dao.GetFriendList(self_id, user_info);
 }
 
+bool MysqlMgr::RegisterFile(const std::string& file_id, int uploader_uid,
+	const std::string& file_name, int64_t file_size, int file_type, const std::string& mime_type) {
+	return _dao.RegisterFile(file_id, uploader_uid, file_name, file_size, file_type, mime_type);
+}
+
+bool MysqlMgr::UpdateFileStatus(const std::string& file_id, int status,
+	const std::string& file_path, const std::string& md5) {
+	return _dao.UpdateFileStatus(file_id, status, file_path, md5);
+}
+
+bool MysqlMgr::AddFileMessage(int from, int to, int msg_type, const std::string& content) {
+	return _dao.AddFileMessage(from, to, msg_type, content);
+}
+
+bool MysqlMgr::GetFileInfo(const std::string& file_id,
+	std::string& file_path, std::string& file_name, int64_t& file_size) {
+	return _dao.GetFileInfo(file_id, file_path, file_name, file_size);
+}
+

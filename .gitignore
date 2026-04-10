@@ -1,3 +1,6 @@
+# ===== FileServer storage (user uploaded files) =====
+wChat_server/wChat_files/
+
 # ===== 编译产物目录 =====
 build/
 Build/

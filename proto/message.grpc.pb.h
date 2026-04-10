@@ -1811,6 +1811,465 @@ class ChatService final {
   typedef WithStreamedUnaryMethod_NotifyAddFriend<WithStreamedUnaryMethod_RplyAddFriend<WithStreamedUnaryMethod_SendChatMsg<WithStreamedUnaryMethod_NotifyAuthFriend<WithStreamedUnaryMethod_NotifyTextChatMsg<Service > > > > > StreamedService;
 };
 
+class FileService final {
+ public:
+  static constexpr char const* service_full_name() {
+    return "message.FileService";
+  }
+  class StubInterface {
+   public:
+    virtual ~StubInterface() {}
+    virtual ::grpc::Status NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::message::FileUploadDoneRsp* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::FileUploadDoneRsp>> AsyncNotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::FileUploadDoneRsp>>(AsyncNotifyUploadDoneRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::FileUploadDoneRsp>> PrepareAsyncNotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::FileUploadDoneRsp>>(PrepareAsyncNotifyUploadDoneRaw(context, request, cq));
+    }
+    virtual ::grpc::Status RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::message::FileDownloadAuthRsp* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::FileDownloadAuthRsp>> AsyncRegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::FileDownloadAuthRsp>>(AsyncRegisterDownloadAuthRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::FileDownloadAuthRsp>> PrepareAsyncRegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::FileDownloadAuthRsp>>(PrepareAsyncRegisterDownloadAuthRaw(context, request, cq));
+    }
+    class experimental_async_interface {
+     public:
+      virtual ~experimental_async_interface() {}
+      virtual void NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      virtual void RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+    };
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    typedef class experimental_async_interface async_interface;
+    #endif
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    async_interface* async() { return experimental_async(); }
+    #endif
+    virtual class experimental_async_interface* experimental_async() { return nullptr; }
+  private:
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::message::FileUploadDoneRsp>* AsyncNotifyUploadDoneRaw(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::message::FileUploadDoneRsp>* PrepareAsyncNotifyUploadDoneRaw(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::message::FileDownloadAuthRsp>* AsyncRegisterDownloadAuthRaw(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::message::FileDownloadAuthRsp>* PrepareAsyncRegisterDownloadAuthRaw(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::grpc::CompletionQueue* cq) = 0;
+  };
+  class Stub final : public StubInterface {
+   public:
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
+    ::grpc::Status NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::message::FileUploadDoneRsp* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::FileUploadDoneRsp>> AsyncNotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::FileUploadDoneRsp>>(AsyncNotifyUploadDoneRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::FileUploadDoneRsp>> PrepareAsyncNotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::FileUploadDoneRsp>>(PrepareAsyncNotifyUploadDoneRaw(context, request, cq));
+    }
+    ::grpc::Status RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::message::FileDownloadAuthRsp* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::FileDownloadAuthRsp>> AsyncRegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::FileDownloadAuthRsp>>(AsyncRegisterDownloadAuthRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::FileDownloadAuthRsp>> PrepareAsyncRegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::FileDownloadAuthRsp>>(PrepareAsyncRegisterDownloadAuthRaw(context, request, cq));
+    }
+    class experimental_async final :
+      public StubInterface::experimental_async_interface {
+     public:
+      void NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      void RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+     private:
+      friend class Stub;
+      explicit experimental_async(Stub* stub): stub_(stub) { }
+      Stub* stub() { return stub_; }
+      Stub* stub_;
+    };
+    class experimental_async_interface* experimental_async() override { return &async_stub_; }
+
+   private:
+    std::shared_ptr< ::grpc::ChannelInterface> channel_;
+    class experimental_async async_stub_{this};
+    ::grpc::ClientAsyncResponseReader< ::message::FileUploadDoneRsp>* AsyncNotifyUploadDoneRaw(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::message::FileUploadDoneRsp>* PrepareAsyncNotifyUploadDoneRaw(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::message::FileDownloadAuthRsp>* AsyncRegisterDownloadAuthRaw(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::message::FileDownloadAuthRsp>* PrepareAsyncRegisterDownloadAuthRaw(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::grpc::CompletionQueue* cq) override;
+    const ::grpc::internal::RpcMethod rpcmethod_NotifyUploadDone_;
+    const ::grpc::internal::RpcMethod rpcmethod_RegisterDownloadAuth_;
+  };
+  static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+
+  class Service : public ::grpc::Service {
+   public:
+    Service();
+    virtual ~Service();
+    virtual ::grpc::Status NotifyUploadDone(::grpc::ServerContext* context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response);
+    virtual ::grpc::Status RegisterDownloadAuth(::grpc::ServerContext* context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response);
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_NotifyUploadDone : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_NotifyUploadDone() {
+      ::grpc::Service::MarkMethodAsync(0);
+    }
+    ~WithAsyncMethod_NotifyUploadDone() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status NotifyUploadDone(::grpc::ServerContext* /*context*/, const ::message::FileUploadDoneReq* /*request*/, ::message::FileUploadDoneRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestNotifyUploadDone(::grpc::ServerContext* context, ::message::FileUploadDoneReq* request, ::grpc::ServerAsyncResponseWriter< ::message::FileUploadDoneRsp>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_RegisterDownloadAuth : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_RegisterDownloadAuth() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
+    ~WithAsyncMethod_RegisterDownloadAuth() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterDownloadAuth(::grpc::ServerContext* /*context*/, const ::message::FileDownloadAuthReq* /*request*/, ::message::FileDownloadAuthRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestRegisterDownloadAuth(::grpc::ServerContext* context, ::message::FileDownloadAuthReq* request, ::grpc::ServerAsyncResponseWriter< ::message::FileDownloadAuthRsp>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_NotifyUploadDone<WithAsyncMethod_RegisterDownloadAuth<Service > > AsyncService;
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_NotifyUploadDone : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithCallbackMethod_NotifyUploadDone() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::message::FileUploadDoneReq, ::message::FileUploadDoneRsp>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response) { return this->NotifyUploadDone(context, request, response); }));}
+    void SetMessageAllocatorFor_NotifyUploadDone(
+        ::grpc::experimental::MessageAllocator< ::message::FileUploadDoneReq, ::message::FileUploadDoneRsp>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(0);
+    #endif
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::message::FileUploadDoneReq, ::message::FileUploadDoneRsp>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_NotifyUploadDone() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status NotifyUploadDone(::grpc::ServerContext* /*context*/, const ::message::FileUploadDoneReq* /*request*/, ::message::FileUploadDoneRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* NotifyUploadDone(
+      ::grpc::CallbackServerContext* /*context*/, const ::message::FileUploadDoneReq* /*request*/, ::message::FileUploadDoneRsp* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* NotifyUploadDone(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::message::FileUploadDoneReq* /*request*/, ::message::FileUploadDoneRsp* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_RegisterDownloadAuth : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithCallbackMethod_RegisterDownloadAuth() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::message::FileDownloadAuthReq, ::message::FileDownloadAuthRsp>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response) { return this->RegisterDownloadAuth(context, request, response); }));}
+    void SetMessageAllocatorFor_RegisterDownloadAuth(
+        ::grpc::experimental::MessageAllocator< ::message::FileDownloadAuthReq, ::message::FileDownloadAuthRsp>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(1);
+    #endif
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::message::FileDownloadAuthReq, ::message::FileDownloadAuthRsp>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_RegisterDownloadAuth() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterDownloadAuth(::grpc::ServerContext* /*context*/, const ::message::FileDownloadAuthReq* /*request*/, ::message::FileDownloadAuthRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* RegisterDownloadAuth(
+      ::grpc::CallbackServerContext* /*context*/, const ::message::FileDownloadAuthReq* /*request*/, ::message::FileDownloadAuthRsp* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* RegisterDownloadAuth(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::message::FileDownloadAuthReq* /*request*/, ::message::FileDownloadAuthRsp* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+  typedef ExperimentalWithCallbackMethod_NotifyUploadDone<ExperimentalWithCallbackMethod_RegisterDownloadAuth<Service > > CallbackService;
+  #endif
+
+  typedef ExperimentalWithCallbackMethod_NotifyUploadDone<ExperimentalWithCallbackMethod_RegisterDownloadAuth<Service > > ExperimentalCallbackService;
+  template <class BaseClass>
+  class WithGenericMethod_NotifyUploadDone : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_NotifyUploadDone() {
+      ::grpc::Service::MarkMethodGeneric(0);
+    }
+    ~WithGenericMethod_NotifyUploadDone() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status NotifyUploadDone(::grpc::ServerContext* /*context*/, const ::message::FileUploadDoneReq* /*request*/, ::message::FileUploadDoneRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_RegisterDownloadAuth : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_RegisterDownloadAuth() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
+    ~WithGenericMethod_RegisterDownloadAuth() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterDownloadAuth(::grpc::ServerContext* /*context*/, const ::message::FileDownloadAuthReq* /*request*/, ::message::FileDownloadAuthRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_NotifyUploadDone : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_NotifyUploadDone() {
+      ::grpc::Service::MarkMethodRaw(0);
+    }
+    ~WithRawMethod_NotifyUploadDone() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status NotifyUploadDone(::grpc::ServerContext* /*context*/, const ::message::FileUploadDoneReq* /*request*/, ::message::FileUploadDoneRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestNotifyUploadDone(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_RegisterDownloadAuth : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_RegisterDownloadAuth() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
+    ~WithRawMethod_RegisterDownloadAuth() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterDownloadAuth(::grpc::ServerContext* /*context*/, const ::message::FileDownloadAuthReq* /*request*/, ::message::FileDownloadAuthRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestRegisterDownloadAuth(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_NotifyUploadDone : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithRawCallbackMethod_NotifyUploadDone() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->NotifyUploadDone(context, request, response); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_NotifyUploadDone() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status NotifyUploadDone(::grpc::ServerContext* /*context*/, const ::message::FileUploadDoneReq* /*request*/, ::message::FileUploadDoneRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* NotifyUploadDone(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* NotifyUploadDone(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_RegisterDownloadAuth : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithRawCallbackMethod_RegisterDownloadAuth() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->RegisterDownloadAuth(context, request, response); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_RegisterDownloadAuth() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterDownloadAuth(::grpc::ServerContext* /*context*/, const ::message::FileDownloadAuthReq* /*request*/, ::message::FileDownloadAuthRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* RegisterDownloadAuth(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* RegisterDownloadAuth(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_NotifyUploadDone : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_NotifyUploadDone() {
+      ::grpc::Service::MarkMethodStreamed(0,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::message::FileUploadDoneReq, ::message::FileUploadDoneRsp>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::message::FileUploadDoneReq, ::message::FileUploadDoneRsp>* streamer) {
+                       return this->StreamedNotifyUploadDone(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_NotifyUploadDone() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status NotifyUploadDone(::grpc::ServerContext* /*context*/, const ::message::FileUploadDoneReq* /*request*/, ::message::FileUploadDoneRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedNotifyUploadDone(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::message::FileUploadDoneReq,::message::FileUploadDoneRsp>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_RegisterDownloadAuth : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_RegisterDownloadAuth() {
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::message::FileDownloadAuthReq, ::message::FileDownloadAuthRsp>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::message::FileDownloadAuthReq, ::message::FileDownloadAuthRsp>* streamer) {
+                       return this->StreamedRegisterDownloadAuth(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_RegisterDownloadAuth() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status RegisterDownloadAuth(::grpc::ServerContext* /*context*/, const ::message::FileDownloadAuthReq* /*request*/, ::message::FileDownloadAuthRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedRegisterDownloadAuth(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::message::FileDownloadAuthReq,::message::FileDownloadAuthRsp>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_NotifyUploadDone<WithStreamedUnaryMethod_RegisterDownloadAuth<Service > > StreamedUnaryService;
+  typedef Service SplitStreamedService;
+  typedef WithStreamedUnaryMethod_NotifyUploadDone<WithStreamedUnaryMethod_RegisterDownloadAuth<Service > > StreamedService;
+};
+
 }  // namespace message
 
 

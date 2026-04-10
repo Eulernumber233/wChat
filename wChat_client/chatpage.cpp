@@ -106,13 +106,31 @@ void ChatPage::on_send_btn_clicked()
                                                           user_info->_uid, _user_info->_uid);
             emit sig_append_send_chat_msg(txt_msg);
         }
-        else if(type == "image")
+        else if(type == "image" || type == "file")
         {
-            pBubble = new PictureBubble(QPixmap(msgList[i].content) , role);
-        }
-        else if(type == "file")
-        {
+            // Show image bubble locally immediately
+            if(type == "image") {
+                pBubble = new PictureBubble(QPixmap(msgList[i].content), role);
+            }
 
+            // Send file upload request to ChatServer
+            QString local_path = msgList[i].content;
+            QFileInfo fi(local_path);
+            int file_type = (type == "image") ? 0 : 1;
+
+            QJsonObject fileReq;
+            fileReq["fromuid"] = user_info->_uid;
+            fileReq["touid"] = _user_info->_uid;
+            fileReq["file_name"] = fi.fileName();
+            fileReq["file_size"] = static_cast<double>(fi.size());
+            fileReq["file_type"] = file_type;
+
+            QJsonDocument fileDoc(fileReq);
+            QByteArray fileData = fileDoc.toJson(QJsonDocument::Compact);
+            emit TcpMgr::GetInstance()->sig_send_data(ReqId::ID_FILE_UPLOAD_REQ, fileData);
+
+            // Store local_path in FIFO queue for retrieval when upload RSP arrives
+            _pending_file_paths.enqueue(local_path);
         }
         //发送消息
         if(pBubble != nullptr)
@@ -122,19 +140,15 @@ void ChatPage::on_send_btn_clicked()
         }
     }
 
-    qDebug() << "textArray is " << textArray ;
-    //发送给服务器
-    textObj["text_array"] = textArray;
-    textObj["fromuid"] = user_info->_uid;
-    textObj["touid"] = _user_info->_uid;
-    QJsonDocument doc(textObj);
-    QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
-    //发送并清空之前累计的文本列表
-    txt_size = 0;
-    textArray = QJsonArray();
-    textObj = QJsonObject();
-    //发送tcp请求给chat server
-    emit TcpMgr::GetInstance()->sig_send_data(ReqId::ID_TEXT_CHAT_MSG_REQ, jsonData);
+    // Only send text message if there's actual text content
+    if (!textArray.isEmpty()) {
+        textObj["text_array"] = textArray;
+        textObj["fromuid"] = user_info->_uid;
+        textObj["touid"] = _user_info->_uid;
+        QJsonDocument doc(textObj);
+        QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
+        emit TcpMgr::GetInstance()->sig_send_data(ReqId::ID_TEXT_CHAT_MSG_REQ, jsonData);
+    }
 }
 
 
@@ -180,6 +194,19 @@ void ChatPage::AppendChatMsg(std::shared_ptr<TextChatData> msg)
         pChatItem->setWidget(pBubble);
         ui->chat_data_list->appendChatItem(pChatItem);
     }
+}
 
+QString ChatPage::PopPendingFilePath() {
+    if (_pending_file_paths.isEmpty()) return "";
+    return _pending_file_paths.dequeue();
+}
 
+void ChatPage::AppendImageBubble(const QString& image_path, ChatRole role,
+                                  const QString& name, const QString& icon) {
+    ChatItemBase* pChatItem = new ChatItemBase(role);
+    pChatItem->setUserName(name);
+    pChatItem->setUserIcon(QPixmap(icon));
+    PictureBubble* pBubble = new PictureBubble(QPixmap(image_path), role);
+    pChatItem->setWidget(pBubble);
+    ui->chat_data_list->appendChatItem(pChatItem);
 }

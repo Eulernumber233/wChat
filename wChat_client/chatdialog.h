@@ -59,6 +59,10 @@ public slots:
     void slot_jump_chat_item_from_infopage(std::shared_ptr<UserInfo> user_info);//从联系人列表跳转到聊天窗口
     void slot_item_clicked(QListWidgetItem*item);
     void slot_text_chat_msg(std::shared_ptr<TextChatMsg>msg);
+    // File transfer slots
+    void slot_file_upload_rsp(QString file_id, QString file_token,
+                              QString host, QString port, QString local_path, int error);
+    void slot_file_msg_notify(std::shared_ptr<FileChatData> file_data);
 };
 
 #endif // CHATDIALOG_H

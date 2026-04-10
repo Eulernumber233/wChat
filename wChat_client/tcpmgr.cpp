@@ -1,4 +1,5 @@
 #include "tcpmgr.h"
+#include <QtEndian>
 
 TcpMgr::TcpMgr():_host(""),_port(0),_b_recv_pending(false),_message_id(0),_message_len(0)
 {
@@ -61,40 +62,33 @@ void TcpMgr::slot_tcp_connect(ServerInfo si)
 
 void TcpMgr::slot_read_data()
 {
-    // 当有数据可读时，读取所有数据
-    // 读取所有数据并追加到缓冲区
     _buffer.append(_socket.readAll());
 
-    QDataStream stream(&_buffer, QIODevice::ReadOnly);
-    stream.setVersion(QDataStream::Qt_5_0);
-
     forever {
-        //先解析头部
+        // 解析头部
         if(!_b_recv_pending){
-            // 检查缓冲区中的数据是否足够解析出一个消息头（消息ID + 消息长度）
+            // 检查缓冲区中的数据是否足够解析出一个消息头（消息ID 2B + 消息长度 2B）
             if (_buffer.size() < static_cast<int>(sizeof(quint16) * 2)) {
-                return; // 数据不够，等待更多数据
+                return;
             }
 
-            // 预读取消息ID和消息长度，但不从缓冲区中移除
-            stream >> _message_id >> _message_len;
+            // 直接从 buffer 按大端字节序读取 msg_id 和 msg_len
+            _message_id = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>(_buffer.constData()));
+            _message_len = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>(_buffer.constData() + sizeof(quint16)));
 
-            //将buffer 中的前四个字节移除
+            // 移除头部 4 字节
             _buffer = _buffer.mid(sizeof(quint16) * 2);
 
-            // 输出读取的数据
             qDebug() << "Message ID:" << _message_id << ", Length:" << _message_len;
-
         }
 
-        //buffer剩余长读是否满足消息体长度，不满足则退出继续等待接受
+        // buffer 剩余长度是否满足消息体长度
         if(_buffer.size() < _message_len){
             _b_recv_pending = true;
             return;
         }
 
         _b_recv_pending = false;
-        // 读取消息体
         QByteArray messageBody = _buffer.mid(0, _message_len);
         qDebug() << "receive body msg is " << messageBody ;
 
@@ -430,5 +424,53 @@ void TcpMgr::initHandlers()
         auto msg_ptr = std::make_shared<TextChatMsg>(jsonObj["fromuid"].toInt(),
                                                      jsonObj["touid"].toInt(),jsonObj["text_array"].toArray());
         emit sig_text_chat_msg(msg_ptr);
+    });
+
+    // === File transfer handlers ===
+
+    // ID_FILE_UPLOAD_RSP (1102): ChatServer responds with file_id + token + FileServer addr
+    _handlers.insert(ID_FILE_UPLOAD_RSP, [this](ReqId id, int len, QByteArray data) {
+        Q_UNUSED(len);
+        QJsonObject obj = QJsonDocument::fromJson(data).object();
+        int err = obj["error"].toInt();
+        QString file_id = obj["file_id"].toString();
+        QString file_token = obj["file_token"].toString();
+        QString host = obj["host"].toString();
+        QString port = obj["port"].toString();
+        // local_path was stored in a pending map; for now, retrieve via property
+        QString local_path = obj.value("_local_path").toString(); // won't be in server response
+        emit sig_file_upload_rsp(file_id, file_token, host, port, local_path, err);
+    });
+
+    // ID_FILE_NOTIFY_COMPLETE (1103): ChatServer confirms upload done + msg sent
+    _handlers.insert(ID_FILE_NOTIFY_COMPLETE, [this](ReqId id, int len, QByteArray data) {
+        Q_UNUSED(len);
+        QJsonObject obj = QJsonDocument::fromJson(data).object();
+        int err = obj["error"].toInt();
+        QString file_id = obj["file_id"].toString();
+        emit sig_file_notify_complete(file_id, err);
+    });
+
+    // ID_FILE_MSG_NOTIFY (1105): ChatServer tells us someone sent a file message
+    _handlers.insert(ID_FILE_MSG_NOTIFY, [this](ReqId id, int len, QByteArray data) {
+        Q_UNUSED(len);
+        QJsonObject obj = QJsonDocument::fromJson(data).object();
+        int err = obj["error"].toInt();
+        if (err != 0) return;
+
+        auto file_data = std::make_shared<FileChatData>(
+            obj["msgid"].toString(),
+            obj["file_id"].toString(),
+            obj["file_name"].toString(),
+            static_cast<qint64>(obj["file_size"].toDouble()),
+            obj["file_type"].toInt(),
+            obj["fromuid"].toInt(),
+            obj["touid"].toInt()
+        );
+        file_data->_file_host = obj["file_host"].toString();
+        file_data->_file_port = obj["file_port"].toString();
+        file_data->_file_token = obj["file_token"].toString();
+
+        emit sig_file_msg_notify(file_data);
     });
 }

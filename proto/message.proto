@@ -132,3 +132,32 @@ service ChatService {
   rpc NotifyAuthFriend(AuthFriendReq) returns (AuthFriendRsp) {}
   rpc NotifyTextChatMsg(TextChatMsgReq) returns (TextChatMsgRsp) {}
 }
+
+// =====================================================================
+// File Service (FileServer -> ChatServer: notify upload complete)
+// =====================================================================
+
+message FileUploadDoneReq {
+  string file_id   = 1;
+  string file_path = 2;
+  string md5       = 3;
+}
+
+message FileUploadDoneRsp {
+  int32 error = 1;
+}
+
+message FileDownloadAuthReq {
+  string file_id    = 1;
+  string file_token = 2;
+  int32  uid        = 3;
+}
+
+message FileDownloadAuthRsp {
+  int32 error = 1;
+}
+
+service FileService {
+  rpc NotifyUploadDone(FileUploadDoneReq) returns (FileUploadDoneRsp) {}
+  rpc RegisterDownloadAuth(FileDownloadAuthReq) returns (FileDownloadAuthRsp) {}
+}

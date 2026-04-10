@@ -12,8 +12,7 @@ HttpMgr::HttpMgr()
 
 void HttpMgr::PostHttpReq(QString url, QJsonObject json, ReqId req_id, Modules mod)
 {
-    //QUrl _url(gate_url_prefix + url);
-    QUrl _url(gate_url_prefix_domain + url);
+    QUrl _url(gate_url_prefix + url);
     qDebug()<<_url <<Qt::endl;
     QByteArray data =QJsonDocument(json).toJson();
     QNetworkRequest request(_url);

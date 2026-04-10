@@ -19,21 +19,25 @@ private:
 	void RegisterCallBacks();
 	void LoginHandler(std::shared_ptr<CSession> session, const short &msg_id, const std::string &msg_data);
 	void SearchInfo(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
-	// ·¢ËÍÌí¼ÓºÃÓÑÉêÇë
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	void AddFriendApply(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
-	// Í¬Òâ¶Ô·½ÉêÇë
+	// Í¬ï¿½ï¿½Ô·ï¿½ï¿½ï¿½ï¿½ï¿½
 	void AuthFriendApply(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
-	// ½ÓÊÕÏûÏ¢
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 	void DealChatTextMsg(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
 	void HeartBeatHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
+	void FileUploadReqHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
+public:
+	// Called by FileServiceImpl when FileServer reports upload done
+	void HandleFileUploadDone(const std::string& file_id, const std::string& file_path, const std::string& md5);
 	bool isPureDigit(const std::string& str);
 	void GetUserByUid(std::string uid_str, Json::Value& rtvalue);
 	void GetUserByName(std::string name, Json::Value& rtvalue);
-	// »ñÈ¡ÓÃ»§»ù´¡ÐÅÏ¢
+	// ï¿½ï¿½È¡ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 	bool GetBaseInfo(std::string base_key, int uid, std::shared_ptr<UserInfo> &userinfo);
-	// »ñÈ¡ºÃÓÑÉêÇëÁÐ±í
+	// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½
 	bool GetFriendApplyInfo(int to_uid, std::vector<std::shared_ptr<ApplyInfo>>& list);
-	// »ñÈ¡ºÃÓÑÁÐ±í
+	// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½
 	bool GetFriendList(int self_id, std::vector<std::shared_ptr<UserInfo>> & user_list);
 	std::thread _worker_thread;
 	std::queue<std::shared_ptr<LogicNode>> _msg_que;

@@ -58,6 +58,17 @@ enum ReqId{
     ID_HEART_BEAT_REQ = 1023,      //心跳请求
     ID_HEARTBEAT_RSP = 1024,       //心跳回复
 
+    // ChatServer TCP: file coordination
+    ID_FILE_UPLOAD_REQ       = 1101,  // C -> ChatServer: request to upload file
+    ID_FILE_UPLOAD_RSP       = 1102,  // ChatServer -> C: file_id + token + addr
+    ID_FILE_NOTIFY_COMPLETE  = 1103,  // ChatServer -> C(sender): upload done, msg sent
+    ID_FILE_MSG_NOTIFY       = 1105,  // ChatServer -> C(receiver): file msg + download token
+
+    // FileServer TCP: binary transfer
+    ID_FSVR_AUTH_REQ  = 2001,  // C -> FileServer: authenticate with file_token
+    ID_FSVR_AUTH_RSP  = 2002,  // FileServer -> C: auth result + resume offset
+    ID_FSVR_DATA      = 2003,  // C <-> FileServer: file data chunk
+    ID_FSVR_DONE      = 2004,  // FileServer -> C: transfer complete
 };
 enum Modules{
     REGISTERMOD =0,

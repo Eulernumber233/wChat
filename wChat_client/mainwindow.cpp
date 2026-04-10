@@ -21,16 +21,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    // All dialogs are created with 'this' as parent,
+    // Qt's parent-child mechanism deletes them automatically.
     delete ui;
-    if(_login_dlg){
-        delete _login_dlg;
-        _login_dlg=nullptr;
-    }
-    if(_regist_dlg){
-        delete _regist_dlg;
-        _regist_dlg=nullptr;
-    }
-
 }
 
 void MainWindow::slotSwitchRegist()

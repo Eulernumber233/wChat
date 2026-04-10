@@ -41,6 +41,11 @@ signals:
     void sig_add_auth_friend(std::shared_ptr<AuthInfo>);
     void sig_auth_rsp(std::shared_ptr<AuthRsp>);
     void sig_text_chat_msg(std::shared_ptr<TextChatMsg>msg);
+    // File transfer signals
+    void sig_file_upload_rsp(QString file_id, QString file_token,
+                             QString host, QString port, QString local_path, int error);
+    void sig_file_notify_complete(QString file_id, int error);
+    void sig_file_msg_notify(std::shared_ptr<FileChatData> file_data);
 };
 
 #endif // TCPMGR_H

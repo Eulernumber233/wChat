@@ -47,7 +47,7 @@ struct TableStruct_message_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[17]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[21]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -67,6 +67,18 @@ extern AuthFriendReqDefaultTypeInternal _AuthFriendReq_default_instance_;
 class AuthFriendRsp;
 class AuthFriendRspDefaultTypeInternal;
 extern AuthFriendRspDefaultTypeInternal _AuthFriendRsp_default_instance_;
+class FileDownloadAuthReq;
+class FileDownloadAuthReqDefaultTypeInternal;
+extern FileDownloadAuthReqDefaultTypeInternal _FileDownloadAuthReq_default_instance_;
+class FileDownloadAuthRsp;
+class FileDownloadAuthRspDefaultTypeInternal;
+extern FileDownloadAuthRspDefaultTypeInternal _FileDownloadAuthRsp_default_instance_;
+class FileUploadDoneReq;
+class FileUploadDoneReqDefaultTypeInternal;
+extern FileUploadDoneReqDefaultTypeInternal _FileUploadDoneReq_default_instance_;
+class FileUploadDoneRsp;
+class FileUploadDoneRspDefaultTypeInternal;
+extern FileUploadDoneRspDefaultTypeInternal _FileUploadDoneRsp_default_instance_;
 class GetChatServerReq;
 class GetChatServerReqDefaultTypeInternal;
 extern GetChatServerReqDefaultTypeInternal _GetChatServerReq_default_instance_;
@@ -112,6 +124,10 @@ template<> ::message::AddFriendReq* Arena::CreateMaybeMessage<::message::AddFrie
 template<> ::message::AddFriendRsp* Arena::CreateMaybeMessage<::message::AddFriendRsp>(Arena*);
 template<> ::message::AuthFriendReq* Arena::CreateMaybeMessage<::message::AuthFriendReq>(Arena*);
 template<> ::message::AuthFriendRsp* Arena::CreateMaybeMessage<::message::AuthFriendRsp>(Arena*);
+template<> ::message::FileDownloadAuthReq* Arena::CreateMaybeMessage<::message::FileDownloadAuthReq>(Arena*);
+template<> ::message::FileDownloadAuthRsp* Arena::CreateMaybeMessage<::message::FileDownloadAuthRsp>(Arena*);
+template<> ::message::FileUploadDoneReq* Arena::CreateMaybeMessage<::message::FileUploadDoneReq>(Arena*);
+template<> ::message::FileUploadDoneRsp* Arena::CreateMaybeMessage<::message::FileUploadDoneRsp>(Arena*);
 template<> ::message::GetChatServerReq* Arena::CreateMaybeMessage<::message::GetChatServerReq>(Arena*);
 template<> ::message::GetChatServerRsp* Arena::CreateMaybeMessage<::message::GetChatServerRsp>(Arena*);
 template<> ::message::GetVarifyReq* Arena::CreateMaybeMessage<::message::GetVarifyReq>(Arena*);
@@ -2961,6 +2977,633 @@ class TextChatMsgRsp PROTOBUF_FINAL :
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_message_2eproto;
 };
+// -------------------------------------------------------------------
+
+class FileUploadDoneReq PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:message.FileUploadDoneReq) */ {
+ public:
+  inline FileUploadDoneReq() : FileUploadDoneReq(nullptr) {}
+  virtual ~FileUploadDoneReq();
+
+  FileUploadDoneReq(const FileUploadDoneReq& from);
+  FileUploadDoneReq(FileUploadDoneReq&& from) noexcept
+    : FileUploadDoneReq() {
+    *this = ::std::move(from);
+  }
+
+  inline FileUploadDoneReq& operator=(const FileUploadDoneReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline FileUploadDoneReq& operator=(FileUploadDoneReq&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const FileUploadDoneReq& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const FileUploadDoneReq* internal_default_instance() {
+    return reinterpret_cast<const FileUploadDoneReq*>(
+               &_FileUploadDoneReq_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    17;
+
+  friend void swap(FileUploadDoneReq& a, FileUploadDoneReq& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(FileUploadDoneReq* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(FileUploadDoneReq* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline FileUploadDoneReq* New() const final {
+    return CreateMaybeMessage<FileUploadDoneReq>(nullptr);
+  }
+
+  FileUploadDoneReq* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<FileUploadDoneReq>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const FileUploadDoneReq& from);
+  void MergeFrom(const FileUploadDoneReq& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(FileUploadDoneReq* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "message.FileUploadDoneReq";
+  }
+  protected:
+  explicit FileUploadDoneReq(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_message_2eproto);
+    return ::descriptor_table_message_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kFileIdFieldNumber = 1,
+    kFilePathFieldNumber = 2,
+    kMd5FieldNumber = 3,
+  };
+  // string file_id = 1;
+  void clear_file_id();
+  const std::string& file_id() const;
+  void set_file_id(const std::string& value);
+  void set_file_id(std::string&& value);
+  void set_file_id(const char* value);
+  void set_file_id(const char* value, size_t size);
+  std::string* mutable_file_id();
+  std::string* release_file_id();
+  void set_allocated_file_id(std::string* file_id);
+  private:
+  const std::string& _internal_file_id() const;
+  void _internal_set_file_id(const std::string& value);
+  std::string* _internal_mutable_file_id();
+  public:
+
+  // string file_path = 2;
+  void clear_file_path();
+  const std::string& file_path() const;
+  void set_file_path(const std::string& value);
+  void set_file_path(std::string&& value);
+  void set_file_path(const char* value);
+  void set_file_path(const char* value, size_t size);
+  std::string* mutable_file_path();
+  std::string* release_file_path();
+  void set_allocated_file_path(std::string* file_path);
+  private:
+  const std::string& _internal_file_path() const;
+  void _internal_set_file_path(const std::string& value);
+  std::string* _internal_mutable_file_path();
+  public:
+
+  // string md5 = 3;
+  void clear_md5();
+  const std::string& md5() const;
+  void set_md5(const std::string& value);
+  void set_md5(std::string&& value);
+  void set_md5(const char* value);
+  void set_md5(const char* value, size_t size);
+  std::string* mutable_md5();
+  std::string* release_md5();
+  void set_allocated_md5(std::string* md5);
+  private:
+  const std::string& _internal_md5() const;
+  void _internal_set_md5(const std::string& value);
+  std::string* _internal_mutable_md5();
+  public:
+
+  // @@protoc_insertion_point(class_scope:message.FileUploadDoneReq)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr file_id_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr file_path_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr md5_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_message_2eproto;
+};
+// -------------------------------------------------------------------
+
+class FileUploadDoneRsp PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:message.FileUploadDoneRsp) */ {
+ public:
+  inline FileUploadDoneRsp() : FileUploadDoneRsp(nullptr) {}
+  virtual ~FileUploadDoneRsp();
+
+  FileUploadDoneRsp(const FileUploadDoneRsp& from);
+  FileUploadDoneRsp(FileUploadDoneRsp&& from) noexcept
+    : FileUploadDoneRsp() {
+    *this = ::std::move(from);
+  }
+
+  inline FileUploadDoneRsp& operator=(const FileUploadDoneRsp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline FileUploadDoneRsp& operator=(FileUploadDoneRsp&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const FileUploadDoneRsp& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const FileUploadDoneRsp* internal_default_instance() {
+    return reinterpret_cast<const FileUploadDoneRsp*>(
+               &_FileUploadDoneRsp_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    18;
+
+  friend void swap(FileUploadDoneRsp& a, FileUploadDoneRsp& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(FileUploadDoneRsp* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(FileUploadDoneRsp* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline FileUploadDoneRsp* New() const final {
+    return CreateMaybeMessage<FileUploadDoneRsp>(nullptr);
+  }
+
+  FileUploadDoneRsp* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<FileUploadDoneRsp>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const FileUploadDoneRsp& from);
+  void MergeFrom(const FileUploadDoneRsp& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(FileUploadDoneRsp* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "message.FileUploadDoneRsp";
+  }
+  protected:
+  explicit FileUploadDoneRsp(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_message_2eproto);
+    return ::descriptor_table_message_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kErrorFieldNumber = 1,
+  };
+  // int32 error = 1;
+  void clear_error();
+  ::PROTOBUF_NAMESPACE_ID::int32 error() const;
+  void set_error(::PROTOBUF_NAMESPACE_ID::int32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::int32 _internal_error() const;
+  void _internal_set_error(::PROTOBUF_NAMESPACE_ID::int32 value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:message.FileUploadDoneRsp)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::int32 error_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_message_2eproto;
+};
+// -------------------------------------------------------------------
+
+class FileDownloadAuthReq PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:message.FileDownloadAuthReq) */ {
+ public:
+  inline FileDownloadAuthReq() : FileDownloadAuthReq(nullptr) {}
+  virtual ~FileDownloadAuthReq();
+
+  FileDownloadAuthReq(const FileDownloadAuthReq& from);
+  FileDownloadAuthReq(FileDownloadAuthReq&& from) noexcept
+    : FileDownloadAuthReq() {
+    *this = ::std::move(from);
+  }
+
+  inline FileDownloadAuthReq& operator=(const FileDownloadAuthReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline FileDownloadAuthReq& operator=(FileDownloadAuthReq&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const FileDownloadAuthReq& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const FileDownloadAuthReq* internal_default_instance() {
+    return reinterpret_cast<const FileDownloadAuthReq*>(
+               &_FileDownloadAuthReq_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    19;
+
+  friend void swap(FileDownloadAuthReq& a, FileDownloadAuthReq& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(FileDownloadAuthReq* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(FileDownloadAuthReq* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline FileDownloadAuthReq* New() const final {
+    return CreateMaybeMessage<FileDownloadAuthReq>(nullptr);
+  }
+
+  FileDownloadAuthReq* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<FileDownloadAuthReq>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const FileDownloadAuthReq& from);
+  void MergeFrom(const FileDownloadAuthReq& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(FileDownloadAuthReq* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "message.FileDownloadAuthReq";
+  }
+  protected:
+  explicit FileDownloadAuthReq(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_message_2eproto);
+    return ::descriptor_table_message_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kFileIdFieldNumber = 1,
+    kFileTokenFieldNumber = 2,
+    kUidFieldNumber = 3,
+  };
+  // string file_id = 1;
+  void clear_file_id();
+  const std::string& file_id() const;
+  void set_file_id(const std::string& value);
+  void set_file_id(std::string&& value);
+  void set_file_id(const char* value);
+  void set_file_id(const char* value, size_t size);
+  std::string* mutable_file_id();
+  std::string* release_file_id();
+  void set_allocated_file_id(std::string* file_id);
+  private:
+  const std::string& _internal_file_id() const;
+  void _internal_set_file_id(const std::string& value);
+  std::string* _internal_mutable_file_id();
+  public:
+
+  // string file_token = 2;
+  void clear_file_token();
+  const std::string& file_token() const;
+  void set_file_token(const std::string& value);
+  void set_file_token(std::string&& value);
+  void set_file_token(const char* value);
+  void set_file_token(const char* value, size_t size);
+  std::string* mutable_file_token();
+  std::string* release_file_token();
+  void set_allocated_file_token(std::string* file_token);
+  private:
+  const std::string& _internal_file_token() const;
+  void _internal_set_file_token(const std::string& value);
+  std::string* _internal_mutable_file_token();
+  public:
+
+  // int32 uid = 3;
+  void clear_uid();
+  ::PROTOBUF_NAMESPACE_ID::int32 uid() const;
+  void set_uid(::PROTOBUF_NAMESPACE_ID::int32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::int32 _internal_uid() const;
+  void _internal_set_uid(::PROTOBUF_NAMESPACE_ID::int32 value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:message.FileDownloadAuthReq)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr file_id_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr file_token_;
+  ::PROTOBUF_NAMESPACE_ID::int32 uid_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_message_2eproto;
+};
+// -------------------------------------------------------------------
+
+class FileDownloadAuthRsp PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:message.FileDownloadAuthRsp) */ {
+ public:
+  inline FileDownloadAuthRsp() : FileDownloadAuthRsp(nullptr) {}
+  virtual ~FileDownloadAuthRsp();
+
+  FileDownloadAuthRsp(const FileDownloadAuthRsp& from);
+  FileDownloadAuthRsp(FileDownloadAuthRsp&& from) noexcept
+    : FileDownloadAuthRsp() {
+    *this = ::std::move(from);
+  }
+
+  inline FileDownloadAuthRsp& operator=(const FileDownloadAuthRsp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline FileDownloadAuthRsp& operator=(FileDownloadAuthRsp&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const FileDownloadAuthRsp& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const FileDownloadAuthRsp* internal_default_instance() {
+    return reinterpret_cast<const FileDownloadAuthRsp*>(
+               &_FileDownloadAuthRsp_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    20;
+
+  friend void swap(FileDownloadAuthRsp& a, FileDownloadAuthRsp& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(FileDownloadAuthRsp* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(FileDownloadAuthRsp* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline FileDownloadAuthRsp* New() const final {
+    return CreateMaybeMessage<FileDownloadAuthRsp>(nullptr);
+  }
+
+  FileDownloadAuthRsp* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<FileDownloadAuthRsp>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const FileDownloadAuthRsp& from);
+  void MergeFrom(const FileDownloadAuthRsp& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(FileDownloadAuthRsp* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "message.FileDownloadAuthRsp";
+  }
+  protected:
+  explicit FileDownloadAuthRsp(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_message_2eproto);
+    return ::descriptor_table_message_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kErrorFieldNumber = 1,
+  };
+  // int32 error = 1;
+  void clear_error();
+  ::PROTOBUF_NAMESPACE_ID::int32 error() const;
+  void set_error(::PROTOBUF_NAMESPACE_ID::int32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::int32 _internal_error() const;
+  void _internal_set_error(::PROTOBUF_NAMESPACE_ID::int32 value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:message.FileDownloadAuthRsp)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::int32 error_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_message_2eproto;
+};
 // ===================================================================
 
 
@@ -4766,9 +5409,403 @@ TextChatMsgRsp::textmsgs() const {
   return textmsgs_;
 }
 
+// -------------------------------------------------------------------
+
+// FileUploadDoneReq
+
+// string file_id = 1;
+inline void FileUploadDoneReq::clear_file_id() {
+  file_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& FileUploadDoneReq::file_id() const {
+  // @@protoc_insertion_point(field_get:message.FileUploadDoneReq.file_id)
+  return _internal_file_id();
+}
+inline void FileUploadDoneReq::set_file_id(const std::string& value) {
+  _internal_set_file_id(value);
+  // @@protoc_insertion_point(field_set:message.FileUploadDoneReq.file_id)
+}
+inline std::string* FileUploadDoneReq::mutable_file_id() {
+  // @@protoc_insertion_point(field_mutable:message.FileUploadDoneReq.file_id)
+  return _internal_mutable_file_id();
+}
+inline const std::string& FileUploadDoneReq::_internal_file_id() const {
+  return file_id_.Get();
+}
+inline void FileUploadDoneReq::_internal_set_file_id(const std::string& value) {
+  
+  file_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void FileUploadDoneReq::set_file_id(std::string&& value) {
+  
+  file_id_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:message.FileUploadDoneReq.file_id)
+}
+inline void FileUploadDoneReq::set_file_id(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  file_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:message.FileUploadDoneReq.file_id)
+}
+inline void FileUploadDoneReq::set_file_id(const char* value,
+    size_t size) {
+  
+  file_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:message.FileUploadDoneReq.file_id)
+}
+inline std::string* FileUploadDoneReq::_internal_mutable_file_id() {
+  
+  return file_id_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* FileUploadDoneReq::release_file_id() {
+  // @@protoc_insertion_point(field_release:message.FileUploadDoneReq.file_id)
+  return file_id_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void FileUploadDoneReq::set_allocated_file_id(std::string* file_id) {
+  if (file_id != nullptr) {
+    
+  } else {
+    
+  }
+  file_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), file_id,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:message.FileUploadDoneReq.file_id)
+}
+
+// string file_path = 2;
+inline void FileUploadDoneReq::clear_file_path() {
+  file_path_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& FileUploadDoneReq::file_path() const {
+  // @@protoc_insertion_point(field_get:message.FileUploadDoneReq.file_path)
+  return _internal_file_path();
+}
+inline void FileUploadDoneReq::set_file_path(const std::string& value) {
+  _internal_set_file_path(value);
+  // @@protoc_insertion_point(field_set:message.FileUploadDoneReq.file_path)
+}
+inline std::string* FileUploadDoneReq::mutable_file_path() {
+  // @@protoc_insertion_point(field_mutable:message.FileUploadDoneReq.file_path)
+  return _internal_mutable_file_path();
+}
+inline const std::string& FileUploadDoneReq::_internal_file_path() const {
+  return file_path_.Get();
+}
+inline void FileUploadDoneReq::_internal_set_file_path(const std::string& value) {
+  
+  file_path_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void FileUploadDoneReq::set_file_path(std::string&& value) {
+  
+  file_path_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:message.FileUploadDoneReq.file_path)
+}
+inline void FileUploadDoneReq::set_file_path(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  file_path_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:message.FileUploadDoneReq.file_path)
+}
+inline void FileUploadDoneReq::set_file_path(const char* value,
+    size_t size) {
+  
+  file_path_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:message.FileUploadDoneReq.file_path)
+}
+inline std::string* FileUploadDoneReq::_internal_mutable_file_path() {
+  
+  return file_path_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* FileUploadDoneReq::release_file_path() {
+  // @@protoc_insertion_point(field_release:message.FileUploadDoneReq.file_path)
+  return file_path_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void FileUploadDoneReq::set_allocated_file_path(std::string* file_path) {
+  if (file_path != nullptr) {
+    
+  } else {
+    
+  }
+  file_path_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), file_path,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:message.FileUploadDoneReq.file_path)
+}
+
+// string md5 = 3;
+inline void FileUploadDoneReq::clear_md5() {
+  md5_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& FileUploadDoneReq::md5() const {
+  // @@protoc_insertion_point(field_get:message.FileUploadDoneReq.md5)
+  return _internal_md5();
+}
+inline void FileUploadDoneReq::set_md5(const std::string& value) {
+  _internal_set_md5(value);
+  // @@protoc_insertion_point(field_set:message.FileUploadDoneReq.md5)
+}
+inline std::string* FileUploadDoneReq::mutable_md5() {
+  // @@protoc_insertion_point(field_mutable:message.FileUploadDoneReq.md5)
+  return _internal_mutable_md5();
+}
+inline const std::string& FileUploadDoneReq::_internal_md5() const {
+  return md5_.Get();
+}
+inline void FileUploadDoneReq::_internal_set_md5(const std::string& value) {
+  
+  md5_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void FileUploadDoneReq::set_md5(std::string&& value) {
+  
+  md5_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:message.FileUploadDoneReq.md5)
+}
+inline void FileUploadDoneReq::set_md5(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  md5_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:message.FileUploadDoneReq.md5)
+}
+inline void FileUploadDoneReq::set_md5(const char* value,
+    size_t size) {
+  
+  md5_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:message.FileUploadDoneReq.md5)
+}
+inline std::string* FileUploadDoneReq::_internal_mutable_md5() {
+  
+  return md5_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* FileUploadDoneReq::release_md5() {
+  // @@protoc_insertion_point(field_release:message.FileUploadDoneReq.md5)
+  return md5_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void FileUploadDoneReq::set_allocated_md5(std::string* md5) {
+  if (md5 != nullptr) {
+    
+  } else {
+    
+  }
+  md5_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), md5,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:message.FileUploadDoneReq.md5)
+}
+
+// -------------------------------------------------------------------
+
+// FileUploadDoneRsp
+
+// int32 error = 1;
+inline void FileUploadDoneRsp::clear_error() {
+  error_ = 0;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 FileUploadDoneRsp::_internal_error() const {
+  return error_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 FileUploadDoneRsp::error() const {
+  // @@protoc_insertion_point(field_get:message.FileUploadDoneRsp.error)
+  return _internal_error();
+}
+inline void FileUploadDoneRsp::_internal_set_error(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  
+  error_ = value;
+}
+inline void FileUploadDoneRsp::set_error(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  _internal_set_error(value);
+  // @@protoc_insertion_point(field_set:message.FileUploadDoneRsp.error)
+}
+
+// -------------------------------------------------------------------
+
+// FileDownloadAuthReq
+
+// string file_id = 1;
+inline void FileDownloadAuthReq::clear_file_id() {
+  file_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& FileDownloadAuthReq::file_id() const {
+  // @@protoc_insertion_point(field_get:message.FileDownloadAuthReq.file_id)
+  return _internal_file_id();
+}
+inline void FileDownloadAuthReq::set_file_id(const std::string& value) {
+  _internal_set_file_id(value);
+  // @@protoc_insertion_point(field_set:message.FileDownloadAuthReq.file_id)
+}
+inline std::string* FileDownloadAuthReq::mutable_file_id() {
+  // @@protoc_insertion_point(field_mutable:message.FileDownloadAuthReq.file_id)
+  return _internal_mutable_file_id();
+}
+inline const std::string& FileDownloadAuthReq::_internal_file_id() const {
+  return file_id_.Get();
+}
+inline void FileDownloadAuthReq::_internal_set_file_id(const std::string& value) {
+  
+  file_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void FileDownloadAuthReq::set_file_id(std::string&& value) {
+  
+  file_id_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:message.FileDownloadAuthReq.file_id)
+}
+inline void FileDownloadAuthReq::set_file_id(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  file_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:message.FileDownloadAuthReq.file_id)
+}
+inline void FileDownloadAuthReq::set_file_id(const char* value,
+    size_t size) {
+  
+  file_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:message.FileDownloadAuthReq.file_id)
+}
+inline std::string* FileDownloadAuthReq::_internal_mutable_file_id() {
+  
+  return file_id_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* FileDownloadAuthReq::release_file_id() {
+  // @@protoc_insertion_point(field_release:message.FileDownloadAuthReq.file_id)
+  return file_id_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void FileDownloadAuthReq::set_allocated_file_id(std::string* file_id) {
+  if (file_id != nullptr) {
+    
+  } else {
+    
+  }
+  file_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), file_id,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:message.FileDownloadAuthReq.file_id)
+}
+
+// string file_token = 2;
+inline void FileDownloadAuthReq::clear_file_token() {
+  file_token_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& FileDownloadAuthReq::file_token() const {
+  // @@protoc_insertion_point(field_get:message.FileDownloadAuthReq.file_token)
+  return _internal_file_token();
+}
+inline void FileDownloadAuthReq::set_file_token(const std::string& value) {
+  _internal_set_file_token(value);
+  // @@protoc_insertion_point(field_set:message.FileDownloadAuthReq.file_token)
+}
+inline std::string* FileDownloadAuthReq::mutable_file_token() {
+  // @@protoc_insertion_point(field_mutable:message.FileDownloadAuthReq.file_token)
+  return _internal_mutable_file_token();
+}
+inline const std::string& FileDownloadAuthReq::_internal_file_token() const {
+  return file_token_.Get();
+}
+inline void FileDownloadAuthReq::_internal_set_file_token(const std::string& value) {
+  
+  file_token_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void FileDownloadAuthReq::set_file_token(std::string&& value) {
+  
+  file_token_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:message.FileDownloadAuthReq.file_token)
+}
+inline void FileDownloadAuthReq::set_file_token(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  file_token_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:message.FileDownloadAuthReq.file_token)
+}
+inline void FileDownloadAuthReq::set_file_token(const char* value,
+    size_t size) {
+  
+  file_token_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:message.FileDownloadAuthReq.file_token)
+}
+inline std::string* FileDownloadAuthReq::_internal_mutable_file_token() {
+  
+  return file_token_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* FileDownloadAuthReq::release_file_token() {
+  // @@protoc_insertion_point(field_release:message.FileDownloadAuthReq.file_token)
+  return file_token_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void FileDownloadAuthReq::set_allocated_file_token(std::string* file_token) {
+  if (file_token != nullptr) {
+    
+  } else {
+    
+  }
+  file_token_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), file_token,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:message.FileDownloadAuthReq.file_token)
+}
+
+// int32 uid = 3;
+inline void FileDownloadAuthReq::clear_uid() {
+  uid_ = 0;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 FileDownloadAuthReq::_internal_uid() const {
+  return uid_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 FileDownloadAuthReq::uid() const {
+  // @@protoc_insertion_point(field_get:message.FileDownloadAuthReq.uid)
+  return _internal_uid();
+}
+inline void FileDownloadAuthReq::_internal_set_uid(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  
+  uid_ = value;
+}
+inline void FileDownloadAuthReq::set_uid(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  _internal_set_uid(value);
+  // @@protoc_insertion_point(field_set:message.FileDownloadAuthReq.uid)
+}
+
+// -------------------------------------------------------------------
+
+// FileDownloadAuthRsp
+
+// int32 error = 1;
+inline void FileDownloadAuthRsp::clear_error() {
+  error_ = 0;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 FileDownloadAuthRsp::_internal_error() const {
+  return error_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 FileDownloadAuthRsp::error() const {
+  // @@protoc_insertion_point(field_get:message.FileDownloadAuthRsp.error)
+  return _internal_error();
+}
+inline void FileDownloadAuthRsp::_internal_set_error(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  
+  error_ = value;
+}
+inline void FileDownloadAuthRsp::set_error(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  _internal_set_error(value);
+  // @@protoc_insertion_point(field_set:message.FileDownloadAuthRsp.error)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

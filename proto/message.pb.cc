@@ -84,6 +84,22 @@ class TextChatMsgRspDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<TextChatMsgRsp> _instance;
 } _TextChatMsgRsp_default_instance_;
+class FileUploadDoneReqDefaultTypeInternal {
+ public:
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FileUploadDoneReq> _instance;
+} _FileUploadDoneReq_default_instance_;
+class FileUploadDoneRspDefaultTypeInternal {
+ public:
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FileUploadDoneRsp> _instance;
+} _FileUploadDoneRsp_default_instance_;
+class FileDownloadAuthReqDefaultTypeInternal {
+ public:
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FileDownloadAuthReq> _instance;
+} _FileDownloadAuthReq_default_instance_;
+class FileDownloadAuthRspDefaultTypeInternal {
+ public:
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FileDownloadAuthRsp> _instance;
+} _FileDownloadAuthRsp_default_instance_;
 }  // namespace message
 static void InitDefaultsscc_info_AddFriendReq_message_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -140,6 +156,62 @@ static void InitDefaultsscc_info_AuthFriendRsp_message_2eproto() {
 
 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_AuthFriendRsp_message_2eproto =
     {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_AuthFriendRsp_message_2eproto}, {}};
+
+static void InitDefaultsscc_info_FileDownloadAuthReq_message_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::message::_FileDownloadAuthReq_default_instance_;
+    new (ptr) ::message::FileDownloadAuthReq();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::message::FileDownloadAuthReq::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_FileDownloadAuthReq_message_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_FileDownloadAuthReq_message_2eproto}, {}};
+
+static void InitDefaultsscc_info_FileDownloadAuthRsp_message_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::message::_FileDownloadAuthRsp_default_instance_;
+    new (ptr) ::message::FileDownloadAuthRsp();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::message::FileDownloadAuthRsp::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_FileDownloadAuthRsp_message_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_FileDownloadAuthRsp_message_2eproto}, {}};
+
+static void InitDefaultsscc_info_FileUploadDoneReq_message_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::message::_FileUploadDoneReq_default_instance_;
+    new (ptr) ::message::FileUploadDoneReq();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::message::FileUploadDoneReq::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_FileUploadDoneReq_message_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_FileUploadDoneReq_message_2eproto}, {}};
+
+static void InitDefaultsscc_info_FileUploadDoneRsp_message_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::message::_FileUploadDoneRsp_default_instance_;
+    new (ptr) ::message::FileUploadDoneRsp();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::message::FileUploadDoneRsp::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_FileUploadDoneRsp_message_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_FileUploadDoneRsp_message_2eproto}, {}};
 
 static void InitDefaultsscc_info_GetChatServerReq_message_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -325,7 +397,7 @@ static void InitDefaultsscc_info_TextChatMsgRsp_message_2eproto() {
     {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_TextChatMsgRsp_message_2eproto}, {
       &scc_info_TextChatData_message_2eproto.base,}};
 
-static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_message_2eproto[17];
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_message_2eproto[21];
 static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_message_2eproto = nullptr;
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_message_2eproto = nullptr;
 
@@ -466,6 +538,34 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_message_2eproto::offsets[] PRO
   PROTOBUF_FIELD_OFFSET(::message::TextChatMsgRsp, fromuid_),
   PROTOBUF_FIELD_OFFSET(::message::TextChatMsgRsp, touid_),
   PROTOBUF_FIELD_OFFSET(::message::TextChatMsgRsp, textmsgs_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneReq, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneReq, file_id_),
+  PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneReq, file_path_),
+  PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneReq, md5_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneRsp, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneRsp, error_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::message::FileDownloadAuthReq, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  PROTOBUF_FIELD_OFFSET(::message::FileDownloadAuthReq, file_id_),
+  PROTOBUF_FIELD_OFFSET(::message::FileDownloadAuthReq, file_token_),
+  PROTOBUF_FIELD_OFFSET(::message::FileDownloadAuthReq, uid_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::message::FileDownloadAuthRsp, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  PROTOBUF_FIELD_OFFSET(::message::FileDownloadAuthRsp, error_),
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::message::GetVarifyReq)},
@@ -485,6 +585,10 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOB
   { 112, -1, sizeof(::message::TextChatMsgReq)},
   { 120, -1, sizeof(::message::TextChatData)},
   { 127, -1, sizeof(::message::TextChatMsgRsp)},
+  { 136, -1, sizeof(::message::FileUploadDoneReq)},
+  { 144, -1, sizeof(::message::FileUploadDoneRsp)},
+  { 150, -1, sizeof(::message::FileDownloadAuthReq)},
+  { 158, -1, sizeof(::message::FileDownloadAuthRsp)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -505,6 +609,10 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::message::_TextChatMsgReq_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::message::_TextChatData_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::message::_TextChatMsgRsp_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::message::_FileUploadDoneReq_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::message::_FileUploadDoneRsp_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::message::_FileDownloadAuthReq_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::message::_FileDownloadAuthRsp_default_instance_),
 };
 
 const char descriptor_table_protodef_message_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
@@ -536,30 +644,44 @@ const char descriptor_table_protodef_message_2eproto[] PROTOBUF_SECTION_VARIABLE
   "hatData\022\r\n\005msgid\030\001 \001(\t\022\022\n\nmsgcontent\030\002 \001"
   "(\t\"h\n\016TextChatMsgRsp\022\r\n\005error\030\001 \001(\005\022\017\n\007f"
   "romuid\030\002 \001(\005\022\r\n\005touid\030\003 \001(\005\022\'\n\010textmsgs\030"
-  "\004 \003(\0132\025.message.TextChatData2P\n\rVarifySe"
-  "rvice\022\?\n\rGetVarifyCode\022\025.message.GetVari"
-  "fyReq\032\025.message.GetVarifyRsp\"\0002\207\001\n\rStatu"
-  "sService\022G\n\rGetChatServer\022\031.message.GetC"
-  "hatServerReq\032\031.message.GetChatServerRsp\""
-  "\000\022-\n\005Login\022\021.message.LoginReq\032\021.message."
-  "LoginRsp2\345\002\n\013ChatService\022A\n\017NotifyAddFri"
-  "end\022\025.message.AddFriendReq\032\025.message.Add"
-  "FriendRsp\"\000\022A\n\rRplyAddFriend\022\026.message.R"
-  "plyFriendReq\032\026.message.RplyFriendRsp\"\000\022A"
-  "\n\013SendChatMsg\022\027.message.SendChatMsgReq\032\027"
-  ".message.SendChatMsgRsp\"\000\022D\n\020NotifyAuthF"
-  "riend\022\026.message.AuthFriendReq\032\026.message."
-  "AuthFriendRsp\"\000\022G\n\021NotifyTextChatMsg\022\027.m"
-  "essage.TextChatMsgReq\032\027.message.TextChat"
-  "MsgRsp\"\000b\006proto3"
+  "\004 \003(\0132\025.message.TextChatData\"D\n\021FileUplo"
+  "adDoneReq\022\017\n\007file_id\030\001 \001(\t\022\021\n\tfile_path\030"
+  "\002 \001(\t\022\013\n\003md5\030\003 \001(\t\"\"\n\021FileUploadDoneRsp\022"
+  "\r\n\005error\030\001 \001(\005\"G\n\023FileDownloadAuthReq\022\017\n"
+  "\007file_id\030\001 \001(\t\022\022\n\nfile_token\030\002 \001(\t\022\013\n\003ui"
+  "d\030\003 \001(\005\"$\n\023FileDownloadAuthRsp\022\r\n\005error\030"
+  "\001 \001(\0052P\n\rVarifyService\022\?\n\rGetVarifyCode\022"
+  "\025.message.GetVarifyReq\032\025.message.GetVari"
+  "fyRsp\"\0002\207\001\n\rStatusService\022G\n\rGetChatServ"
+  "er\022\031.message.GetChatServerReq\032\031.message."
+  "GetChatServerRsp\"\000\022-\n\005Login\022\021.message.Lo"
+  "ginReq\032\021.message.LoginRsp2\345\002\n\013ChatServic"
+  "e\022A\n\017NotifyAddFriend\022\025.message.AddFriend"
+  "Req\032\025.message.AddFriendRsp\"\000\022A\n\rRplyAddF"
+  "riend\022\026.message.RplyFriendReq\032\026.message."
+  "RplyFriendRsp\"\000\022A\n\013SendChatMsg\022\027.message"
+  ".SendChatMsgReq\032\027.message.SendChatMsgRsp"
+  "\"\000\022D\n\020NotifyAuthFriend\022\026.message.AuthFri"
+  "endReq\032\026.message.AuthFriendRsp\"\000\022G\n\021Noti"
+  "fyTextChatMsg\022\027.message.TextChatMsgReq\032\027"
+  ".message.TextChatMsgRsp\"\0002\261\001\n\013FileServic"
+  "e\022L\n\020NotifyUploadDone\022\032.message.FileUplo"
+  "adDoneReq\032\032.message.FileUploadDoneRsp\"\000\022"
+  "T\n\024RegisterDownloadAuth\022\034.message.FileDo"
+  "wnloadAuthReq\032\034.message.FileDownloadAuth"
+  "Rsp\"\000b\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_message_2eproto_deps[1] = {
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_message_2eproto_sccs[17] = {
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_message_2eproto_sccs[21] = {
   &scc_info_AddFriendReq_message_2eproto.base,
   &scc_info_AddFriendRsp_message_2eproto.base,
   &scc_info_AuthFriendReq_message_2eproto.base,
   &scc_info_AuthFriendRsp_message_2eproto.base,
+  &scc_info_FileDownloadAuthReq_message_2eproto.base,
+  &scc_info_FileDownloadAuthRsp_message_2eproto.base,
+  &scc_info_FileUploadDoneReq_message_2eproto.base,
+  &scc_info_FileUploadDoneRsp_message_2eproto.base,
   &scc_info_GetChatServerReq_message_2eproto.base,
   &scc_info_GetChatServerRsp_message_2eproto.base,
   &scc_info_GetVarifyReq_message_2eproto.base,
@@ -576,10 +698,10 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_mes
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_message_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_message_2eproto = {
-  false, false, descriptor_table_protodef_message_2eproto, "message.proto", 1736,
-  &descriptor_table_message_2eproto_once, descriptor_table_message_2eproto_sccs, descriptor_table_message_2eproto_deps, 17, 0,
+  false, false, descriptor_table_protodef_message_2eproto, "message.proto", 2133,
+  &descriptor_table_message_2eproto_once, descriptor_table_message_2eproto_sccs, descriptor_table_message_2eproto_deps, 21, 0,
   schemas, file_default_instances, TableStruct_message_2eproto::offsets,
-  file_level_metadata_message_2eproto, 17, file_level_enum_descriptors_message_2eproto, file_level_service_descriptors_message_2eproto,
+  file_level_metadata_message_2eproto, 21, file_level_enum_descriptors_message_2eproto, file_level_service_descriptors_message_2eproto,
 };
 
 // Force running AddDescriptors() at dynamic initialization time.
@@ -5096,6 +5218,959 @@ void TextChatMsgRsp::InternalSwap(TextChatMsgRsp* other) {
 }
 
 
+// ===================================================================
+
+void FileUploadDoneReq::InitAsDefaultInstance() {
+}
+class FileUploadDoneReq::_Internal {
+ public:
+};
+
+FileUploadDoneReq::FileUploadDoneReq(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
+  SharedCtor();
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:message.FileUploadDoneReq)
+}
+FileUploadDoneReq::FileUploadDoneReq(const FileUploadDoneReq& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  file_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_file_id().empty()) {
+    file_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_file_id(),
+      GetArena());
+  }
+  file_path_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_file_path().empty()) {
+    file_path_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_file_path(),
+      GetArena());
+  }
+  md5_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_md5().empty()) {
+    md5_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_md5(),
+      GetArena());
+  }
+  // @@protoc_insertion_point(copy_constructor:message.FileUploadDoneReq)
+}
+
+void FileUploadDoneReq::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FileUploadDoneReq_message_2eproto.base);
+  file_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  file_path_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  md5_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+
+FileUploadDoneReq::~FileUploadDoneReq() {
+  // @@protoc_insertion_point(destructor:message.FileUploadDoneReq)
+  SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+void FileUploadDoneReq::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
+  file_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  file_path_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  md5_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+
+void FileUploadDoneReq::ArenaDtor(void* object) {
+  FileUploadDoneReq* _this = reinterpret_cast< FileUploadDoneReq* >(object);
+  (void)_this;
+}
+void FileUploadDoneReq::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
+void FileUploadDoneReq::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+const FileUploadDoneReq& FileUploadDoneReq::default_instance() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FileUploadDoneReq_message_2eproto.base);
+  return *internal_default_instance();
+}
+
+
+void FileUploadDoneReq::Clear() {
+// @@protoc_insertion_point(message_clear_start:message.FileUploadDoneReq)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  file_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  file_path_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  md5_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* FileUploadDoneReq::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
+      // string file_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_file_id();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "message.FileUploadDoneReq.file_id"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // string file_path = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          auto str = _internal_mutable_file_path();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "message.FileUploadDoneReq.file_path"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // string md5 = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          auto str = _internal_mutable_md5();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "message.FileUploadDoneReq.md5"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      default: {
+      handle_unusual:
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
+          goto success;
+        }
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
+      }
+    }  // switch
+  }  // while
+success:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto success;
+#undef CHK_
+}
+
+::PROTOBUF_NAMESPACE_ID::uint8* FileUploadDoneReq::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:message.FileUploadDoneReq)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string file_id = 1;
+  if (this->file_id().size() > 0) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_file_id().data(), static_cast<int>(this->_internal_file_id().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "message.FileUploadDoneReq.file_id");
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_file_id(), target);
+  }
+
+  // string file_path = 2;
+  if (this->file_path().size() > 0) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_file_path().data(), static_cast<int>(this->_internal_file_path().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "message.FileUploadDoneReq.file_path");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_file_path(), target);
+  }
+
+  // string md5 = 3;
+  if (this->md5().size() > 0) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_md5().data(), static_cast<int>(this->_internal_md5().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "message.FileUploadDoneReq.md5");
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_md5(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:message.FileUploadDoneReq)
+  return target;
+}
+
+size_t FileUploadDoneReq::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:message.FileUploadDoneReq)
+  size_t total_size = 0;
+
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string file_id = 1;
+  if (this->file_id().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_file_id());
+  }
+
+  // string file_path = 2;
+  if (this->file_path().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_file_path());
+  }
+
+  // string md5 = 3;
+  if (this->md5().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_md5());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void FileUploadDoneReq::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:message.FileUploadDoneReq)
+  GOOGLE_DCHECK_NE(&from, this);
+  const FileUploadDoneReq* source =
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<FileUploadDoneReq>(
+          &from);
+  if (source == nullptr) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:message.FileUploadDoneReq)
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:message.FileUploadDoneReq)
+    MergeFrom(*source);
+  }
+}
+
+void FileUploadDoneReq::MergeFrom(const FileUploadDoneReq& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:message.FileUploadDoneReq)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.file_id().size() > 0) {
+    _internal_set_file_id(from._internal_file_id());
+  }
+  if (from.file_path().size() > 0) {
+    _internal_set_file_path(from._internal_file_path());
+  }
+  if (from.md5().size() > 0) {
+    _internal_set_md5(from._internal_md5());
+  }
+}
+
+void FileUploadDoneReq::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:message.FileUploadDoneReq)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void FileUploadDoneReq::CopyFrom(const FileUploadDoneReq& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:message.FileUploadDoneReq)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool FileUploadDoneReq::IsInitialized() const {
+  return true;
+}
+
+void FileUploadDoneReq::InternalSwap(FileUploadDoneReq* other) {
+  using std::swap;
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  file_id_.Swap(&other->file_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  file_path_.Swap(&other->file_path_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  md5_.Swap(&other->md5_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata FileUploadDoneReq::GetMetadata() const {
+  return GetMetadataStatic();
+}
+
+
+// ===================================================================
+
+void FileUploadDoneRsp::InitAsDefaultInstance() {
+}
+class FileUploadDoneRsp::_Internal {
+ public:
+};
+
+FileUploadDoneRsp::FileUploadDoneRsp(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
+  SharedCtor();
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:message.FileUploadDoneRsp)
+}
+FileUploadDoneRsp::FileUploadDoneRsp(const FileUploadDoneRsp& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  error_ = from.error_;
+  // @@protoc_insertion_point(copy_constructor:message.FileUploadDoneRsp)
+}
+
+void FileUploadDoneRsp::SharedCtor() {
+  error_ = 0;
+}
+
+FileUploadDoneRsp::~FileUploadDoneRsp() {
+  // @@protoc_insertion_point(destructor:message.FileUploadDoneRsp)
+  SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+void FileUploadDoneRsp::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
+}
+
+void FileUploadDoneRsp::ArenaDtor(void* object) {
+  FileUploadDoneRsp* _this = reinterpret_cast< FileUploadDoneRsp* >(object);
+  (void)_this;
+}
+void FileUploadDoneRsp::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
+void FileUploadDoneRsp::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+const FileUploadDoneRsp& FileUploadDoneRsp::default_instance() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FileUploadDoneRsp_message_2eproto.base);
+  return *internal_default_instance();
+}
+
+
+void FileUploadDoneRsp::Clear() {
+// @@protoc_insertion_point(message_clear_start:message.FileUploadDoneRsp)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  error_ = 0;
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* FileUploadDoneRsp::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
+      // int32 error = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          error_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      default: {
+      handle_unusual:
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
+          goto success;
+        }
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
+      }
+    }  // switch
+  }  // while
+success:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto success;
+#undef CHK_
+}
+
+::PROTOBUF_NAMESPACE_ID::uint8* FileUploadDoneRsp::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:message.FileUploadDoneRsp)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 error = 1;
+  if (this->error() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_error(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:message.FileUploadDoneRsp)
+  return target;
+}
+
+size_t FileUploadDoneRsp::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:message.FileUploadDoneRsp)
+  size_t total_size = 0;
+
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int32 error = 1;
+  if (this->error() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_error());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void FileUploadDoneRsp::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:message.FileUploadDoneRsp)
+  GOOGLE_DCHECK_NE(&from, this);
+  const FileUploadDoneRsp* source =
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<FileUploadDoneRsp>(
+          &from);
+  if (source == nullptr) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:message.FileUploadDoneRsp)
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:message.FileUploadDoneRsp)
+    MergeFrom(*source);
+  }
+}
+
+void FileUploadDoneRsp::MergeFrom(const FileUploadDoneRsp& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:message.FileUploadDoneRsp)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.error() != 0) {
+    _internal_set_error(from._internal_error());
+  }
+}
+
+void FileUploadDoneRsp::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:message.FileUploadDoneRsp)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void FileUploadDoneRsp::CopyFrom(const FileUploadDoneRsp& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:message.FileUploadDoneRsp)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool FileUploadDoneRsp::IsInitialized() const {
+  return true;
+}
+
+void FileUploadDoneRsp::InternalSwap(FileUploadDoneRsp* other) {
+  using std::swap;
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  swap(error_, other->error_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata FileUploadDoneRsp::GetMetadata() const {
+  return GetMetadataStatic();
+}
+
+
+// ===================================================================
+
+void FileDownloadAuthReq::InitAsDefaultInstance() {
+}
+class FileDownloadAuthReq::_Internal {
+ public:
+};
+
+FileDownloadAuthReq::FileDownloadAuthReq(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
+  SharedCtor();
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:message.FileDownloadAuthReq)
+}
+FileDownloadAuthReq::FileDownloadAuthReq(const FileDownloadAuthReq& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  file_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_file_id().empty()) {
+    file_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_file_id(),
+      GetArena());
+  }
+  file_token_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_file_token().empty()) {
+    file_token_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_file_token(),
+      GetArena());
+  }
+  uid_ = from.uid_;
+  // @@protoc_insertion_point(copy_constructor:message.FileDownloadAuthReq)
+}
+
+void FileDownloadAuthReq::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FileDownloadAuthReq_message_2eproto.base);
+  file_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  file_token_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  uid_ = 0;
+}
+
+FileDownloadAuthReq::~FileDownloadAuthReq() {
+  // @@protoc_insertion_point(destructor:message.FileDownloadAuthReq)
+  SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+void FileDownloadAuthReq::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
+  file_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  file_token_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+
+void FileDownloadAuthReq::ArenaDtor(void* object) {
+  FileDownloadAuthReq* _this = reinterpret_cast< FileDownloadAuthReq* >(object);
+  (void)_this;
+}
+void FileDownloadAuthReq::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
+void FileDownloadAuthReq::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+const FileDownloadAuthReq& FileDownloadAuthReq::default_instance() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FileDownloadAuthReq_message_2eproto.base);
+  return *internal_default_instance();
+}
+
+
+void FileDownloadAuthReq::Clear() {
+// @@protoc_insertion_point(message_clear_start:message.FileDownloadAuthReq)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  file_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  file_token_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  uid_ = 0;
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* FileDownloadAuthReq::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
+      // string file_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_file_id();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "message.FileDownloadAuthReq.file_id"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // string file_token = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          auto str = _internal_mutable_file_token();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "message.FileDownloadAuthReq.file_token"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // int32 uid = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          uid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      default: {
+      handle_unusual:
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
+          goto success;
+        }
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
+      }
+    }  // switch
+  }  // while
+success:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto success;
+#undef CHK_
+}
+
+::PROTOBUF_NAMESPACE_ID::uint8* FileDownloadAuthReq::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:message.FileDownloadAuthReq)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string file_id = 1;
+  if (this->file_id().size() > 0) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_file_id().data(), static_cast<int>(this->_internal_file_id().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "message.FileDownloadAuthReq.file_id");
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_file_id(), target);
+  }
+
+  // string file_token = 2;
+  if (this->file_token().size() > 0) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_file_token().data(), static_cast<int>(this->_internal_file_token().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "message.FileDownloadAuthReq.file_token");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_file_token(), target);
+  }
+
+  // int32 uid = 3;
+  if (this->uid() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_uid(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:message.FileDownloadAuthReq)
+  return target;
+}
+
+size_t FileDownloadAuthReq::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:message.FileDownloadAuthReq)
+  size_t total_size = 0;
+
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string file_id = 1;
+  if (this->file_id().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_file_id());
+  }
+
+  // string file_token = 2;
+  if (this->file_token().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_file_token());
+  }
+
+  // int32 uid = 3;
+  if (this->uid() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_uid());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void FileDownloadAuthReq::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:message.FileDownloadAuthReq)
+  GOOGLE_DCHECK_NE(&from, this);
+  const FileDownloadAuthReq* source =
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<FileDownloadAuthReq>(
+          &from);
+  if (source == nullptr) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:message.FileDownloadAuthReq)
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:message.FileDownloadAuthReq)
+    MergeFrom(*source);
+  }
+}
+
+void FileDownloadAuthReq::MergeFrom(const FileDownloadAuthReq& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:message.FileDownloadAuthReq)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.file_id().size() > 0) {
+    _internal_set_file_id(from._internal_file_id());
+  }
+  if (from.file_token().size() > 0) {
+    _internal_set_file_token(from._internal_file_token());
+  }
+  if (from.uid() != 0) {
+    _internal_set_uid(from._internal_uid());
+  }
+}
+
+void FileDownloadAuthReq::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:message.FileDownloadAuthReq)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void FileDownloadAuthReq::CopyFrom(const FileDownloadAuthReq& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:message.FileDownloadAuthReq)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool FileDownloadAuthReq::IsInitialized() const {
+  return true;
+}
+
+void FileDownloadAuthReq::InternalSwap(FileDownloadAuthReq* other) {
+  using std::swap;
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  file_id_.Swap(&other->file_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  file_token_.Swap(&other->file_token_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  swap(uid_, other->uid_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata FileDownloadAuthReq::GetMetadata() const {
+  return GetMetadataStatic();
+}
+
+
+// ===================================================================
+
+void FileDownloadAuthRsp::InitAsDefaultInstance() {
+}
+class FileDownloadAuthRsp::_Internal {
+ public:
+};
+
+FileDownloadAuthRsp::FileDownloadAuthRsp(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
+  SharedCtor();
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:message.FileDownloadAuthRsp)
+}
+FileDownloadAuthRsp::FileDownloadAuthRsp(const FileDownloadAuthRsp& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  error_ = from.error_;
+  // @@protoc_insertion_point(copy_constructor:message.FileDownloadAuthRsp)
+}
+
+void FileDownloadAuthRsp::SharedCtor() {
+  error_ = 0;
+}
+
+FileDownloadAuthRsp::~FileDownloadAuthRsp() {
+  // @@protoc_insertion_point(destructor:message.FileDownloadAuthRsp)
+  SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+void FileDownloadAuthRsp::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
+}
+
+void FileDownloadAuthRsp::ArenaDtor(void* object) {
+  FileDownloadAuthRsp* _this = reinterpret_cast< FileDownloadAuthRsp* >(object);
+  (void)_this;
+}
+void FileDownloadAuthRsp::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
+void FileDownloadAuthRsp::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+const FileDownloadAuthRsp& FileDownloadAuthRsp::default_instance() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FileDownloadAuthRsp_message_2eproto.base);
+  return *internal_default_instance();
+}
+
+
+void FileDownloadAuthRsp::Clear() {
+// @@protoc_insertion_point(message_clear_start:message.FileDownloadAuthRsp)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  error_ = 0;
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* FileDownloadAuthRsp::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
+      // int32 error = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          error_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      default: {
+      handle_unusual:
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
+          goto success;
+        }
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
+      }
+    }  // switch
+  }  // while
+success:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto success;
+#undef CHK_
+}
+
+::PROTOBUF_NAMESPACE_ID::uint8* FileDownloadAuthRsp::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:message.FileDownloadAuthRsp)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 error = 1;
+  if (this->error() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_error(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:message.FileDownloadAuthRsp)
+  return target;
+}
+
+size_t FileDownloadAuthRsp::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:message.FileDownloadAuthRsp)
+  size_t total_size = 0;
+
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int32 error = 1;
+  if (this->error() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_error());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void FileDownloadAuthRsp::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:message.FileDownloadAuthRsp)
+  GOOGLE_DCHECK_NE(&from, this);
+  const FileDownloadAuthRsp* source =
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<FileDownloadAuthRsp>(
+          &from);
+  if (source == nullptr) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:message.FileDownloadAuthRsp)
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:message.FileDownloadAuthRsp)
+    MergeFrom(*source);
+  }
+}
+
+void FileDownloadAuthRsp::MergeFrom(const FileDownloadAuthRsp& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:message.FileDownloadAuthRsp)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.error() != 0) {
+    _internal_set_error(from._internal_error());
+  }
+}
+
+void FileDownloadAuthRsp::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:message.FileDownloadAuthRsp)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void FileDownloadAuthRsp::CopyFrom(const FileDownloadAuthRsp& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:message.FileDownloadAuthRsp)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool FileDownloadAuthRsp::IsInitialized() const {
+  return true;
+}
+
+void FileDownloadAuthRsp::InternalSwap(FileDownloadAuthRsp* other) {
+  using std::swap;
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  swap(error_, other->error_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata FileDownloadAuthRsp::GetMetadata() const {
+  return GetMetadataStatic();
+}
+
+
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace message
 PROTOBUF_NAMESPACE_OPEN
@@ -5149,6 +6224,18 @@ template<> PROTOBUF_NOINLINE ::message::TextChatData* Arena::CreateMaybeMessage<
 }
 template<> PROTOBUF_NOINLINE ::message::TextChatMsgRsp* Arena::CreateMaybeMessage< ::message::TextChatMsgRsp >(Arena* arena) {
   return Arena::CreateMessageInternal< ::message::TextChatMsgRsp >(arena);
+}
+template<> PROTOBUF_NOINLINE ::message::FileUploadDoneReq* Arena::CreateMaybeMessage< ::message::FileUploadDoneReq >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::message::FileUploadDoneReq >(arena);
+}
+template<> PROTOBUF_NOINLINE ::message::FileUploadDoneRsp* Arena::CreateMaybeMessage< ::message::FileUploadDoneRsp >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::message::FileUploadDoneRsp >(arena);
+}
+template<> PROTOBUF_NOINLINE ::message::FileDownloadAuthReq* Arena::CreateMaybeMessage< ::message::FileDownloadAuthReq >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::message::FileDownloadAuthReq >(arena);
+}
+template<> PROTOBUF_NOINLINE ::message::FileDownloadAuthRsp* Arena::CreateMaybeMessage< ::message::FileDownloadAuthRsp >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::message::FileDownloadAuthRsp >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

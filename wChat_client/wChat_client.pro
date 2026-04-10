@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     adduseritem.cpp \
+    filemgr.cpp \
     applyfriend.cpp \
     applyfrienditem.cpp \
     applyfriendlist.cpp \
@@ -54,6 +55,7 @@ SOURCES += \
 
 HEADERS += \
     adduseritem.h \
+    filemgr.h \
     applyfriend.h \
     applyfrienditem.h \
     applyfriendlist.h \

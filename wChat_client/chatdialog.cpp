@@ -1,6 +1,9 @@
 #include "chatdialog.h"
 #include "ui_chatdialog.h"
 #include "conuseritem.h"
+#include "filemgr.h"
+#include "picturebubble.h"
+#include "chatitembase.h"
 ChatDialog::ChatDialog(QWidget *parent):
     QDialog(parent), ui(new Ui::ChatDialog),_mode(ChatUIMode::ChatMode),
     _state(ChatUIMode::ChatMode),_b_loading(false),_cur_chat_uid(0),_last_widget(nullptr)
@@ -110,7 +113,11 @@ ChatDialog::ChatDialog(QWidget *parent):
     //连接对端消息通知
     connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_text_chat_msg, this, &ChatDialog::slot_text_chat_msg);
 
-
+    // File transfer connections
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_file_upload_rsp,
+            this, &ChatDialog::slot_file_upload_rsp);
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_file_msg_notify,
+            this, &ChatDialog::slot_file_msg_notify);
 }
 
 ChatDialog::~ChatDialog()
@@ -732,5 +739,66 @@ void ChatDialog::UpdateChatMsg(std::vector<std::shared_ptr<TextChatData> > msgda
 void ChatDialog::slot_show_search(bool show)
 {
     ShowSearch(show);
+}
+
+// =====================================================================
+// File transfer slots
+// =====================================================================
+
+void ChatDialog::slot_file_upload_rsp(QString file_id, QString file_token,
+                                       QString host, QString port,
+                                       QString local_path, int error) {
+    if (error != 0) {
+        qDebug() << "File upload request failed, error=" << error;
+        return;
+    }
+
+    // Find local_path from ChatPage's pending map
+    // The server doesn't echo local_path, so we need to look it up.
+    // For now, use the ChatPage's _pending_file_paths by filename (simplified).
+    // A more robust approach would use file_id as key.
+    if (local_path.isEmpty()) {
+        local_path = ui->chat_page->PopPendingFilePath();
+    }
+
+    if (local_path.isEmpty()) {
+        qDebug() << "File upload RSP: cannot find local path for file_id=" << file_id;
+        return;
+    }
+
+    qDebug() << "Starting upload: file_id=" << file_id << " path=" << local_path;
+    FileMgr::GetInstance()->StartUpload(file_id, file_token, host, port, local_path);
+}
+
+void ChatDialog::slot_file_msg_notify(std::shared_ptr<FileChatData> file_data) {
+    qDebug() << "Received file message: file_id=" << file_data->_file_id
+             << " from=" << file_data->_from_uid;
+
+    // Always download from server (no local cache check)
+    // This avoids stale/corrupt cache issues and ensures data consistency
+    auto file_id = file_data->_file_id;
+    auto from_uid = file_data->_from_uid;
+
+    // Use a QMetaObject::Connection so we can disconnect after one match
+    auto conn = std::make_shared<QMetaObject::Connection>();
+    *conn = connect(FileMgr::GetInstance().get(), &FileMgr::sig_download_done,
+            this, [this, file_id, from_uid, conn](QString dl_file_id, QString local_path, int error) {
+        if (dl_file_id != file_id) return;
+        // Disconnect immediately — this lambda should fire only once
+        disconnect(*conn);
+        if (error != 0) {
+            qDebug() << "File download failed: file_id=" << file_id << " error=" << error;
+            return;
+        }
+        // Display image bubble regardless of which chat is active
+        auto fi = UserMgr::GetInstance()->GetFriendById(from_uid);
+        QString name = fi ? fi->_name : "";
+        QString icon = fi ? fi->_icon : "";
+        if (from_uid == _cur_chat_uid) {
+            ui->chat_page->AppendImageBubble(local_path, ChatRole::Other, name, icon);
+        }
+    });
+
+    FileMgr::GetInstance()->StartDownload(file_data);
 }
 

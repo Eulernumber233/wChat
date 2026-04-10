@@ -4,7 +4,10 @@
       "Bash(rm -f config.ini start.bat)",
       "Bash(rm -rf .vs x64 wChat_se.98b7377f wChat_server_tcp/x64)",
       "Bash(\"D:/library/grpc/visualpro/third_party/protobuf/Debug/protoc.exe\" --cpp_out=. \"message.proto\")",
-      "Bash(\"D:/library/grpc/visualpro/third_party/protobuf/Debug/protoc.exe\" -I=\".\" --grpc_out=\".\" --plugin=protoc-gen-grpc=\"D:/library/grpc/visualpro/Debug/grpc_cpp_plugin.exe\" \"message.proto\")"
+      "Bash(\"D:/library/grpc/visualpro/third_party/protobuf/Debug/protoc.exe\" -I=\".\" --grpc_out=\".\" --plugin=protoc-gen-grpc=\"D:/library/grpc/visualpro/Debug/grpc_cpp_plugin.exe\" \"message.proto\")",
+      "Bash(xxd \"d:/CPP/network/wChat/wChat_server/wChat_server_tcp/ChatServiceImpl.cpp\")",
+      "Bash(grep -n \"NotifyUploadDone\" /d/CPP/network/wChat/wChat_server/wChat_FileServer/*.cpp)",
+      "Bash(grep -n \"RegisterFile\\\\|UpdateFileStatus\\\\|GetFileInfo\\\\|AddFileMessage\" /d/CPP/network/wChat/wChat_server/wChat_server_tcp/*.cpp)"
     ]
   }
 }

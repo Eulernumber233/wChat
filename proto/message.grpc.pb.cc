@@ -414,5 +414,108 @@ ChatService::Service::~Service() {
 }
 
 
+static const char* FileService_method_names[] = {
+  "/message.FileService/NotifyUploadDone",
+  "/message.FileService/RegisterDownloadAuth",
+};
+
+std::unique_ptr< FileService::Stub> FileService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
+  (void)options;
+  std::unique_ptr< FileService::Stub> stub(new FileService::Stub(channel));
+  return stub;
+}
+
+FileService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
+  : channel_(channel), rpcmethod_NotifyUploadDone_(FileService_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_RegisterDownloadAuth_(FileService_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  {}
+
+::grpc::Status FileService::Stub::NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::message::FileUploadDoneRsp* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::message::FileUploadDoneReq, ::message::FileUploadDoneRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_NotifyUploadDone_, context, request, response);
+}
+
+void FileService::Stub::experimental_async::NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::message::FileUploadDoneReq, ::message::FileUploadDoneRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_NotifyUploadDone_, context, request, response, std::move(f));
+}
+
+void FileService::Stub::experimental_async::NotifyUploadDone(::grpc::ClientContext* context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_NotifyUploadDone_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::message::FileUploadDoneRsp>* FileService::Stub::PrepareAsyncNotifyUploadDoneRaw(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::message::FileUploadDoneRsp, ::message::FileUploadDoneReq, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_NotifyUploadDone_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::message::FileUploadDoneRsp>* FileService::Stub::AsyncNotifyUploadDoneRaw(::grpc::ClientContext* context, const ::message::FileUploadDoneReq& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncNotifyUploadDoneRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status FileService::Stub::RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::message::FileDownloadAuthRsp* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::message::FileDownloadAuthReq, ::message::FileDownloadAuthRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_RegisterDownloadAuth_, context, request, response);
+}
+
+void FileService::Stub::experimental_async::RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::message::FileDownloadAuthReq, ::message::FileDownloadAuthRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_RegisterDownloadAuth_, context, request, response, std::move(f));
+}
+
+void FileService::Stub::experimental_async::RegisterDownloadAuth(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_RegisterDownloadAuth_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::message::FileDownloadAuthRsp>* FileService::Stub::PrepareAsyncRegisterDownloadAuthRaw(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::message::FileDownloadAuthRsp, ::message::FileDownloadAuthReq, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_RegisterDownloadAuth_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::message::FileDownloadAuthRsp>* FileService::Stub::AsyncRegisterDownloadAuthRaw(::grpc::ClientContext* context, const ::message::FileDownloadAuthReq& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncRegisterDownloadAuthRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+FileService::Service::Service() {
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      FileService_method_names[0],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< FileService::Service, ::message::FileUploadDoneReq, ::message::FileUploadDoneRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](FileService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::message::FileUploadDoneReq* req,
+             ::message::FileUploadDoneRsp* resp) {
+               return service->NotifyUploadDone(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      FileService_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< FileService::Service, ::message::FileDownloadAuthReq, ::message::FileDownloadAuthRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](FileService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::message::FileDownloadAuthReq* req,
+             ::message::FileDownloadAuthRsp* resp) {
+               return service->RegisterDownloadAuth(ctx, req, resp);
+             }, this)));
+}
+
+FileService::Service::~Service() {
+}
+
+::grpc::Status FileService::Service::NotifyUploadDone(::grpc::ServerContext* context, const ::message::FileUploadDoneReq* request, ::message::FileUploadDoneRsp* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status FileService::Service::RegisterDownloadAuth(::grpc::ServerContext* context, const ::message::FileDownloadAuthReq* request, ::message::FileDownloadAuthRsp* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+
 }  // namespace message
 

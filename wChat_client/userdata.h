@@ -186,4 +186,29 @@ struct TextChatMsg{
     std::vector<std::shared_ptr<TextChatData>> _chat_msgs;
 };
 
+// File message data (image / file / audio)
+struct FileChatData {
+    FileChatData(QString msg_id, QString file_id, QString file_name,
+                 qint64 file_size, int file_type, int from_uid, int to_uid)
+        : _msg_id(msg_id), _file_id(file_id), _file_name(file_name),
+          _file_size(file_size), _file_type(file_type),
+          _from_uid(from_uid), _to_uid(to_uid) {}
+
+    QString _msg_id;
+    QString _file_id;
+    QString _file_name;
+    qint64  _file_size;
+    int     _file_type;     // 0=image, 1=file, 2=audio
+    int     _from_uid;
+    int     _to_uid;
+
+    // Filled by FileMgr after download, or set immediately for sender
+    QString _local_path;    // cache/files/<file_id>.<ext>
+
+    // For download: FileServer connection info
+    QString _file_host;
+    QString _file_port;
+    QString _file_token;
+};
+
 #endif // USERDATA_H

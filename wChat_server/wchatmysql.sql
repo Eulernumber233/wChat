@@ -156,4 +156,24 @@ END
 ;;
 delimiter ;
 
+-- ----------------------------
+-- Table structure for chat_files
+-- ----------------------------
+DROP TABLE IF EXISTS `chat_files`;
+CREATE TABLE `chat_files`  (
+  `file_id`       VARCHAR(64)  NOT NULL,
+  `uploader_uid`  INT          NOT NULL,
+  `file_name`     VARCHAR(255) NOT NULL COMMENT 'original file name for display',
+  `file_size`     BIGINT       NOT NULL COMMENT 'size in bytes',
+  `file_type`     TINYINT      NOT NULL DEFAULT 0 COMMENT '0=image, 1=file, 2=audio',
+  `mime_type`     VARCHAR(64)  NOT NULL DEFAULT '' COMMENT 'e.g. image/jpeg',
+  `file_path`     VARCHAR(512) NOT NULL DEFAULT '' COMMENT 'relative path on disk, filled after upload',
+  `md5`           VARCHAR(32)  NOT NULL DEFAULT '' COMMENT 'integrity checksum',
+  `status`        TINYINT      NOT NULL DEFAULT 0 COMMENT '0=registered, 1=uploading, 2=uploaded, 3=failed',
+  `upload_time`   DATETIME     NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`file_id`) USING BTREE,
+  INDEX `idx_uploader`(`uploader_uid` ASC) USING BTREE,
+  INDEX `idx_status`(`status` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
 SET FOREIGN_KEY_CHECKS = 1;
