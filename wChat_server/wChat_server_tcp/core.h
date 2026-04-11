@@ -93,11 +93,29 @@ enum MSG_IDS {
 	ID_NOTIFY_OFF_LINE_REQ = 1021, //֪ͨ�û�����
 	ID_HEART_BEAT_REQ = 1023,      //��������
 	ID_HEARTBEAT_RSP = 1024,       //�����ظ�
+
+	// STAGE-C: lazy-loading history
+	ID_PULL_CONV_SUMMARY_REQ  = 1025,
+	ID_PULL_CONV_SUMMARY_RSP  = 1026,
+	ID_PULL_MESSAGES_REQ      = 1027,
+	ID_PULL_MESSAGES_RSP      = 1028,
+	ID_GET_DOWNLOAD_TOKEN_REQ = 1029,
+	ID_GET_DOWNLOAD_TOKEN_RSP = 1030,
+
 	// File coordination
 	ID_FILE_UPLOAD_REQ      = 1101,
 	ID_FILE_UPLOAD_RSP      = 1102,
 	ID_FILE_NOTIFY_COMPLETE = 1103,
 	ID_FILE_MSG_NOTIFY      = 1105,
+};
+
+// chat_messages.msg_type global convention.
+// MUST stay in sync with wChat_client/global.h MsgType and docs/FileServer_Design.md.
+enum MsgType {
+	MSG_TYPE_TEXT  = 1, // text:  content = {"msgid":"...","content":"..."}
+	MSG_TYPE_IMAGE = 2, // image: content = {"msgid":"...","file_id":"...","file_name":"...","file_size":N}
+	MSG_TYPE_FILE  = 3, // file:  same shape as image
+	MSG_TYPE_AUDIO = 4, // audio: same shape as image
 };
 
 // ȷ����ȷ����ʱ�����ı�������

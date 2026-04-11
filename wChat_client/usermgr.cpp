@@ -1,4 +1,5 @@
 #include "usermgr.h"
+#include "filemgr.h"
 UserMgr::~UserMgr()
 {
 }
@@ -130,33 +131,69 @@ void UserMgr::AppendFriendList(QJsonArray array) {
                                                  nick, icon, sex, desc, back);
         qDebug()<<"----- name:"<<name<<"  icon:"<<icon<<"--------"<<Qt::endl;
 
-        // 解析该好友的聊天记录数组
+        // 解析该好友的聊天记录数组 (text + file 混合,按 msg_type 分支)
         QJsonArray messages = value["text_array"].toArray();
         for (const QJsonValue& message : messages) {
-            int sender_id = message["sender_id"].toInt();
-            int receiver_id = message["receiver_id"].toInt();
-            QString jsonStr = message["content"].toString();
-            QByteArray jsonData = jsonStr.toUtf8();
-            QJsonDocument doc = QJsonDocument::fromJson(jsonData);
+            QJsonObject msgObj = message.toObject();
+            int sender_id = msgObj["sender_id"].toInt();
+            int receiver_id = msgObj["receiver_id"].toInt();
+            int msg_type = msgObj.value("msg_type").toInt(MSG_TYPE_TEXT);
+            int msg_db_id = msgObj.value("msg_db_id").toInt(0);
+            QString contentStr = msgObj["content"].toString();
+            QByteArray contentBytes = contentStr.toUtf8();
+            QJsonDocument doc = QJsonDocument::fromJson(contentBytes);
             if (doc.isNull()) {
-                qDebug() << "JSON解析失败！";
-                return;
+                qDebug() << "chat history: content JSON parse failed, skip";
+                continue;
             }
-            if (!doc.isArray()) {
-                qDebug() << "JSON不是一个数组！";
-                return;
-            }
-            QJsonArray jsonArray = doc.array();
-            for (const QJsonValue &value : jsonArray) {
-                if (!value.isObject()) {
-                    qDebug() << "数组元素不是对象！";
+
+            if (msg_type == MSG_TYPE_TEXT) {
+                // text content is stored as a JSON array of {msgid, content}
+                if (!doc.isArray()) {
+                    qDebug() << "chat history: text content is not array, skip";
                     continue;
                 }
-                QJsonObject jsonObj = value.toObject();
-                QString content = jsonObj["content"].toString();
-                QString msgid = jsonObj["msgid"].toString();
-                info->_chat_msgs.push_back(std::make_shared<TextChatData>
-                    (msgid,content,sender_id,receiver_id));
+                QJsonArray jsonArray = doc.array();
+                for (const QJsonValue& v : jsonArray) {
+                    if (!v.isObject()) continue;
+                    QJsonObject jsonObj = v.toObject();
+                    QString content = jsonObj["content"].toString();
+                    QString msgid = jsonObj["msgid"].toString();
+                    auto td = std::make_shared<TextChatData>(msgid, content, sender_id, receiver_id);
+                    td->_msg_db_id = msg_db_id;
+                    info->_chat_msgs.push_back(td);
+                }
+            } else {
+                // file content is a single JSON object
+                if (!doc.isObject()) {
+                    qDebug() << "chat history: file content is not object, skip";
+                    continue;
+                }
+                QJsonObject fileObj = doc.object();
+                auto fd = std::make_shared<TextChatData>(
+                    fileObj["msgid"].toString(),
+                    msg_type,
+                    sender_id,
+                    receiver_id,
+                    fileObj["file_id"].toString(),
+                    fileObj["file_name"].toString(),
+                    static_cast<qint64>(fileObj["file_size"].toDouble())
+                );
+                fd->_msg_db_id = msg_db_id;
+                fd->_file_host = msgObj.value("file_host").toString();
+                fd->_file_port = msgObj.value("file_port").toString();
+                fd->_file_token = msgObj.value("file_token").toString();
+
+                // STAGE-B: reuse the per-user on-disk cache if this file was
+                // already downloaded in a previous session. Lets ChatPage's
+                // Case 1 path render instantly without a re-download.
+                QString cached = FileMgr::GetInstance()->GetCachedPath(
+                    fd->_file_id, fd->_file_name);
+                if (!cached.isEmpty()) {
+                    fd->_local_path = cached;
+                }
+
+                info->_chat_msgs.push_back(fd);
             }
         }
         _friend_list.push_back(info);

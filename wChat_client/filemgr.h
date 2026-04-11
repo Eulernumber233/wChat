@@ -16,6 +16,16 @@ class FileMgr : public QObject, public Singleton<FileMgr>
 public:
     ~FileMgr();
 
+    // Bind the cache directory to the currently logged-in user. Must be
+    // called after AppPaths::SetCurrentUser, before any upload / download.
+    // Safe to call repeatedly (e.g. on re-login); resets _cache_dir from
+    // AppPaths::FilesDir().
+    void Init();
+
+    // Release the current user binding. After this the cache dir is empty
+    // and subsequent upload / download calls will fail early.
+    void Shutdown();
+
     // Upload a file to FileServer. Called after receiving ID_FILE_UPLOAD_RSP from ChatServer.
     void StartUpload(const QString& file_id, const QString& file_token,
                      const QString& host, const QString& port,
@@ -27,12 +37,12 @@ public:
     // Check if a file is already cached locally. Returns local path or empty string.
     QString GetCachedPath(const QString& file_id, const QString& file_name);
 
-    // Get cache directory path
+    // Get cache directory path (empty until Init() is called).
     QString GetCacheDir();
 
 signals:
     void sig_upload_progress(QString file_id, int percent);
-    void sig_upload_done(QString file_id, int error);
+    void sig_upload_done(QString file_id, int error); // 未连接槽函数，标记失败
     void sig_download_progress(QString file_id, int percent);
     void sig_download_done(QString file_id, QString local_path, int error);
 

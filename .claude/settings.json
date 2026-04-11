@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls wChat_server/wChat_server_tcp/*.h)",
+      "Bash(ls wChat_server/wChat_server_tcp/*.sln wChat_server/wChat_server_tcp/*.vcxproj)",
+      "Bash(ls wChat_client/*.pro wChat_client/*.vcxproj)",
+      "Bash(ls wChat_client/*.vcxproj.filters)"
+    ]
+  }
+}

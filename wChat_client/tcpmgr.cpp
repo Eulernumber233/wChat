@@ -1,4 +1,7 @@
 #include "tcpmgr.h"
+#include "apppaths.h"
+#include "filemgr.h"
+#include "localdb.h"
 #include <QtEndian>
 
 TcpMgr::TcpMgr():_host(""),_port(0),_b_recv_pending(false),_message_id(0),_message_len(0)
@@ -174,6 +177,20 @@ void TcpMgr::initHandlers()
         auto user_info = std::make_shared<UserInfo>(uid, name, nick, icon, sex,"",certification);
         UserMgr::GetInstance()->SetUserInfo(user_info);
         UserMgr::GetInstance()->SetToken(jsonObj["token"].toString());
+
+        // STAGE-B: bind per-user paths before parsing history so that
+        // UserMgr::AppendFriendList can probe the per-user file cache
+        // while building TextChatData records.
+        AppPaths::SetCurrentUser(uid);
+        FileMgr::GetInstance()->Init();
+
+        // STAGE-C.1: open per-user SQLite. Schema is created on first run.
+        // Not yet used for reads in stage C.1 — this call just verifies
+        // that the file is created under <AppData>/wChat/users/<uid>/db/.
+        if (!LocalDb::Inst().Open()) {
+            qWarning() << "LocalDb::Open failed for uid=" << uid;
+        }
+
         //申请列表
         if(jsonObj.contains("apply_list")){
             UserMgr::GetInstance()->AppendApplyList(jsonObj["apply_list"].toArray());

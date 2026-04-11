@@ -774,6 +774,21 @@ void ChatDialog::slot_file_msg_notify(std::shared_ptr<FileChatData> file_data) {
     qDebug() << "Received file message: file_id=" << file_data->_file_id
              << " from=" << file_data->_from_uid;
 
+    // Persist this file message into the friend's _chat_msgs so it survives
+    // switching chats within the same session. STAGE-A: lives in memory only.
+    // STAGE-C: will be inserted into local SQLite.
+    int msg_type = MSG_TYPE_IMAGE + file_data->_file_type; // 0->IMAGE, 1->FILE, 2->AUDIO
+    auto chat_msg = std::make_shared<TextChatData>(
+        file_data->_msg_id, msg_type,
+        file_data->_from_uid, file_data->_to_uid,
+        file_data->_file_id, file_data->_file_name, file_data->_file_size);
+    chat_msg->_file_host = file_data->_file_host;
+    chat_msg->_file_port = file_data->_file_port;
+    chat_msg->_file_token = file_data->_file_token;
+    std::vector<std::shared_ptr<TextChatData>> vec;
+    vec.push_back(chat_msg);
+    UserMgr::GetInstance()->AppendFriendChatMsg(file_data->_from_uid, vec);
+
     // Always download from server (no local cache check)
     // This avoids stale/corrupt cache issues and ensures data consistency
     auto file_id = file_data->_file_id;
@@ -782,7 +797,7 @@ void ChatDialog::slot_file_msg_notify(std::shared_ptr<FileChatData> file_data) {
     // Use a QMetaObject::Connection so we can disconnect after one match
     auto conn = std::make_shared<QMetaObject::Connection>();
     *conn = connect(FileMgr::GetInstance().get(), &FileMgr::sig_download_done,
-            this, [this, file_id, from_uid, conn](QString dl_file_id, QString local_path, int error) {
+            this, [this, file_id, from_uid, chat_msg, conn](QString dl_file_id, QString local_path, int error) {
         if (dl_file_id != file_id) return;
         // Disconnect immediately — this lambda should fire only once
         disconnect(*conn);
@@ -790,6 +805,11 @@ void ChatDialog::slot_file_msg_notify(std::shared_ptr<FileChatData> file_data) {
             qDebug() << "File download failed: file_id=" << file_id << " error=" << error;
             return;
         }
+        // Remember the local path on the history entry so re-opening the chat
+        // can render the image from disk. Actually rendering from history is
+        // STAGE-A-NEXT (A.5).
+        chat_msg->_local_path = local_path;
+
         // Display image bubble regardless of which chat is active
         auto fi = UserMgr::GetInstance()->GetFriendById(from_uid);
         QString name = fi ? fi->_name : "";

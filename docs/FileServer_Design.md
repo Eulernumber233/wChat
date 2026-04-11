@@ -105,12 +105,20 @@ CREATE TABLE chat_files (
 
 ### 2.2 MySQL: `chat_messages.msg_type` Extension
 
-| Value | Type  | content format                                     |
-|-------|-------|----------------------------------------------------|
-| 0     | text  | `[{"msgid":"...","content":"..."}]` (existing)      |
-| 1     | image | `{"msgid":"...","file_id":"...","file_name":"...","file_size":N,"file_type":1}` |
-| 2     | file  | same structure as image, file_type=2               |
-| 3     | audio | same structure as image, file_type=3               |
+> **Canonical values** (must match `wChat_client/global.h` `MsgType` and
+> `wChat_server/wChat_server_tcp/core.h` `MsgType`).
+
+| Value | Type  | content format                                                            |
+|-------|-------|---------------------------------------------------------------------------|
+| 1     | text  | `{"msgid":"...","content":"..."}` (legacy rows already use this)          |
+| 2     | image | `{"msgid":"...","file_id":"...","file_name":"...","file_size":N,"file_type":0}` |
+| 3     | file  | same structure as image, file_type=1                                      |
+| 4     | audio | same structure as image, file_type=2                                      |
+
+Note: `content.file_type` inside the JSON is the **FileServer file_type**
+(0=image, 1=file, 2=audio). The outer `msg_type` column is
+`MsgType::IMAGE/FILE/AUDIO` (2/3/4). The relationship is
+`msg_type = MSG_TYPE_IMAGE + content.file_type`.
 
 ### 2.3 Redis Keys (new)
 

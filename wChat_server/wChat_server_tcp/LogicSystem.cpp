@@ -98,6 +98,14 @@ void LogicSystem::RegisterCallBacks() {
 
 	_fun_callbacks[ID_FILE_UPLOAD_REQ] = std::bind(&LogicSystem::FileUploadReqHandler, this,
 		placeholders::_1, placeholders::_2, placeholders::_3);
+
+	// STAGE-C: lazy-loading history handlers
+	_fun_callbacks[ID_PULL_CONV_SUMMARY_REQ] = std::bind(&LogicSystem::PullConvSummaryHandler, this,
+		placeholders::_1, placeholders::_2, placeholders::_3);
+	_fun_callbacks[ID_PULL_MESSAGES_REQ] = std::bind(&LogicSystem::PullMessagesHandler, this,
+		placeholders::_1, placeholders::_2, placeholders::_3);
+	_fun_callbacks[ID_GET_DOWNLOAD_TOKEN_REQ] = std::bind(&LogicSystem::GetDownloadTokenHandler, this,
+		placeholders::_1, placeholders::_2, placeholders::_3);
 }
 
 void LogicSystem::LoginHandler(shared_ptr<CSession> session, const short &msg_id, const string &msg_data) {
@@ -165,7 +173,10 @@ void LogicSystem::LoginHandler(shared_ptr<CSession> session, const short &msg_id
 		}
 	}
 
-	//��ȡ�����б����������¼
+	// STAGE-C: friend list ships only the base profile. Chat history is
+	// loaded lazily by the client via ID_PULL_CONV_SUMMARY_REQ + per-peer
+	// ID_PULL_MESSAGES_REQ, and file download tokens are minted on demand
+	// via ID_GET_DOWNLOAD_TOKEN_REQ.
 	std::vector<std::shared_ptr<UserInfo>> friend_list;
 	bool b_friend_list = GetFriendList(uid, friend_list);
 	for (auto& friend_ele : friend_list) {
@@ -176,10 +187,6 @@ void LogicSystem::LoginHandler(shared_ptr<CSession> session, const short &msg_id
 		obj["nick"] = friend_ele->nick;
 		obj["sex"] = friend_ele->sex;
 		obj["back"] = friend_ele->back;
-		obj["text_array"] = Json::Value(Json::arrayValue);
-		MysqlMgr::GetInstance()->GetMessages(uid, friend_ele->uid, obj);
-
-
 		rtvalue["friend_list"].append(obj);
 	}
 	auto server_name = ConfigMgr::Inst().GetValue("SelfServer", "Name");
@@ -659,8 +666,8 @@ void LogicSystem::HandleFileUploadDone(const std::string& file_id,
 	content["file_size"] = static_cast<double>(file_size);
 	content["file_type"] = file_type;
 
-	// msg_type: 2=image, 3=file, 4=audio (map from file_type 0/1/2)
-	int msg_type = file_type + 2; // image(0)->2, file(1)->3, audio(2)->4
+	// msg_type: map file_type(0/1/2) -> MsgType(IMAGE/FILE/AUDIO) in core.h
+	int msg_type = MSG_TYPE_IMAGE + file_type;
 
 	// 4. Write chat_messages
 	MysqlMgr::GetInstance()->AddFileMessage(fromuid, touid, msg_type,
@@ -926,4 +933,113 @@ bool LogicSystem::GetFriendApplyInfo(int to_uid, std::vector<std::shared_ptr<App
 bool LogicSystem::GetFriendList(int self_id, std::vector<std::shared_ptr<UserInfo>>& user_list) {
 	//��mysql��ȡ�����б�
 	return MysqlMgr::GetInstance()->GetFriendList(self_id, user_list);
+}
+
+// =====================================================================
+// STAGE-C: lazy-loading history handlers
+// =====================================================================
+
+// Client expects: { "uid": N }
+// Server replies: { "error": 0, "summaries": [ {peer_uid, last_msg_db_id,
+//                    last_msg_type, last_msg_preview, last_msg_time,
+//                    unread_count}, ... ] }
+void LogicSystem::PullConvSummaryHandler(std::shared_ptr<CSession> session,
+	const short& msg_id, const std::string& msg_data) {
+	Json::Reader reader;
+	Json::Value root;
+	reader.parse(msg_data, root);
+	int self_uid = root["uid"].asInt();
+
+	Json::Value rtvalue;
+	Defer defer([&rtvalue, session]() {
+		std::string return_str = rtvalue.toStyledString();
+		session->Send(return_str, ID_PULL_CONV_SUMMARY_RSP);
+	});
+
+	rtvalue["error"] = ErrorCodes::Success;
+	rtvalue["summaries"] = Json::Value(Json::arrayValue);
+	if (!MysqlMgr::GetInstance()->GetConvSummaries(self_uid, rtvalue["summaries"])) {
+		rtvalue["error"] = ErrorCodes::Error_Json;
+	}
+}
+
+// Client expects: { "uid": N, "peer_uid": M, "before_msg_db_id": K, "limit": L }
+// Server replies: { "error": 0, "peer_uid": M, "messages": [...], "has_more": bool }
+// Messages are returned in id-descending order (newest first within the page);
+// the client is expected to reverse or use id-sorted render order.
+void LogicSystem::PullMessagesHandler(std::shared_ptr<CSession> session,
+	const short& msg_id, const std::string& msg_data) {
+	Json::Reader reader;
+	Json::Value root;
+	reader.parse(msg_data, root);
+	int self_uid = root["uid"].asInt();
+	int peer_uid = root["peer_uid"].asInt();
+	int64_t before = static_cast<int64_t>(root.get("before_msg_db_id", 0).asDouble());
+	int limit = root.get("limit", 30).asInt();
+	if (limit <= 0 || limit > 200) limit = 30;
+
+	Json::Value rtvalue;
+	Defer defer([&rtvalue, session]() {
+		std::string return_str = rtvalue.toStyledString();
+		session->Send(return_str, ID_PULL_MESSAGES_RSP);
+	});
+
+	rtvalue["error"] = ErrorCodes::Success;
+	rtvalue["peer_uid"] = peer_uid;
+	rtvalue["messages"] = Json::Value(Json::arrayValue);
+	bool has_more = false;
+	if (!MysqlMgr::GetInstance()->GetMessagesPage(self_uid, peer_uid, before,
+			limit, rtvalue["messages"], has_more)) {
+		rtvalue["error"] = ErrorCodes::Error_Json;
+	}
+	rtvalue["has_more"] = has_more;
+}
+
+// Client expects: { "uid": N, "file_id": "..." }
+// Server replies: { "error": 0, "file_id": "...", "file_host": "...",
+//                   "file_port": "...", "file_token": "..." }
+void LogicSystem::GetDownloadTokenHandler(std::shared_ptr<CSession> session,
+	const short& msg_id, const std::string& msg_data) {
+	Json::Reader reader;
+	Json::Value root;
+	reader.parse(msg_data, root);
+	int uid = root["uid"].asInt();
+	std::string file_id = root["file_id"].asString();
+
+	Json::Value rtvalue;
+	Defer defer([&rtvalue, session]() {
+		std::string return_str = rtvalue.toStyledString();
+		session->Send(return_str, ID_GET_DOWNLOAD_TOKEN_RSP);
+	});
+
+	rtvalue["error"] = ErrorCodes::Success;
+	rtvalue["file_id"] = file_id;
+
+	if (file_id.empty()) {
+		rtvalue["error"] = ErrorCodes::Error_Json;
+		return;
+	}
+
+	// Verify the user actually participated in a chat involving this file.
+	// This is the only authorisation check between client and FileServer.
+	if (!MysqlMgr::GetInstance()->UserCanAccessFile(uid, file_id)) {
+		rtvalue["error"] = ErrorCodes::UidInvalid;
+		return;
+	}
+
+	// Mint a fresh one-time token. 600s is enough — client requests this
+	// right before calling FileMgr::StartDownload.
+	auto uuid = boost::uuids::random_generator()();
+	std::string dl_token = boost::uuids::to_string(uuid);
+	Json::Value tok;
+	tok["file_id"] = file_id;
+	tok["uid"] = uid;
+	std::string dl_key = std::string(FILE_DOWNLOAD_TOKEN_PREFIX) + dl_token;
+	RedisMgr::GetInstance()->Set(dl_key, tok.toStyledString());
+	RedisMgr::GetInstance()->Expire(dl_key, 600);
+
+	auto& cfg = ConfigMgr::Inst();
+	rtvalue["file_host"] = std::string(cfg["FileServer"]["Host"]);
+	rtvalue["file_port"] = std::string(cfg["FileServer"]["Port"]);
+	rtvalue["file_token"] = dl_token;
 }

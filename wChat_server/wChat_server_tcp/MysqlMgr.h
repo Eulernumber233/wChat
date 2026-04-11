@@ -22,6 +22,12 @@ public:
 	bool AddMessage(const int& from, const int& to, std::string message);
 	// ��ѯ��Ϣ��
 	bool GetMessages(const int& from, const int& to, Json::Value& messages);
+
+	// STAGE-C: lazy-loading history support
+	bool GetConvSummaries(int self_uid, Json::Value& out);
+	bool GetMessagesPage(int self_uid, int peer_uid, int64_t before_msg_db_id,
+		int limit, Json::Value& messages_out, bool& has_more_out);
+	bool UserCanAccessFile(int uid, const std::string& file_id);
 	std::shared_ptr<UserInfo> GetUser(int uid);
 	std::shared_ptr<UserInfo> GetUser(std::string name);
 	std::shared_ptr<FriendInfo> GetFriendBaseInfo(int self_uid, int friend_uid);

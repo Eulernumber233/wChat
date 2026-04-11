@@ -41,11 +41,11 @@
   <Import Project="$(QtMsBuild)\qt_defaults.props" Condition="Exists('$(QtMsBuild)\qt_defaults.props')" />
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <QtInstall>6.9.1_msvc2022_64</QtInstall>
-    <QtModules>core;gui;network;widgets</QtModules>
+    <QtModules>core;gui;network;widgets;sql</QtModules>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <QtInstall>6.9.1_msvc2022_64</QtInstall>
-    <QtModules>core;gui;network;widgets</QtModules>
+    <QtModules>core;gui;network;widgets;sql</QtModules>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') OR !Exists('$(QtMsBuild)\Qt.props')">
     <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
@@ -233,6 +233,8 @@
     <ClCompile Include="chatdialog.cpp" />
     <ClCompile Include="chatitembase.cpp" />
     <ClCompile Include="chatpage.cpp" />
+    <ClCompile Include="apppaths.cpp" />
+    <ClCompile Include="localdb.cpp" />
     <ClCompile Include="filemgr.cpp" />
     <ClCompile Include="chatuserlist.cpp" />
     <ClCompile Include="chatuserwid.cpp" />
@@ -293,6 +295,8 @@
     <QtMoc Include="friendinfopage.h" />
     <QtMoc Include="friendlabel.h" />
     <ClInclude Include="global.h" />
+    <ClInclude Include="apppaths.h" />
+    <ClInclude Include="localdb.h" />
     <QtMoc Include="grouptipitem.h" />
     <QtMoc Include="httpmgr.h" />
     <QtMoc Include="listitembase.h" />

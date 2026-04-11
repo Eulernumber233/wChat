@@ -368,21 +368,46 @@ bool MysqlDao::AddMessage(const int& from, const int& to, std::string message)
 		int conversationId = res->getInt("id");
 
 
-		// ׼���ڶ���SQL��䣬������Ϣ
+		// Insert the text message. send_time must be set explicitly because
+		// the table's `send_time` column has DEFAULT NULL (ON UPDATE only),
+		// so omitting it leaves NULL and breaks time-based ordering against
+		// file messages (which DO set NOW()).
 		std::unique_ptr<sql::PreparedStatement> pstmt_2(con->_con->prepareStatement(
 			"INSERT INTO chat_messages "
-			"(conversation_id, sender_id, receiver_id, content, msg_type) "
-			"VALUES (?, ?, ?, ?, ?)"));
+			"(conversation_id, sender_id, receiver_id, content, msg_type, send_time) "
+			"VALUES (?, ?, ?, ?, ?, NOW())"));
 		pstmt_2->setInt(1, conversationId);
 		pstmt_2->setInt(2, from);
 		pstmt_2->setInt(3, to);
 		pstmt_2->setString(4, message);
-		pstmt_2->setInt(5, 1);// Ĭ��Ϊ�ı�
+		pstmt_2->setInt(5, MSG_TYPE_TEXT);
 		int rowAffected = pstmt_2->executeUpdate();
 		if (rowAffected < 0) {
 			con->_con->rollback();
 			return false;
 		}
+
+		// STAGE-C.5: maintain chat_conversations.last_msg_id so the upcoming
+		// ID_PULL_CONV_SUMMARY endpoint can cheaply join on it for previews.
+		// Read LAST_INSERT_ID() first into a local; do NOT inline it into
+		// the UPDATE's SET expression because UPDATE resets LAST_INSERT_ID().
+		std::unique_ptr<sql::Statement> stmt_last(con->_con->createStatement());
+		std::unique_ptr<sql::ResultSet> res_last(
+			stmt_last->executeQuery("SELECT LAST_INSERT_ID() AS id"));
+		int inserted_msg_id = 0;
+		if (res_last->next()) {
+			inserted_msg_id = res_last->getInt("id");
+		}
+		if (inserted_msg_id > 0) {
+			std::unique_ptr<sql::PreparedStatement> pstmt_3(con->_con->prepareStatement(
+				"UPDATE chat_conversations "
+				"SET last_msg_id = ?, update_time = NOW() "
+				"WHERE id = ?"));
+			pstmt_3->setInt(1, inserted_msg_id);
+			pstmt_3->setInt(2, conversationId);
+			pstmt_3->executeUpdate();
+		}
+
 		con->_con->commit();
 
 		return true;
@@ -423,26 +448,30 @@ bool MysqlDao::GetMessages(const int& from, const int& to, Json::Value& obj) {
 		int conversationId = res_1->getInt("id");
 
 
-		// ׼���ڶ���SQL��䣬��ȡ��Ϣ�б�
+		// Load all messages (text + file). No type/status filter here.
+		// Content is passed through as-is; parsing lives on the client.
+		// Order strictly by id: AUTO_INCREMENT id is the authoritative insertion
+		// order, and robust against same-second writes where send_time ties.
 		std::unique_ptr<sql::PreparedStatement> pstmt_2(con->_con->prepareStatement(
-			"SELECT sender_id, receiver_id, content, msg_type, status, send_time, read_time "
+			"SELECT id, sender_id, receiver_id, content, msg_type, status, "
+			"UNIX_TIMESTAMP(send_time) AS send_ts "
 			"FROM chat_messages "
 			"WHERE conversation_id = ? "
-			"ORDER BY send_time ASC")
+			"ORDER BY id ASC")
 		);
 		pstmt_2->setInt(1, conversationId);
 		std::unique_ptr<sql::ResultSet> res_2(pstmt_2->executeQuery());
-		// �������������ÿ����Ϣ��ʽ�������vector
 		while (res_2->next()) {
-			if (res_2->getInt("msg_type") != 1)continue;
-			if (res_2->getInt("status") != 0)continue;
 			Json::Value messages;
-			messages["sender_id"] = res_2->getInt("sender_id");
+			messages["msg_db_id"]   = res_2->getInt("id");
+			messages["sender_id"]   = res_2->getInt("sender_id");
 			messages["receiver_id"] = res_2->getInt("receiver_id");
-			std::string content = res_2->getString("content");
-			messages["content"] = content;
+			messages["content"]     = std::string(res_2->getString("content"));
+			messages["msg_type"]    = res_2->getInt("msg_type");
+			messages["status"]      = res_2->getInt("status");
+			// jsoncpp in this project has no Int64; unix-seconds fits safely in double.
+			messages["send_time"]   = static_cast<double>(res_2->getInt64("send_ts"));
 			obj["text_array"].append(messages);
-			std::cout << "read one temp messages --------------\n";
 		}
 
 
@@ -772,6 +801,26 @@ bool MysqlDao::AddFileMessage(int from, int to, int msg_type, const std::string&
 		pstmt_2->setString(4, content);
 		pstmt_2->setInt(5, msg_type);
 		pstmt_2->executeUpdate();
+
+		// STAGE-C.5: update chat_conversations.last_msg_id within the same
+		// transaction so summary queries see a consistent view.
+		std::unique_ptr<sql::Statement> stmt_last(con->_con->createStatement());
+		std::unique_ptr<sql::ResultSet> res_last(
+			stmt_last->executeQuery("SELECT LAST_INSERT_ID() AS id"));
+		int inserted_msg_id = 0;
+		if (res_last->next()) {
+			inserted_msg_id = res_last->getInt("id");
+		}
+		if (inserted_msg_id > 0) {
+			std::unique_ptr<sql::PreparedStatement> pstmt_3(con->_con->prepareStatement(
+				"UPDATE chat_conversations "
+				"SET last_msg_id = ?, update_time = NOW() "
+				"WHERE id = ?"));
+			pstmt_3->setInt(1, inserted_msg_id);
+			pstmt_3->setInt(2, conversationId);
+			pstmt_3->executeUpdate();
+		}
+
 		con->_con->commit();
 		return true;
 	}
@@ -802,6 +851,172 @@ bool MysqlDao::GetFileInfo(const std::string& file_id,
 	}
 	catch (sql::SQLException& e) {
 		std::cerr << "MysqlDao::GetFileInfo error: " << e.what() << std::endl;
+		return false;
+	}
+}
+
+// =====================================================================
+// STAGE-C: lazy history loading
+// =====================================================================
+
+// Builds a short preview string for a conversation's last message. Text
+// messages are stored as a JSON array of {msgid, content}; we show the
+// first bubble. File messages get a fixed label based on msg_type.
+static std::string BuildLastMsgPreview(int msg_type, const std::string& content) {
+	if (msg_type == MSG_TYPE_IMAGE) return "[image]";
+	if (msg_type == MSG_TYPE_FILE)  return "[file]";
+	if (msg_type == MSG_TYPE_AUDIO) return "[audio]";
+	// MSG_TYPE_TEXT: parse the inner array and take the first .content
+	Json::Reader r;
+	Json::Value v;
+	if (!r.parse(content, v)) return "";
+	if (!v.isArray() || v.size() == 0) return "";
+	// jsoncpp 0.5.0: v[0] is ambiguous between int / UInt overloads; cast.
+	std::string s = v[Json::Value::UInt(0)].get("content", "").asString();
+	// Trim to a reasonable preview length (char-count, not byte-count).
+	// Stage C keeps it simple: 30 UTF-8 bytes cap. Client can re-trim.
+	if (s.size() > 90) s = s.substr(0, 90) + "...";
+	return s;
+}
+
+bool MysqlDao::GetConvSummaries(int self_uid, Json::Value& out) {
+	auto con = pool_->getConnection();
+	if (con == nullptr) return false;
+	Defer defer([this, &con]() { pool_->returnConnection(std::move(con)); });
+
+	try {
+		// Pull conversations involving self_uid along with the joined
+		// last message. unread is subquery-computed from chat_messages.
+		std::unique_ptr<sql::PreparedStatement> pstmt(con->_con->prepareStatement(
+			"SELECT c.id AS conv_id, "
+			"       CASE WHEN c.user_a_id = ? THEN c.user_b_id ELSE c.user_a_id END AS peer, "
+			"       c.last_msg_id, "
+			"       m.msg_type, m.content, UNIX_TIMESTAMP(m.send_time) AS ts, "
+			"       (SELECT COUNT(*) FROM chat_messages "
+			"          WHERE conversation_id = c.id AND receiver_id = ? AND status = 0) AS unread "
+			"FROM chat_conversations c "
+			"LEFT JOIN chat_messages m ON m.id = c.last_msg_id "
+			"WHERE c.user_a_id = ? OR c.user_b_id = ?"));
+		pstmt->setInt(1, self_uid);
+		pstmt->setInt(2, self_uid);
+		pstmt->setInt(3, self_uid);
+		pstmt->setInt(4, self_uid);
+		std::unique_ptr<sql::ResultSet> res(pstmt->executeQuery());
+
+		while (res->next()) {
+			Json::Value item;
+			item["peer_uid"] = res->getInt("peer");
+			int last_msg_id = res->getInt("last_msg_id");
+			item["last_msg_db_id"] = last_msg_id;
+
+			// last_msg_id == 0 means "empty conversation". The LEFT JOIN
+			// will have produced NULL for the message columns; we fall
+			// back to safe defaults.
+			if (last_msg_id > 0 && !res->isNull("msg_type")) {
+				int mt = res->getInt("msg_type");
+				std::string content = res->getString("content");
+				item["last_msg_type"] = mt;
+				item["last_msg_preview"] = BuildLastMsgPreview(mt, content);
+				item["last_msg_time"] = static_cast<double>(res->getInt64("ts"));
+			} else {
+				item["last_msg_type"] = 0;
+				item["last_msg_preview"] = "";
+				item["last_msg_time"] = 0.0;
+			}
+			item["unread_count"] = res->getInt("unread");
+			out.append(item);
+		}
+		return true;
+	}
+	catch (sql::SQLException& e) {
+		std::cerr << "MysqlDao::GetConvSummaries error: " << e.what() << std::endl;
+		return false;
+	}
+}
+
+bool MysqlDao::GetMessagesPage(int self_uid, int peer_uid, int64_t before_msg_db_id,
+	int limit, Json::Value& messages_out, bool& has_more_out) {
+	has_more_out = false;
+	auto con = pool_->getConnection();
+	if (con == nullptr) return false;
+	Defer defer([this, &con]() { pool_->returnConnection(std::move(con)); });
+
+	try {
+		// Resolve conversation id (pairs are stored with min/max uid ordering).
+		std::unique_ptr<sql::PreparedStatement> pstmt_1(con->_con->prepareStatement(
+			"SELECT id FROM chat_conversations WHERE user_a_id = ? AND user_b_id = ?"));
+		pstmt_1->setInt(1, std::min(self_uid, peer_uid));
+		pstmt_1->setInt(2, std::max(self_uid, peer_uid));
+		std::unique_ptr<sql::ResultSet> res1(pstmt_1->executeQuery());
+		if (!res1->next()) {
+			// No conversation yet — empty page, no error.
+			return true;
+		}
+		int conv_id = res1->getInt("id");
+
+		// Fetch `limit` rows strictly older than before_msg_db_id
+		// (or newest page when before_msg_db_id == 0).
+		std::unique_ptr<sql::PreparedStatement> pstmt_2(con->_con->prepareStatement(
+			"SELECT id, sender_id, receiver_id, content, msg_type, status, "
+			"       UNIX_TIMESTAMP(send_time) AS send_ts "
+			"FROM chat_messages "
+			"WHERE conversation_id = ? "
+			"  AND (? = 0 OR id < ?) "
+			"ORDER BY id DESC "
+			"LIMIT ?"));
+		pstmt_2->setInt(1, conv_id);
+		pstmt_2->setInt64(2, before_msg_db_id);
+		pstmt_2->setInt64(3, before_msg_db_id);
+		pstmt_2->setInt(4, limit);
+		std::unique_ptr<sql::ResultSet> res2(pstmt_2->executeQuery());
+
+		int count = 0;
+		while (res2->next()) {
+			Json::Value m;
+			m["msg_db_id"]   = res2->getInt("id");
+			m["sender_id"]   = res2->getInt("sender_id");
+			m["receiver_id"] = res2->getInt("receiver_id");
+			m["content"]     = std::string(res2->getString("content"));
+			m["msg_type"]    = res2->getInt("msg_type");
+			m["status"]      = res2->getInt("status");
+			m["send_time"]   = static_cast<double>(res2->getInt64("send_ts"));
+			messages_out.append(m);
+			++count;
+		}
+		has_more_out = (count == limit);
+		return true;
+	}
+	catch (sql::SQLException& e) {
+		std::cerr << "MysqlDao::GetMessagesPage error: " << e.what() << std::endl;
+		return false;
+	}
+}
+
+bool MysqlDao::UserCanAccessFile(int uid, const std::string& file_id) {
+	auto con = pool_->getConnection();
+	if (con == nullptr) return false;
+	Defer defer([this, &con]() { pool_->returnConnection(std::move(con)); });
+
+	try {
+		// A user is allowed to download the file if there is any
+		// chat_messages row mentioning this file_id in its content JSON
+		// AND the row has him as sender or receiver.
+		// content is a small TEXT field (<1KB for file messages) so LIKE
+		// is cheap enough at this scale.
+		std::string like_pat = "%\"file_id\":\"" + file_id + "\"%";
+		std::unique_ptr<sql::PreparedStatement> pstmt(con->_con->prepareStatement(
+			"SELECT 1 FROM chat_messages "
+			"WHERE content LIKE ? "
+			"  AND (sender_id = ? OR receiver_id = ?) "
+			"LIMIT 1"));
+		pstmt->setString(1, like_pat);
+		pstmt->setInt(2, uid);
+		pstmt->setInt(3, uid);
+		std::unique_ptr<sql::ResultSet> res(pstmt->executeQuery());
+		return res->next();
+	}
+	catch (sql::SQLException& e) {
+		std::cerr << "MysqlDao::UserCanAccessFile error: " << e.what() << std::endl;
 		return false;
 	}
 }

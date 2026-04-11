@@ -27,6 +27,10 @@ private:
 	void DealChatTextMsg(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
 	void HeartBeatHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
 	void FileUploadReqHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
+	// STAGE-C: lazy-loading history
+	void PullConvSummaryHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
+	void PullMessagesHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
+	void GetDownloadTokenHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
 public:
 	// Called by FileServiceImpl when FileServer reports upload done
 	void HandleFileUploadDone(const std::string& file_id, const std::string& file_path, const std::string& md5);

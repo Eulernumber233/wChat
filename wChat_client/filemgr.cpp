@@ -1,4 +1,5 @@
 #include "filemgr.h"
+#include "apppaths.h"
 #include <QThread>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -10,19 +11,35 @@ static const int FRAME_HEADER_SIZE = 14;
 static const int CHUNK_SIZE = 64 * 1024; // 64 KB
 
 FileMgr::FileMgr() {
-    _cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
-                 + "/wChat/files";
+    // STAGE-B: _cache_dir is set lazily by Init() after login; do not read
+    // any pre-login global path. This ensures different accounts on the same
+    // machine never share cached files.
+}
+
+FileMgr::~FileMgr() {}
+
+void FileMgr::Init() {
+    QString dir = AppPaths::FilesDir();
+    if (dir.isEmpty()) {
+        qWarning() << "FileMgr::Init called before AppPaths::SetCurrentUser";
+        _cache_dir.clear();
+        return;
+    }
+    _cache_dir = dir;
     QDir().mkpath(_cache_dir);
     qDebug() << "FileMgr cache dir:" << _cache_dir;
 }
 
-FileMgr::~FileMgr() {}
+void FileMgr::Shutdown() {
+    _cache_dir.clear();
+}
 
 QString FileMgr::GetCacheDir() {
     return _cache_dir;
 }
 
 QString FileMgr::GetCachedPath(const QString& file_id, const QString& file_name) {
+    if (_cache_dir.isEmpty()) return "";
     QString ext;
     int dot = file_name.lastIndexOf('.');
     if (dot >= 0) ext = file_name.mid(dot);
@@ -156,6 +173,12 @@ void FileMgr::StartDownload(std::shared_ptr<FileChatData> file_data) {
 
 void FileMgr::DoDownload(QString file_id, QString file_token,
                           QString host, quint16 port, QString file_name) {
+    if (_cache_dir.isEmpty()) {
+        qWarning() << "FileMgr download: no cache dir bound (user not logged in?)";
+        emit sig_download_done(file_id, "", 8);
+        return;
+    }
+
     QTcpSocket socket;
     socket.connectToHost(host, port);
     if (!socket.waitForConnected(5000)) {

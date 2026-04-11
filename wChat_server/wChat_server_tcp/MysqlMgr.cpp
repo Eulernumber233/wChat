@@ -91,3 +91,17 @@ bool MysqlMgr::GetFileInfo(const std::string& file_id,
 	return _dao.GetFileInfo(file_id, file_path, file_name, file_size);
 }
 
+bool MysqlMgr::GetConvSummaries(int self_uid, Json::Value& out) {
+	return _dao.GetConvSummaries(self_uid, out);
+}
+
+bool MysqlMgr::GetMessagesPage(int self_uid, int peer_uid, int64_t before_msg_db_id,
+	int limit, Json::Value& messages_out, bool& has_more_out) {
+	return _dao.GetMessagesPage(self_uid, peer_uid, before_msg_db_id,
+		limit, messages_out, has_more_out);
+}
+
+bool MysqlMgr::UserCanAccessFile(int uid, const std::string& file_id) {
+	return _dao.UserCanAccessFile(uid, file_id);
+}
+

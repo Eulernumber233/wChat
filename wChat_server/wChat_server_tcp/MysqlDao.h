@@ -245,6 +245,20 @@ public:
 	bool AddFriend(const int& from, const int& to, std::string back_name);
 	bool AddMessage(const int& from, const int& to, std::string message);
 	bool GetMessages(const int& from, const int& to, Json::Value& messages);
+
+	// STAGE-C: lazy-loading history support
+	// Per-peer conversation summaries for self_uid. Writes a JSON array to `out`.
+	bool GetConvSummaries(int self_uid, Json::Value& out);
+	// Page of messages between self_uid and peer_uid, strictly older than
+	// `before_msg_db_id` (0 means "newest page"). Results go in `messages_out`
+	// as a JSON array in id-DESC order; `has_more_out` is set to true when
+	// the result set was saturated by `limit`.
+	bool GetMessagesPage(int self_uid, int peer_uid, int64_t before_msg_db_id,
+		int limit, Json::Value& messages_out, bool& has_more_out);
+	// Authorize that `uid` participated in a chat involving `file_id`
+	// (either as sender or receiver), so he has a legitimate claim to
+	// download it now.
+	bool UserCanAccessFile(int uid, const std::string& file_id);
 	std::shared_ptr<UserInfo> GetUser(int uid);
 	std::shared_ptr<UserInfo> GetUser(std::string name);
 	std::shared_ptr<FriendInfo> GetFriendBaseInfo(int self_uid, int friend_uid);

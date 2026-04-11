@@ -159,15 +159,46 @@ struct UserInfo {
     std::vector<std::shared_ptr<TextChatData>> _chat_msgs;
 };
 
+// Unified chat message record. Despite the "Text" name (kept to avoid a
+// sweeping rename in stage A), it also carries file-message fields.
+// STAGE-C: replace with a proper ChatMsgData + LocalDb schema.
 struct TextChatData{
+    // Text constructor (existing call sites keep working)
     TextChatData(QString msg_id, QString msg_content, int fromuid, int touid)
-        :_msg_id(msg_id),_msg_content(msg_content),_from_uid(fromuid),_to_uid(touid){
+        :_msg_id(msg_id),_msg_content(msg_content),_from_uid(fromuid),_to_uid(touid),
+          _msg_type(MSG_TYPE_TEXT){}
 
-    }
+    // File constructor (image / file / audio)
+    TextChatData(QString msg_id, int msg_type, int fromuid, int touid,
+                 QString file_id, QString file_name, qint64 file_size)
+        :_msg_id(msg_id),_from_uid(fromuid),_to_uid(touid),_msg_type(msg_type),
+          _file_id(file_id),_file_name(file_name),_file_size(file_size){}
+
     QString _msg_id;
-    QString _msg_content;
+    QString _msg_content;   // text body; empty for file messages
     int _from_uid;
     int _to_uid;
+
+    // STAGE-A additions
+    int _msg_type = MSG_TYPE_TEXT;  // 1=text, 2=image, 3=file, 4=audio
+    int _msg_db_id = 0;             // server chat_messages.id; 0 for realtime msgs
+
+    // File-message fields (only valid when _msg_type != TEXT)
+    QString _file_id;
+    QString _file_name;
+    qint64  _file_size = 0;
+
+    // Download routing (from LoginHandler or ID_FILE_MSG_NOTIFY)
+    QString _file_host;
+    QString _file_port;
+    QString _file_token;
+
+    // Local state after download completes
+    QString _local_path;
+    // True while a download for this msg is in flight; prevents re-issuing.
+    bool _download_pending = false;
+
+    bool IsFile() const { return _msg_type != MSG_TYPE_TEXT; }
 };
 
 struct TextChatMsg{

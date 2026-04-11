@@ -1,4 +1,6 @@
-# CLAUDE.md — wChat 项目记忆
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 > 本文件供 Claude Code 在每次新会话开始时自动加载。目的：让你（Claude）在不重新阅读全部代码的前提下，快速掌握项目背景、模块边界、跨服务调用链与关键约定，避免陷入"局部修改 / 全局失配"的问题。
 >
@@ -145,6 +147,15 @@ wChat/
 - `chat_conversations(id, user_a_id, user_b_id, last_msg_id, update_time)` — 联合索引 `(user_a_id, user_b_id)`
 - `chat_messages(id, conversation_id, sender_id, receiver_id, content, msg_type, status, send_time, read_time)` — 外键到 `chat_conversations.id`，按 `conversation_id` 索引
 - `friend_apply(from_uid, to_uid, status, back, ...)` — 申请表，`status=1` 表示已同意
+
+**`chat_messages.msg_type` 取值**（客户端 `global.h` 的 `MsgType` 与 ChatServer `core.h` 的 `MsgType` 必须同步，见 `docs/FileServer_Design.md` §2.2）：
+
+| 值 | 含义 | content JSON 格式 |
+|---|---|---|
+| 1 | text  | `{"msgid":"...","content":"..."}` |
+| 2 | image | `{"msgid":"...","file_id":"...","file_name":"...","file_size":N,"file_type":0}` |
+| 3 | file  | 同 image，`file_type=1` |
+| 4 | audio | 同 image，`file_type=2` |
 
 **Redis 常用 key 前缀**（出现在多个服务的逻辑函数里，搜代码时按这些前缀找）：
 

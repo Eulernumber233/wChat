@@ -58,6 +58,14 @@ enum ReqId{
     ID_HEART_BEAT_REQ = 1023,      //心跳请求
     ID_HEARTBEAT_RSP = 1024,       //心跳回复
 
+    // STAGE-C: lazy-loading history
+    ID_PULL_CONV_SUMMARY_REQ  = 1025, // C -> ChatServer: fetch per-peer summary list
+    ID_PULL_CONV_SUMMARY_RSP  = 1026,
+    ID_PULL_MESSAGES_REQ      = 1027, // C -> ChatServer: paged message fetch for one peer
+    ID_PULL_MESSAGES_RSP      = 1028,
+    ID_GET_DOWNLOAD_TOKEN_REQ = 1029, // C -> ChatServer: on-demand file download token
+    ID_GET_DOWNLOAD_TOKEN_RSP = 1030,
+
     // ChatServer TCP: file coordination
     ID_FILE_UPLOAD_REQ       = 1101,  // C -> ChatServer: request to upload file
     ID_FILE_UPLOAD_RSP       = 1102,  // ChatServer -> C: file_id + token + addr
@@ -74,6 +82,14 @@ enum Modules{
     REGISTERMOD =0,
     RESETMOD = 1,
     LOGINMOD = 2,
+};
+
+// chat_messages.msg_type 全局约定(客户端 / ChatServer / FileServer 必须一致)
+enum MsgType{
+    MSG_TYPE_TEXT  = 1, // 文本消息;content = {"msgid":"...","content":"..."}
+    MSG_TYPE_IMAGE = 2, // 图片;content = {"msgid":"...","file_id":"...","file_name":"...","file_size":N}
+    MSG_TYPE_FILE  = 3, // 普通文件;content 同上
+    MSG_TYPE_AUDIO = 4, // 语音;content 同上
 };
 enum ErrorCodes{
     SUCCESS =0,

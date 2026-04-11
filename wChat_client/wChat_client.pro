@@ -1,5 +1,6 @@
 QT       += core gui
 QT       += core network
+QT       += sql
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
@@ -10,6 +11,8 @@ CONFIG += c++17
 
 SOURCES += \
     adduseritem.cpp \
+    apppaths.cpp \
+    localdb.cpp \
     filemgr.cpp \
     applyfriend.cpp \
     applyfrienditem.cpp \
@@ -55,6 +58,8 @@ SOURCES += \
 
 HEADERS += \
     adduseritem.h \
+    apppaths.h \
+    localdb.h \
     filemgr.h \
     applyfriend.h \
     applyfrienditem.h \
