@@ -18,8 +18,8 @@ public:
 	bool AuthFriendApply(const int& from, const int& to);
 	// ���Ӻ���
 	bool AddFriend(const int& from, const int& to, std::string back_name);
-	// ���ӷ��͵���Ϣ
-	bool AddMessage(const int& from, const int& to, std::string message);
+	// ���ӷ��͵���Ϣ; returns chat_messages.id on success, 0 on failure.
+	int AddMessage(const int& from, const int& to, std::string message);
 	// ��ѯ��Ϣ��
 	bool GetMessages(const int& from, const int& to, Json::Value& messages);
 
@@ -38,7 +38,7 @@ public:
 		const std::string& file_name, int64_t file_size, int file_type, const std::string& mime_type);
 	bool UpdateFileStatus(const std::string& file_id, int status,
 		const std::string& file_path = "", const std::string& md5 = "");
-	bool AddFileMessage(int from, int to, int msg_type, const std::string& content);
+	int AddFileMessage(int from, int to, int msg_type, const std::string& content);
 	bool GetFileInfo(const std::string& file_id,
 		std::string& file_path, std::string& file_name, int64_t& file_size);
 private:

@@ -243,7 +243,8 @@ public:
 	bool AddFriendApply(const int& from, const int& to, const std::string& back, const std::string& certification);
 	bool AuthFriendApply(const int& from, const int& to);
 	bool AddFriend(const int& from, const int& to, std::string back_name);
-	bool AddMessage(const int& from, const int& to, std::string message);
+	// Returns the inserted chat_messages.id on success, 0 on failure.
+	int AddMessage(const int& from, const int& to, std::string message);
 	bool GetMessages(const int& from, const int& to, Json::Value& messages);
 
 	// STAGE-C: lazy-loading history support
@@ -269,7 +270,8 @@ public:
 		const std::string& file_name, int64_t file_size, int file_type, const std::string& mime_type);
 	bool UpdateFileStatus(const std::string& file_id, int status,
 		const std::string& file_path = "", const std::string& md5 = "");
-	bool AddFileMessage(int from, int to, int msg_type, const std::string& content);
+	// Returns inserted chat_messages.id, 0 on failure.
+	int AddFileMessage(int from, int to, int msg_type, const std::string& content);
 	bool GetFileInfo(const std::string& file_id,
 		std::string& file_path, std::string& file_name, int64_t& file_size);
 private:

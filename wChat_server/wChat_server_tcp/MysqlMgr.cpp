@@ -38,7 +38,7 @@ bool MysqlMgr::AddFriend(const int& from, const int& to, std::string back_name) 
 	return _dao.AddFriend(from, to, back_name);
 }
 
-bool MysqlMgr::AddMessage(const int& from, const int& to, std::string message) {
+int MysqlMgr::AddMessage(const int& from, const int& to, std::string message) {
 	return _dao.AddMessage(from, to, message);
 }
 
@@ -82,7 +82,7 @@ bool MysqlMgr::UpdateFileStatus(const std::string& file_id, int status,
 	return _dao.UpdateFileStatus(file_id, status, file_path, md5);
 }
 
-bool MysqlMgr::AddFileMessage(int from, int to, int msg_type, const std::string& content) {
+int MysqlMgr::AddFileMessage(int from, int to, int msg_type, const std::string& content) {
 	return _dao.AddFileMessage(from, to, msg_type, content);
 }
 

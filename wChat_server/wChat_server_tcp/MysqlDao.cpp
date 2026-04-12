@@ -342,11 +342,11 @@ bool MysqlDao::AddFriend(const int& from, const int& to, std::string back_to) {
 	return true;
 }
 
-bool MysqlDao::AddMessage(const int& from, const int& to, std::string message)
+int MysqlDao::AddMessage(const int& from, const int& to, std::string message)
 {
 	auto con = pool_->getConnection();
 	if (con == nullptr) {
-		return false;
+		return 0;
 	}
 
 	Defer defer([this, &con]() {
@@ -363,7 +363,7 @@ bool MysqlDao::AddMessage(const int& from, const int& to, std::string message)
 		std::unique_ptr<sql::ResultSet> res(pstmt_1->executeQuery());
 		// �ж��Ƿ��н��
 		if (!res->next()) {
-			return false;
+			return 0;
 		}
 		int conversationId = res->getInt("id");
 
@@ -384,7 +384,7 @@ bool MysqlDao::AddMessage(const int& from, const int& to, std::string message)
 		int rowAffected = pstmt_2->executeUpdate();
 		if (rowAffected < 0) {
 			con->_con->rollback();
-			return false;
+			return 0;
 		}
 
 		// STAGE-C.5: maintain chat_conversations.last_msg_id so the upcoming
@@ -410,17 +410,14 @@ bool MysqlDao::AddMessage(const int& from, const int& to, std::string message)
 
 		con->_con->commit();
 
-		return true;
+		return inserted_msg_id;
 	}
 	catch (sql::SQLException& e) {
 		std::cerr << "SQLException: " << e.what();
 		std::cerr << " (MySQL error code: " << e.getErrorCode();
 		std::cerr << ", SQLState: " << e.getSQLState() << " )" << std::endl;
-		return false;
+		return 0;
 	}
-
-
-	return true;
 }
 
 bool MysqlDao::GetMessages(const int& from, const int& to, Json::Value& obj) {
@@ -754,9 +751,9 @@ bool MysqlDao::UpdateFileStatus(const std::string& file_id, int status,
 	}
 }
 
-bool MysqlDao::AddFileMessage(int from, int to, int msg_type, const std::string& content) {
+int MysqlDao::AddFileMessage(int from, int to, int msg_type, const std::string& content) {
 	auto con = pool_->getConnection();
-	if (con == nullptr) return false;
+	if (con == nullptr) return 0;
 	Defer defer([this, &con]() {
 		if (con) {
 			try { con->_con->setAutoCommit(true); } catch (...) {}
@@ -789,7 +786,7 @@ bool MysqlDao::AddFileMessage(int from, int to, int msg_type, const std::string&
 		}
 		if (conversationId < 0) {
 			con->_con->rollback();
-			return false;
+			return 0;
 		}
 		// Insert message
 		std::unique_ptr<sql::PreparedStatement> pstmt_2(con->_con->prepareStatement(
@@ -822,12 +819,12 @@ bool MysqlDao::AddFileMessage(int from, int to, int msg_type, const std::string&
 		}
 
 		con->_con->commit();
-		return true;
+		return inserted_msg_id;
 	}
 	catch (sql::SQLException& e) {
 		std::cerr << "MysqlDao::AddFileMessage error: " << e.what() << std::endl;
 		try { con->_con->rollback(); } catch (...) {}
-		return false;
+		return 0;
 	}
 }
 
@@ -1003,7 +1000,10 @@ bool MysqlDao::UserCanAccessFile(int uid, const std::string& file_id) {
 		// AND the row has him as sender or receiver.
 		// content is a small TEXT field (<1KB for file messages) so LIKE
 		// is cheap enough at this scale.
-		std::string like_pat = "%\"file_id\":\"" + file_id + "\"%";
+		// Note: content is stored via Json::Value::toStyledString() which
+		// inserts spaces around ':' (`"file_id" : "..."`). Use wildcard %
+		// between the key and the id to tolerate either form.
+		std::string like_pat = "%\"file_id\"%\"" + file_id + "\"%";
 		std::unique_ptr<sql::PreparedStatement> pstmt(con->_con->prepareStatement(
 			"SELECT 1 FROM chat_messages "
 			"WHERE content LIKE ? "

@@ -472,8 +472,13 @@ void LogicSystem::DealChatTextMsg(std::shared_ptr<CSession> session, const short
 		session->Send(return_str, ID_TEXT_CHAT_MSG_RSP);
 		});
 
-	// ����Ϣ����mysql
-	MysqlMgr::GetInstance()->AddMessage(uid, touid, arrays.toStyledString());
+	// Persist and capture the inserted row id so the client can store it
+	// in its local SQLite mirror (STAGE-C). Cross-server forwarding still
+	// goes through the existing proto which has no msg_db_id field, so the
+	// receiver on a different ChatServer will get 0 and fall back to the
+	// next ID_PULL_MESSAGES_REQ to pick up the real id.
+	int inserted_id = MysqlMgr::GetInstance()->AddMessage(uid, touid, arrays.toStyledString());
+	rtvalue["msg_db_id"] = inserted_id;
 
 	//��ѯredis ����touid��Ӧ��server ip
 	auto to_str = std::to_string(touid);
@@ -670,15 +675,23 @@ void LogicSystem::HandleFileUploadDone(const std::string& file_id,
 	int msg_type = MSG_TYPE_IMAGE + file_type;
 
 	// 4. Write chat_messages
-	MysqlMgr::GetInstance()->AddFileMessage(fromuid, touid, msg_type,
-		content.toStyledString());
+	int inserted_msg_db_id = MysqlMgr::GetInstance()->AddFileMessage(
+		fromuid, touid, msg_type, content.toStyledString());
 
-	// 5. Notify sender: upload complete
+	// 5. Notify sender: upload complete (carry msg_db_id for LocalDb mirror)
 	auto sender_session = UserMgr::GetInstance()->GetSession(fromuid);
 	if (sender_session) {
 		Json::Value notify_sender;
 		notify_sender["error"] = 0;
 		notify_sender["file_id"] = file_id;
+		notify_sender["msg_db_id"] = inserted_msg_db_id;
+		notify_sender["msg_type"] = msg_type;
+		notify_sender["file_name"] = file_name;
+		notify_sender["file_size"] = static_cast<double>(file_size);
+		notify_sender["file_type"] = file_type;
+		notify_sender["msgid"] = content["msgid"];
+		notify_sender["fromuid"] = fromuid;
+		notify_sender["touid"] = touid;
 		sender_session->Send(notify_sender.toStyledString(), ID_FILE_NOTIFY_COMPLETE);
 	}
 
@@ -710,6 +723,7 @@ void LogicSystem::HandleFileUploadDone(const std::string& file_id,
 	notify["fromuid"] = fromuid;
 	notify["touid"] = touid;
 	notify["msg_type"] = msg_type;
+	notify["msg_db_id"] = inserted_msg_db_id;
 	notify["msgid"] = content["msgid"];
 	notify["file_id"] = file_id;
 	notify["file_name"] = file_name;
