@@ -4,7 +4,7 @@
 #include "localdb.h"
 #include <QtEndian>
 
-TcpMgr::TcpMgr():_host(""),_port(0),_b_recv_pending(false),_message_id(0),_message_len(0)
+TcpMgr::TcpMgr():_host(""),_port(0),_b_recv_pending(false),_message_id(0),_message_len(0),_kick_pending(false),_last_heartbeat_rsp_ms(0)
 {
     // 建立连接回调
     QObject::connect(&_socket, &QTcpSocket::connected, [&]() {
@@ -15,6 +15,10 @@ TcpMgr::TcpMgr():_host(""),_port(0),_b_recv_pending(false),_message_id(0),_messa
     // 断开连接回调
     QObject::connect(&_socket, &QTcpSocket::disconnected, [&]() {
         qDebug() << "Disconnected from server.";
+        if (!_kick_pending) {
+            // 非踢人导致的断线，通知 UI 层
+            emit sig_connection_lost();
+        }
     });
     // 读信号回调
     QObject::connect(&_socket, &QTcpSocket::readyRead, this, &TcpMgr::slot_read_data);
@@ -32,6 +36,9 @@ TcpMgr::TcpMgr():_host(""),_port(0),_b_recv_pending(false),_message_id(0),_messa
                              break;
                          case QTcpSocket::RemoteHostClosedError:
                              qDebug() << "Remote Host Closed Connection!";
+                             if (!_kick_pending) {
+                                 emit sig_connection_lost();
+                             }
                              break;
                          case QTcpSocket::HostNotFoundError:
                              qDebug() << "Host Not Found!";
@@ -58,6 +65,8 @@ void TcpMgr::slot_tcp_connect(ServerInfo si)
     qDebug()<< "receive tcp connect signal";
     // 尝试连接到服务器
     qDebug() << "Connecting to server...";
+    _kick_pending = false; // 重置踢人标志
+    _last_heartbeat_rsp_ms = QDateTime::currentMSecsSinceEpoch(); // 初始化为当前时间
     _host = si.Host;
     _port = static_cast<uint16_t>(si.Port.toUInt());
     _socket.connectToHost(si.Host, _port);
@@ -184,9 +193,7 @@ void TcpMgr::initHandlers()
         AppPaths::SetCurrentUser(uid);
         FileMgr::GetInstance()->Init();
 
-        // STAGE-C.1: open per-user SQLite. Schema is created on first run.
-        // Not yet used for reads in stage C.1 — this call just verifies
-        // that the file is created under <AppData>/wChat/users/<uid>/db/.
+        // STAGE-C: open per-user SQLite before parsing friend list.
         if (!LocalDb::Inst().Open()) {
             qWarning() << "LocalDb::Open failed for uid=" << uid;
         }
@@ -195,12 +202,22 @@ void TcpMgr::initHandlers()
         if(jsonObj.contains("apply_list")){
             UserMgr::GetInstance()->AppendApplyList(jsonObj["apply_list"].toArray());
         }
-        //添加好友列表
+        //添加好友列表 (STAGE-C: friend profile only — no embedded history)
         if (jsonObj.contains("friend_list")) {
             UserMgr::GetInstance()->AppendFriendList(jsonObj["friend_list"].toArray());
         }
         qDebug()<<"hhhhh success login !!!!"<<Qt::endl;
         emit sig_switch_chatdlg();
+
+        // STAGE-C: fire off conversation summary request immediately so the
+        // chat list can show last-msg previews and unread badges without
+        // waiting for the user to click any peer.
+        {
+            QJsonObject pullObj;
+            pullObj["uid"] = uid;
+            QByteArray pullData = QJsonDocument(pullObj).toJson(QJsonDocument::Compact);
+            emit sig_send_data(ReqId::ID_PULL_CONV_SUMMARY_REQ, pullData);
+        }
     });
     // 搜索回复
     _handlers.insert(ID_SEARCH_USER_RSP, [this](ReqId id, int len, QByteArray data) {
@@ -409,7 +426,14 @@ void TcpMgr::initHandlers()
         }
 
         qDebug() << "Receive Text Chat Rsp Success " ;
-        //ui设置送达等标记 todo...
+        // STAGE-C: emit an echo carrying msg_db_id + arrays so ChatDialog
+        // can persist the outgoing message into LocalDb.
+        qint64 msg_db_id = static_cast<qint64>(jsonObj.value("msg_db_id").toDouble());
+        auto echo = std::make_shared<TextChatMsg>(jsonObj["fromuid"].toInt(),
+                                                  jsonObj["touid"].toInt(),
+                                                  jsonObj["text_array"].toArray(),
+                                                  msg_db_id);
+        emit sig_text_chat_msg_rsp(echo);
     });
     _handlers.insert(ID_NOTIFY_TEXT_CHAT_MSG_REQ, [this](ReqId id, int len, QByteArray data) {
         Q_UNUSED(len);
@@ -438,8 +462,11 @@ void TcpMgr::initHandlers()
         }
 
         qDebug() << "Receive Text Chat Notify Success " ;
+        qint64 msg_db_id = static_cast<qint64>(jsonObj.value("msg_db_id").toDouble());
         auto msg_ptr = std::make_shared<TextChatMsg>(jsonObj["fromuid"].toInt(),
-                                                     jsonObj["touid"].toInt(),jsonObj["text_array"].toArray());
+                                                     jsonObj["touid"].toInt(),
+                                                     jsonObj["text_array"].toArray(),
+                                                     msg_db_id);
         emit sig_text_chat_msg(msg_ptr);
     });
 
@@ -465,6 +492,26 @@ void TcpMgr::initHandlers()
         QJsonObject obj = QJsonDocument::fromJson(data).object();
         int err = obj["error"].toInt();
         QString file_id = obj["file_id"].toString();
+
+        // STAGE-C: emit enriched echo so ChatDialog can mirror this file
+        // message into LocalDb. Only if the server provided msg_db_id
+        // (which means the write to chat_messages succeeded). On failure
+        // we still fire sig_file_notify_complete below so ChatDialog can
+        // clean up any pending copy entry.
+        qint64 msg_db_id = static_cast<qint64>(obj.value("msg_db_id").toDouble());
+        if (err == 0 && msg_db_id > 0) {
+            auto fd = std::make_shared<FileChatData>(
+                obj["msgid"].toString(),
+                file_id,
+                obj["file_name"].toString(),
+                static_cast<qint64>(obj["file_size"].toDouble()),
+                obj["file_type"].toInt(),
+                obj["fromuid"].toInt(),
+                obj["touid"].toInt()
+            );
+            fd->_msg_db_id = msg_db_id;
+            emit sig_file_upload_persisted(fd);
+        }
         emit sig_file_notify_complete(file_id, err);
     });
 
@@ -484,10 +531,67 @@ void TcpMgr::initHandlers()
             obj["fromuid"].toInt(),
             obj["touid"].toInt()
         );
+        file_data->_msg_db_id = static_cast<qint64>(obj.value("msg_db_id").toDouble());
         file_data->_file_host = obj["file_host"].toString();
         file_data->_file_port = obj["file_port"].toString();
         file_data->_file_token = obj["file_token"].toString();
 
         emit sig_file_msg_notify(file_data);
+    });
+
+    // === lazy-loading history handlers ===
+
+    // ID_PULL_CONV_SUMMARY_RSP (1026)
+    _handlers.insert(ID_PULL_CONV_SUMMARY_RSP, [this](ReqId id, int len, QByteArray data) {
+        Q_UNUSED(len);
+        QJsonObject obj = QJsonDocument::fromJson(data).object();
+        if (obj["error"].toInt() != 0) {
+            qWarning() << "PullConvSummary rsp error:" << obj["error"].toInt();
+            return;
+        }
+        QJsonArray summaries = obj["summaries"].toArray();
+        emit sig_conv_summary(summaries);
+    });
+
+    // ID_PULL_MESSAGES_RSP (1028)
+    _handlers.insert(ID_PULL_MESSAGES_RSP, [this](ReqId id, int len, QByteArray data) {
+        Q_UNUSED(len);
+        QJsonObject obj = QJsonDocument::fromJson(data).object();
+        if (obj["error"].toInt() != 0) {
+            qWarning() << "PullMessages rsp error:" << obj["error"].toInt();
+            return;
+        }
+        int peer_uid = obj["peer_uid"].toInt();
+        QJsonArray msgs = obj["messages"].toArray();
+        bool has_more = obj["has_more"].toBool();
+        emit sig_pull_messages_rsp(peer_uid, msgs, has_more);
+    });
+
+    // ID_GET_DOWNLOAD_TOKEN_RSP (1030)
+    _handlers.insert(ID_GET_DOWNLOAD_TOKEN_RSP, [this](ReqId id, int len, QByteArray data) {
+        Q_UNUSED(len);
+        QJsonObject obj = QJsonDocument::fromJson(data).object();
+        int err = obj["error"].toInt();
+        QString file_id = obj["file_id"].toString();
+        QString host = obj["file_host"].toString();
+        QString port = obj["file_port"].toString();
+        QString token = obj["file_token"].toString();
+        emit sig_download_token_rsp(file_id, host, port, token, err);
+    });
+
+    // ID_NOTIFY_KICK_USER (1031) — 被踢下线通知
+    _handlers.insert(ID_NOTIFY_KICK_USER, [this](ReqId id, int len, QByteArray data) {
+        Q_UNUSED(len);
+        QJsonObject obj = QJsonDocument::fromJson(data).object();
+        QString reason = obj["reason"].toString();
+        qDebug() << "Received kick notification, reason:" << reason;
+        _kick_pending = true;
+        emit sig_kick_user(reason);
+    });
+
+    // ID_HEARTBEAT_RSP (1024) — 心跳回复：刷新最后响应时间戳
+    _handlers.insert(ID_HEARTBEAT_RSP, [this](ReqId id, int len, QByteArray data) {
+        Q_UNUSED(len); Q_UNUSED(data);
+        _last_heartbeat_rsp_ms = QDateTime::currentMSecsSinceEpoch();
     });
 }

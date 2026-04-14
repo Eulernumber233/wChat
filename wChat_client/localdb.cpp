@@ -1,5 +1,7 @@
 #include "localdb.h"
 #include "apppaths.h"
+#include "userdata.h"
+#include "filemgr.h"
 
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlQuery>
@@ -7,6 +9,9 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonValue>
+#include <QFile>
 
 LocalDb& LocalDb::Inst() {
     static LocalDb inst;
@@ -321,4 +326,103 @@ bool LocalDb::SetLastSyncedMsgId(int peer_uid, qint64 msg_id) {
         return false;
     }
     return true;
+}
+
+// ==========================================================================
+// Static helpers: server JSON <-> MsgRow <-> TextChatData
+// ==========================================================================
+
+int LocalDb::RowsFromServerMessages(const QJsonArray& in_msgs, int self_uid,
+                                     QVector<MsgRow>& out_rows) {
+    int before = out_rows.size();
+    for (const QJsonValue& v : in_msgs) {
+        QJsonObject o = v.toObject();
+
+        MsgRow r;
+        r.msg_db_id = static_cast<qint64>(o["msg_db_id"].toDouble());
+        int sender = o["sender_id"].toInt();
+        int receiver = o["receiver_id"].toInt();
+        r.peer_uid  = (sender == self_uid) ? receiver : sender;
+        r.direction = (sender == self_uid) ? 1 : 0;
+        r.msg_type  = o["msg_type"].toInt(MSG_TYPE_TEXT);
+        r.content   = o["content"].toString();
+        r.send_time = static_cast<qint64>(o["send_time"].toDouble());
+        r.status    = o["status"].toInt();
+
+        // Drop rows without a real primary key (server must always set it).
+        if (r.msg_db_id <= 0) {
+            qWarning() << "RowsFromServerMessages: missing msg_db_id, skip";
+            continue;
+        }
+        out_rows.append(r);
+    }
+    return out_rows.size() - before;
+}
+
+QVector<std::shared_ptr<TextChatData>>
+LocalDb::RowToTextChatData(const MsgRow& row, int self_uid) {
+    QVector<std::shared_ptr<TextChatData>> out;
+
+    int from_uid = (row.direction == 1) ? self_uid : row.peer_uid;
+    int to_uid   = (row.direction == 1) ? row.peer_uid : self_uid;
+
+    QJsonDocument doc = QJsonDocument::fromJson(row.content.toUtf8());
+    if (doc.isNull()) {
+        qWarning() << "RowToTextChatData: content parse failed, msg_db_id="
+                   << row.msg_db_id;
+        return out;
+    }
+
+    if (row.msg_type == MSG_TYPE_TEXT) {
+        // Legacy: server stores text content as a JSON array of {msgid, content}.
+        if (!doc.isArray()) {
+            qWarning() << "RowToTextChatData: text content is not array, msg_db_id="
+                       << row.msg_db_id;
+            return out;
+        }
+        const QJsonArray arr = doc.array();
+        for (const QJsonValue& bv : arr) {
+            if (!bv.isObject()) continue;
+            QJsonObject bo = bv.toObject();
+            auto td = std::make_shared<TextChatData>(
+                bo["msgid"].toString(), bo["content"].toString(), from_uid, to_uid);
+            td->_msg_db_id = row.msg_db_id;
+            td->_send_time = row.send_time;
+            out.append(td);
+        }
+        return out;
+    }
+
+    // File message: content is a single object {msgid, file_id, ...}
+    if (!doc.isObject()) {
+        qWarning() << "RowToTextChatData: file content is not object, msg_db_id="
+                   << row.msg_db_id;
+        return out;
+    }
+    QJsonObject fo = doc.object();
+    auto td = std::make_shared<TextChatData>(
+        fo["msgid"].toString(),
+        row.msg_type,
+        from_uid, to_uid,
+        fo["file_id"].toString(),
+        fo["file_name"].toString(),
+        static_cast<qint64>(fo["file_size"].toDouble()));
+    td->_msg_db_id = row.msg_db_id;
+    td->_send_time = row.send_time;
+
+    // Prefer local_files (authoritative) over a filesystem probe; fall back
+    // to GetCachedPath for pre-C.4b cache files that never got recorded.
+    FileRow frow;
+    if (LocalDb::Inst().GetFile(td->_file_id, frow)
+        && frow.download_status == 2
+        && !frow.local_path.isEmpty()
+        && QFile::exists(frow.local_path)) {
+        td->_local_path = frow.local_path;
+    } else {
+        QString cached = FileMgr::GetInstance()->GetCachedPath(
+            td->_file_id, td->_file_name);
+        if (!cached.isEmpty()) td->_local_path = cached;
+    }
+    out.append(td);
+    return out;
 }

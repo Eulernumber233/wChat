@@ -26,21 +26,17 @@ void UserMgr::SetUserSession(int uid, std::shared_ptr<CSession> session)
 
 void UserMgr::RmvUserSession(int uid, std::string session_id)
 {
-	//{
-	//	std::lock_guard<std::mutex> lock(_session_mtx);
-	//	auto iter = _uid_to_session.find(uid);
-	//	if (iter == _uid_to_session.end()) {
-	//		return;
-	//	}
+	std::lock_guard<std::mutex> lock(_session_mtx);
+	auto iter = _uid_to_session.find(uid);
+	if (iter == _uid_to_session.end()) {
+		return;
+	}
 
-	//	auto session_id_ = iter->second->GetSessionId();
-	//	//不相等说明是其他地方登录了
-	//	if (session_id_ != session_id) {
-	//		return;
-	//	}
-	//	_uid_to_session.erase(uid);
-	//}
-
+	// 鍙Щ闄ゅ尮閰嶇殑 session锛岄槻姝㈣鍒犳柊鐧诲綍宸茶鐩栫殑 session
+	if (iter->second->GetSessionId() != session_id) {
+		return;
+	}
+	_uid_to_session.erase(uid);
 }
 
 UserMgr::UserMgr()

@@ -47,7 +47,7 @@ struct TableStruct_message_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[21]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[23]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -91,6 +91,12 @@ extern GetVarifyReqDefaultTypeInternal _GetVarifyReq_default_instance_;
 class GetVarifyRsp;
 class GetVarifyRspDefaultTypeInternal;
 extern GetVarifyRspDefaultTypeInternal _GetVarifyRsp_default_instance_;
+class KickUserReq;
+class KickUserReqDefaultTypeInternal;
+extern KickUserReqDefaultTypeInternal _KickUserReq_default_instance_;
+class KickUserRsp;
+class KickUserRspDefaultTypeInternal;
+extern KickUserRspDefaultTypeInternal _KickUserRsp_default_instance_;
 class LoginReq;
 class LoginReqDefaultTypeInternal;
 extern LoginReqDefaultTypeInternal _LoginReq_default_instance_;
@@ -132,6 +138,8 @@ template<> ::message::GetChatServerReq* Arena::CreateMaybeMessage<::message::Get
 template<> ::message::GetChatServerRsp* Arena::CreateMaybeMessage<::message::GetChatServerRsp>(Arena*);
 template<> ::message::GetVarifyReq* Arena::CreateMaybeMessage<::message::GetVarifyReq>(Arena*);
 template<> ::message::GetVarifyRsp* Arena::CreateMaybeMessage<::message::GetVarifyRsp>(Arena*);
+template<> ::message::KickUserReq* Arena::CreateMaybeMessage<::message::KickUserReq>(Arena*);
+template<> ::message::KickUserRsp* Arena::CreateMaybeMessage<::message::KickUserRsp>(Arena*);
 template<> ::message::LoginReq* Arena::CreateMaybeMessage<::message::LoginReq>(Arena*);
 template<> ::message::LoginRsp* Arena::CreateMaybeMessage<::message::LoginRsp>(Arena*);
 template<> ::message::RplyFriendReq* Arena::CreateMaybeMessage<::message::RplyFriendReq>(Arena*);
@@ -2979,6 +2987,309 @@ class TextChatMsgRsp PROTOBUF_FINAL :
 };
 // -------------------------------------------------------------------
 
+class KickUserReq PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:message.KickUserReq) */ {
+ public:
+  inline KickUserReq() : KickUserReq(nullptr) {}
+  virtual ~KickUserReq();
+
+  KickUserReq(const KickUserReq& from);
+  KickUserReq(KickUserReq&& from) noexcept
+    : KickUserReq() {
+    *this = ::std::move(from);
+  }
+
+  inline KickUserReq& operator=(const KickUserReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline KickUserReq& operator=(KickUserReq&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const KickUserReq& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const KickUserReq* internal_default_instance() {
+    return reinterpret_cast<const KickUserReq*>(
+               &_KickUserReq_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    17;
+
+  friend void swap(KickUserReq& a, KickUserReq& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(KickUserReq* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(KickUserReq* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline KickUserReq* New() const final {
+    return CreateMaybeMessage<KickUserReq>(nullptr);
+  }
+
+  KickUserReq* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<KickUserReq>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const KickUserReq& from);
+  void MergeFrom(const KickUserReq& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(KickUserReq* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "message.KickUserReq";
+  }
+  protected:
+  explicit KickUserReq(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_message_2eproto);
+    return ::descriptor_table_message_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kReasonFieldNumber = 2,
+    kUidFieldNumber = 1,
+  };
+  // string reason = 2;
+  void clear_reason();
+  const std::string& reason() const;
+  void set_reason(const std::string& value);
+  void set_reason(std::string&& value);
+  void set_reason(const char* value);
+  void set_reason(const char* value, size_t size);
+  std::string* mutable_reason();
+  std::string* release_reason();
+  void set_allocated_reason(std::string* reason);
+  private:
+  const std::string& _internal_reason() const;
+  void _internal_set_reason(const std::string& value);
+  std::string* _internal_mutable_reason();
+  public:
+
+  // int32 uid = 1;
+  void clear_uid();
+  ::PROTOBUF_NAMESPACE_ID::int32 uid() const;
+  void set_uid(::PROTOBUF_NAMESPACE_ID::int32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::int32 _internal_uid() const;
+  void _internal_set_uid(::PROTOBUF_NAMESPACE_ID::int32 value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:message.KickUserReq)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr reason_;
+  ::PROTOBUF_NAMESPACE_ID::int32 uid_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_message_2eproto;
+};
+// -------------------------------------------------------------------
+
+class KickUserRsp PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:message.KickUserRsp) */ {
+ public:
+  inline KickUserRsp() : KickUserRsp(nullptr) {}
+  virtual ~KickUserRsp();
+
+  KickUserRsp(const KickUserRsp& from);
+  KickUserRsp(KickUserRsp&& from) noexcept
+    : KickUserRsp() {
+    *this = ::std::move(from);
+  }
+
+  inline KickUserRsp& operator=(const KickUserRsp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline KickUserRsp& operator=(KickUserRsp&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const KickUserRsp& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const KickUserRsp* internal_default_instance() {
+    return reinterpret_cast<const KickUserRsp*>(
+               &_KickUserRsp_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    18;
+
+  friend void swap(KickUserRsp& a, KickUserRsp& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(KickUserRsp* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(KickUserRsp* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline KickUserRsp* New() const final {
+    return CreateMaybeMessage<KickUserRsp>(nullptr);
+  }
+
+  KickUserRsp* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<KickUserRsp>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const KickUserRsp& from);
+  void MergeFrom(const KickUserRsp& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(KickUserRsp* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "message.KickUserRsp";
+  }
+  protected:
+  explicit KickUserRsp(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_message_2eproto);
+    return ::descriptor_table_message_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kErrorFieldNumber = 1,
+    kWasOnlineFieldNumber = 2,
+  };
+  // int32 error = 1;
+  void clear_error();
+  ::PROTOBUF_NAMESPACE_ID::int32 error() const;
+  void set_error(::PROTOBUF_NAMESPACE_ID::int32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::int32 _internal_error() const;
+  void _internal_set_error(::PROTOBUF_NAMESPACE_ID::int32 value);
+  public:
+
+  // bool was_online = 2;
+  void clear_was_online();
+  bool was_online() const;
+  void set_was_online(bool value);
+  private:
+  bool _internal_was_online() const;
+  void _internal_set_was_online(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:message.KickUserRsp)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::int32 error_;
+  bool was_online_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_message_2eproto;
+};
+// -------------------------------------------------------------------
+
 class FileUploadDoneReq PROTOBUF_FINAL :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:message.FileUploadDoneReq) */ {
  public:
@@ -3021,7 +3332,7 @@ class FileUploadDoneReq PROTOBUF_FINAL :
                &_FileUploadDoneReq_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    17;
+    19;
 
   friend void swap(FileUploadDoneReq& a, FileUploadDoneReq& b) {
     a.Swap(&b);
@@ -3201,7 +3512,7 @@ class FileUploadDoneRsp PROTOBUF_FINAL :
                &_FileUploadDoneRsp_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    18;
+    20;
 
   friend void swap(FileUploadDoneRsp& a, FileUploadDoneRsp& b) {
     a.Swap(&b);
@@ -3338,7 +3649,7 @@ class FileDownloadAuthReq PROTOBUF_FINAL :
                &_FileDownloadAuthReq_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    19;
+    21;
 
   friend void swap(FileDownloadAuthReq& a, FileDownloadAuthReq& b) {
     a.Swap(&b);
@@ -3511,7 +3822,7 @@ class FileDownloadAuthRsp PROTOBUF_FINAL :
                &_FileDownloadAuthRsp_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    20;
+    22;
 
   friend void swap(FileDownloadAuthRsp& a, FileDownloadAuthRsp& b) {
     a.Swap(&b);
@@ -5411,6 +5722,136 @@ TextChatMsgRsp::textmsgs() const {
 
 // -------------------------------------------------------------------
 
+// KickUserReq
+
+// int32 uid = 1;
+inline void KickUserReq::clear_uid() {
+  uid_ = 0;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 KickUserReq::_internal_uid() const {
+  return uid_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 KickUserReq::uid() const {
+  // @@protoc_insertion_point(field_get:message.KickUserReq.uid)
+  return _internal_uid();
+}
+inline void KickUserReq::_internal_set_uid(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  
+  uid_ = value;
+}
+inline void KickUserReq::set_uid(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  _internal_set_uid(value);
+  // @@protoc_insertion_point(field_set:message.KickUserReq.uid)
+}
+
+// string reason = 2;
+inline void KickUserReq::clear_reason() {
+  reason_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& KickUserReq::reason() const {
+  // @@protoc_insertion_point(field_get:message.KickUserReq.reason)
+  return _internal_reason();
+}
+inline void KickUserReq::set_reason(const std::string& value) {
+  _internal_set_reason(value);
+  // @@protoc_insertion_point(field_set:message.KickUserReq.reason)
+}
+inline std::string* KickUserReq::mutable_reason() {
+  // @@protoc_insertion_point(field_mutable:message.KickUserReq.reason)
+  return _internal_mutable_reason();
+}
+inline const std::string& KickUserReq::_internal_reason() const {
+  return reason_.Get();
+}
+inline void KickUserReq::_internal_set_reason(const std::string& value) {
+  
+  reason_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void KickUserReq::set_reason(std::string&& value) {
+  
+  reason_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:message.KickUserReq.reason)
+}
+inline void KickUserReq::set_reason(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  reason_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:message.KickUserReq.reason)
+}
+inline void KickUserReq::set_reason(const char* value,
+    size_t size) {
+  
+  reason_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:message.KickUserReq.reason)
+}
+inline std::string* KickUserReq::_internal_mutable_reason() {
+  
+  return reason_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* KickUserReq::release_reason() {
+  // @@protoc_insertion_point(field_release:message.KickUserReq.reason)
+  return reason_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void KickUserReq::set_allocated_reason(std::string* reason) {
+  if (reason != nullptr) {
+    
+  } else {
+    
+  }
+  reason_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), reason,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:message.KickUserReq.reason)
+}
+
+// -------------------------------------------------------------------
+
+// KickUserRsp
+
+// int32 error = 1;
+inline void KickUserRsp::clear_error() {
+  error_ = 0;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 KickUserRsp::_internal_error() const {
+  return error_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 KickUserRsp::error() const {
+  // @@protoc_insertion_point(field_get:message.KickUserRsp.error)
+  return _internal_error();
+}
+inline void KickUserRsp::_internal_set_error(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  
+  error_ = value;
+}
+inline void KickUserRsp::set_error(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  _internal_set_error(value);
+  // @@protoc_insertion_point(field_set:message.KickUserRsp.error)
+}
+
+// bool was_online = 2;
+inline void KickUserRsp::clear_was_online() {
+  was_online_ = false;
+}
+inline bool KickUserRsp::_internal_was_online() const {
+  return was_online_;
+}
+inline bool KickUserRsp::was_online() const {
+  // @@protoc_insertion_point(field_get:message.KickUserRsp.was_online)
+  return _internal_was_online();
+}
+inline void KickUserRsp::_internal_set_was_online(bool value) {
+  
+  was_online_ = value;
+}
+inline void KickUserRsp::set_was_online(bool value) {
+  _internal_set_was_online(value);
+  // @@protoc_insertion_point(field_set:message.KickUserRsp.was_online)
+}
+
+// -------------------------------------------------------------------
+
 // FileUploadDoneReq
 
 // string file_id = 1;
@@ -5798,6 +6239,10 @@ inline void FileDownloadAuthRsp::set_error(::PROTOBUF_NAMESPACE_ID::int32 value)
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

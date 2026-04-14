@@ -101,6 +101,7 @@ enum MSG_IDS {
 	ID_PULL_MESSAGES_RSP      = 1028,
 	ID_GET_DOWNLOAD_TOKEN_REQ = 1029,
 	ID_GET_DOWNLOAD_TOKEN_RSP = 1030,
+	ID_NOTIFY_KICK_USER       = 1031, // Server→Client: 你被踢下线了（重复登录等）
 
 	// File coordination
 	ID_FILE_UPLOAD_REQ      = 1101,
@@ -144,4 +145,7 @@ private:
 #define LOCK_COUNT "lockcount"
 #define FILE_UPLOAD_TOKEN_PREFIX    "file_upload_token:"
 #define FILE_DOWNLOAD_TOKEN_PREFIX  "file_download_token:"
-#define LOCK_COUNT "lockcount"
+
+// 分布式锁超时参数（秒）
+#define LOCK_TIME_OUT     5   // 锁自动过期时间（防死锁）
+#define ACQUIRE_TIME_OUT  3   // 获取锁最大等待时间

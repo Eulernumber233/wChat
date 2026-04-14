@@ -17,6 +17,8 @@ private:
 	LogicSystem();
 	void DealMsg();
 	void RegisterCallBacks();
+	// 校验 session 是否仍然合法（被动踢除兜底）
+	bool ValidateSession(std::shared_ptr<CSession> session);
 	void LoginHandler(std::shared_ptr<CSession> session, const short &msg_id, const std::string &msg_data);
 	void SearchInfo(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
 	// �������Ӻ�������

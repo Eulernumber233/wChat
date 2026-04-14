@@ -3,7 +3,12 @@
 
 #include <QString>
 #include <QVector>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <memory>
 #include <QtSql/QSqlDatabase>
+
+struct TextChatData;
 
 // Per-user SQLite persistence for chat messages and file metadata.
 //
@@ -72,6 +77,34 @@ public:
     // ---- Sync state (per-peer high-water mark of synced msg_db_id) ----
     qint64 GetLastSyncedMsgId(int peer_uid);   // 0 when no row
     bool   SetLastSyncedMsgId(int peer_uid, qint64 msg_id);
+
+    // ---- Helpers: MsgRow <-> TextChatData / server JSON ----
+    //
+    // Build a MsgRow from the per-message JSON returned by the server (either
+    // via ID_PULL_MESSAGES_RSP or from realtime text/file notifications). The
+    // caller supplies self_uid so we can set `direction` correctly.
+    //
+    // For text messages the server stores `content` as a JSON array of
+    // {msgid, content} bubbles. `out_rows` therefore may get MORE entries
+    // than `in_msgs.size()`: we fan text-array rows into separate MsgRows
+    // keyed by msg_db_id * 1000 + bubble_index to stay unique... no, we
+    // actually keep each DB row as ONE MsgRow and let the UI layer decide
+    // how to render multi-bubble text content. Stage C.4b takes the "one
+    // DB row == one bubble" shortcut: text arrays of length > 1 still
+    // become a single MsgRow with the whole array as content, and the UI
+    // renders only the first bubble. This is a known stage-C limitation
+    // documented in C.6.
+    //
+    // Returns the number of rows appended to `out_rows`.
+    static int RowsFromServerMessages(const QJsonArray& in_msgs,
+                                      int self_uid,
+                                      QVector<MsgRow>& out_rows);
+
+    // Convert a single MsgRow into zero-or-more TextChatData records suitable
+    // for ChatPage::AppendChatMsg. Text rows with multi-bubble content are
+    // fanned out into multiple TextChatData entries; file rows produce one.
+    static QVector<std::shared_ptr<TextChatData>> RowToTextChatData(
+        const MsgRow& row, int self_uid);
 
 private:
     LocalDb() = default;

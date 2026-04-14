@@ -37,6 +37,11 @@ public:
     // Check if a file is already cached locally. Returns local path or empty string.
     QString GetCachedPath(const QString& file_id, const QString& file_name);
 
+    // Like GetCachedPath but returns the target path whether or not the file
+    // exists. Used by ChatDialog when copying a sender's source file into
+    // the per-user cache at upload time.
+    QString BuildCachedPath(const QString& file_id, const QString& file_name);
+
     // Get cache directory path (empty until Init() is called).
     QString GetCacheDir();
 

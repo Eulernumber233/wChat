@@ -1,7 +1,9 @@
 #include "RedisMgr.h"
 #include "core.h"
 #include "ConfigMgr.h"
-//#include "DistLock.h"
+#include <random>
+#include <sstream>
+#include <iomanip>
 RedisMgr::RedisMgr() {
 	auto& gCfgMgr = ConfigMgr::Inst();
 	auto host = gCfgMgr["Redis"]["Host"];
@@ -373,39 +375,95 @@ bool RedisMgr::ExistsKey(const std::string &key)
 }
 
 
+// 生成随机标识符，用于锁的归属判断
+static std::string GenerateLockId() {
+	static thread_local std::mt19937 rng(std::random_device{}());
+	std::uniform_int_distribution<uint64_t> dist;
+	std::ostringstream oss;
+	oss << std::hex << dist(rng) << dist(rng);
+	return oss.str();
+}
+
 std::string RedisMgr::acquireLock(const std::string& lockName,
 	int lockTimeout, int acquireTimeout) {
 
-	//auto connect = _con_pool->getConnection();
-	//if (connect == nullptr) {
-	//	return "";
-	//}
+	auto connect = _con_pool->getConnection();
+	if (connect == nullptr) {
+		return "";
+	}
 
-	//Defer defer([&connect, this]() {
-	//	_con_pool->returnConnection(connect);
-	//});
+	Defer defer([&connect, this]() {
+		_con_pool->returnConnection(connect);
+	});
 
-	//return DistLock::Inst().acquireLock(connect, lockName, lockTimeout, acquireTimeout);
+	std::string identifier = GenerateLockId();
+	auto deadline = std::chrono::steady_clock::now() +
+		std::chrono::seconds(acquireTimeout);
+
+	while (std::chrono::steady_clock::now() < deadline) {
+		// SET lockName identifier NX EX lockTimeout
+		auto reply = (redisReply*)redisCommand(connect,
+			"SET %s %s NX EX %d",
+			lockName.c_str(), identifier.c_str(), lockTimeout);
+
+		if (reply == nullptr) {
+			return "";
+		}
+
+		if (reply->type == REDIS_REPLY_STATUS &&
+			(strcmp(reply->str, "OK") == 0)) {
+			freeReplyObject(reply);
+			std::cout << "acquireLock: got lock [" << lockName << "]" << std::endl;
+			return identifier;
+		}
+
+		freeReplyObject(reply);
+		// 短暂等待后重试
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
+
+	std::cout << "acquireLock: timeout for lock [" << lockName << "]" << std::endl;
 	return "";
 }
 
 bool RedisMgr::releaseLock(const std::string& lockName,
 	const std::string& identifier) {
-	//if (identifier.empty()) {
-	//	return true;
-	//}
-	//auto connect = _con_pool->getConnection();
-	//if (connect == nullptr) {
-	//	return false;
-	//}
+	if (identifier.empty()) {
+		return true;
+	}
 
+	auto connect = _con_pool->getConnection();
+	if (connect == nullptr) {
+		return false;
+	}
 
-	//Defer defer([&connect, this]() {
-	//	_con_pool->returnConnection(connect);
-	//	});
+	Defer defer([&connect, this]() {
+		_con_pool->returnConnection(connect);
+	});
 
-	//return DistLock::Inst().releaseLock(connect, lockName, identifier);
-	return false;
+	// Lua 脚本：只有持有者才能释放锁（CAS 语义）
+	const char* lua_script =
+		"if redis.call('get', KEYS[1]) == ARGV[1] then "
+		"  return redis.call('del', KEYS[1]) "
+		"else "
+		"  return 0 "
+		"end";
+
+	auto reply = (redisReply*)redisCommand(connect,
+		"EVAL %s 1 %s %s",
+		lua_script, lockName.c_str(), identifier.c_str());
+
+	if (reply == nullptr) {
+		return false;
+	}
+
+	bool released = (reply->type == REDIS_REPLY_INTEGER && reply->integer == 1);
+	freeReplyObject(reply);
+
+	if (released) {
+		std::cout << "releaseLock: released [" << lockName << "]" << std::endl;
+	}
+	return released;
 }
 
 void RedisMgr::IncreaseCount(std::string server_name)

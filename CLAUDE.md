@@ -133,6 +133,12 @@ wChat/
 | 1019 | `ID_NOTIFY_TEXT_CHAT_MSG_REQ` | ChatServer → C（接收方） | TCP |
 | 1021 | `ID_NOTIFY_OFF_LINE_REQ` | ChatServer → C | TCP |
 | 1023 / 1024 | 心跳 请求 / 回复 | C ↔ ChatServer | TCP |
+| 1025 / 1026 | `ID_PULL_CONV_SUMMARY` 请求 / 回包 | C ↔ ChatServer | TCP（登录后自动拉一次，返回每个会话的 last_msg/unread） |
+| 1027 / 1028 | `ID_PULL_MESSAGES` 请求 / 回包 | C ↔ ChatServer | TCP（打开会话时拉 30 条，或滚屏加载更老一页） |
+| 1029 / 1030 | `ID_GET_DOWNLOAD_TOKEN` 请求 / 回包 | C ↔ ChatServer | TCP（历史文件消息的按需下载凭证） |
+| 1101 / 1102 | 文件上传 请求 / 回包 | C ↔ ChatServer | TCP |
+| 1103 | `ID_FILE_NOTIFY_COMPLETE` | ChatServer → C（发送方） | TCP（上传完成 + 带 msg_db_id 让发送方写 LocalDb） |
+| 1105 | `ID_FILE_MSG_NOTIFY` | ChatServer → C（接收方） | TCP |
 
 > **改协议时必须同步三处**：客户端 `global.h` 的枚举、ChatServer 的 `LogicSystem::RegisterCallBacks()` 注册、proto 文件（如果涉及跨服 gRPC 字段）。
 
@@ -147,6 +153,16 @@ wChat/
 - `chat_conversations(id, user_a_id, user_b_id, last_msg_id, update_time)` — 联合索引 `(user_a_id, user_b_id)`
 - `chat_messages(id, conversation_id, sender_id, receiver_id, content, msg_type, status, send_time, read_time)` — 外键到 `chat_conversations.id`，按 `conversation_id` 索引
 - `friend_apply(from_uid, to_uid, status, back, ...)` — 申请表，`status=1` 表示已同意
+
+**客户端本地 SQLite**（阶段 C 引入，路径 `<AppDataLocation>/wChat/users/<uid>/db/chat.sqlite`，通过 `LocalDb` 单例访问）：
+
+- `local_messages(msg_db_id PK, peer_uid, direction, msg_type, content, send_time, status)` — 服务端 `chat_messages.id` 做主键天然去重；`content` 原样存服务端 JSON（文本是 `[{msgid,content}, ...]` 数组，文件是单对象）
+- `local_files(file_id PK, file_name, file_size, file_type, local_path, download_status, md5, last_access)` — 文件元数据与本地缓存路径,`download_status=2` 表示已下载完成
+- `sync_state(peer_uid PK, last_synced_msg_id)` — 每个会话已同步到的最大 `msg_db_id`
+
+**登录后的加载顺序**:`SetUserInfo` → `FileMgr::Init()` → `LocalDb::Open()` → 发 `ID_PULL_CONV_SUMMARY_REQ`。打开某个会话时:先从 LocalDb `LoadRecent(peer, 30)` 渲染,再无条件发 `ID_PULL_MESSAGES_REQ { before_msg_db_id: 0, limit: 30 }` 拉服务端最新一页,收到响应后 `UpsertMessages` + 重建 UI。
+
+**实时消息入本地库的条件**:只在**同服路径**下服务端会在 `ID_NOTIFY_TEXT_CHAT_MSG_REQ` / `ID_FILE_NOTIFY_COMPLETE` / `ID_FILE_MSG_NOTIFY` 的 JSON 里带 `msg_db_id` 字段,客户端 `PersistTextMsgToLocalDb` / `slot_file_upload_persisted` / `slot_file_msg_notify` 才写库。跨服(通过 `ChatGrpcClient::NotifyTextChatMsg` 转发)时 proto 没有这个字段,客户端收到 `msg_db_id=0`,**不写** LocalDb,等下次 `SetUserInfo` 触发的 `ID_PULL_MESSAGES_REQ` 把真实 id 补回来。
 
 **`chat_messages.msg_type` 取值**（客户端 `global.h` 的 `MsgType` 与 ChatServer `core.h` 的 `MsgType` 必须同步，见 `docs/FileServer_Design.md` §2.2）：
 
@@ -170,7 +186,7 @@ wChat/
 
 ## 8. 跨服务调用链速查（修改任何业务前先看对应链）
 
-### 8.1 登录
+### 8.1 登录 + 懒加载
 ```
 Client(LoginDialog)
   └─HTTP POST /user_login─▶ GateServer::LogicSystem(post_handlers)
@@ -182,11 +198,32 @@ Client(LoginDialog)
 Client(TcpMgr) ──TCP connect──▶ ChatServer
   ──首包 ID_CHAT_LOGIN {uid, token}──▶ ChatServer::LogicSystem::LoginHandler
        ├─ Redis 校验 token
-       ├─ MysqlMgr 加载 base_info / friend_list / apply_list / 历史消息
+       ├─ MysqlMgr 加载 base_info / friend_list / apply_list（不含历史消息）
        ├─ Redis 写 useripprefix_<uid> = self_server_name
        ├─ UserMgr::SetUserSession(uid, session)
-       └─ 回包 ID_CHAT_LOGIN_RSP
-Client ── 跳转主界面 ChatDialog
+       └─ 回包 ID_CHAT_LOGIN_RSP（只含好友基本信息,不含 text_array）
+Client:
+  ├─ AppPaths::SetCurrentUser(uid) → FileMgr::Init() → LocalDb::Open()
+  ├─ 跳转主界面 ChatDialog
+  └─ 立即发 ID_PULL_CONV_SUMMARY_REQ(uid)
+       └─▶ ChatServer::PullConvSummaryHandler → GetConvSummaries SQL
+       ◀── ID_PULL_CONV_SUMMARY_RSP {summaries: [{peer, last_msg, unread}, ...]}
+Client: UserMgr::ApplyConvSummaries (填好友的 last_msg / unread_count)
+
+打开某个会话:
+Client(ChatPage::SetUserInfo)
+  ├─ LocalDb::LoadRecent(peer, 30) → 瞬时渲染（首屏）
+  └─ ID_PULL_MESSAGES_REQ {peer, before=0, limit=30}
+       └─▶ ChatServer::PullMessagesHandler → GetMessagesPage SQL
+       ◀── ID_PULL_MESSAGES_RSP {messages, has_more}
+Client: LocalDb::UpsertMessages → RefreshFromLocalDb（增量合并到本地库后重建 UI）
+
+历史文件消息的按需下载:
+ChatPage::AppendChatMsg (msg_type=IMAGE, _local_path 空)
+  └─ ID_GET_DOWNLOAD_TOKEN_REQ {uid, file_id}
+       └─▶ ChatServer::GetDownloadTokenHandler → UserCanAccessFile + Redis mint token
+       ◀── ID_GET_DOWNLOAD_TOKEN_RSP {file_host, file_port, file_token}
+  └─ FileMgr::StartDownload → FileServer TCP → 写 local_files → PictureBubble
 ```
 
 ### 8.2 文本消息发送（含跨服务器路由）
@@ -194,14 +231,15 @@ Client ── 跳转主界面 ChatDialog
 Client A: ChatPage::on_send_btn_clicked
   └─TcpMgr 发 ID_TEXT_CHAT_MSG_REQ {fromuid, touid, msg}─▶
 ChatServer A::LogicSystem::DealChatTextMsg
-  ├─ MysqlMgr::AddMessage（先持久化）
+  ├─ MysqlMgr::AddMessage（持久化,返回 msg_db_id）
   ├─ Redis Get useripprefix_<touid>
   ├─ 同服(==self_name)? ──▶ UserMgr::GetSession(touid)->Send(ID_NOTIFY_TEXT_CHAT_MSG_REQ)
   └─ 跨服?            ──▶ ChatGrpcClient::NotifyTextChatMsg(peer_addr, ...)
                               └─▶ ChatServer B::ChatServiceImpl::NotifyTextChatMsg
                                      └─ UserMgr::GetSession(touid)->Send(ID_NOTIFY_TEXT_CHAT_MSG_REQ)
-  └─ 回包 ID_TEXT_CHAT_MSG_RSP 给 Client A
-Client B: TcpMgr 收 ID_NOTIFY_TEXT_CHAT_MSG_REQ → emit sig_text_chat_msg → ChatDialog 更新 list/page
+  └─ 回包 ID_TEXT_CHAT_MSG_RSP（含 msg_db_id）给 Client A
+Client A: sig_text_chat_msg_rsp → PersistTextMsgToLocalDb（写 local_messages）
+Client B: TcpMgr 收 ID_NOTIFY_TEXT_CHAT_MSG_REQ（含 msg_db_id）→ PersistTextMsgToLocalDb → ChatDialog 更新 list/page
 ```
 
 > **修改消息流时的检查清单**（避免改一处坏全局）：
@@ -209,7 +247,7 @@ Client B: TcpMgr 收 ID_NOTIFY_TEXT_CHAT_MSG_REQ → emit sig_text_chat_msg → 
 > 2. ID_TEXT_CHAT_MSG_REQ 的字段是否变？→ 同步改 `ChatGrpcClient` / `ChatServiceImpl` / `message.proto`，否则跨服转发会丢字段。
 > 3. 持久化字段是否变？→ 同步改 `MysqlDao::AddMessage` SQL 与 `chat_messages` 表结构。
 > 4. 接收端 `Client::TcpMgr` 的 `handlers[ID_NOTIFY_TEXT_CHAT_MSG_REQ]` 是否需要更新解析。
-> 5. 历史消息加载路径（登录时 `GetMessages`）是否也需要兼容新字段。
+> 5. 历史消息加载路径（`GetMessagesPage` + 客户端 `LocalDb::RowToTextChatData`）是否也需要兼容新字段。
 
 ### 8.3 加好友 / 同意好友
 - 加好友：`Client → ChatServer A (AddFriendApply) → MysqlMgr 写 friend_apply → Redis 查对方所在服务器 → 同服 Session 推 / 跨服 gRPC NotifyAddFriend → Client B 收到 ID_NOTIFY_ADD_FRIEND_REQ → ApplyFriendPage 显示`

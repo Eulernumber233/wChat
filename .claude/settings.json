@@ -4,7 +4,21 @@
       "Bash(ls wChat_server/wChat_server_tcp/*.h)",
       "Bash(ls wChat_server/wChat_server_tcp/*.sln wChat_server/wChat_server_tcp/*.vcxproj)",
       "Bash(ls wChat_client/*.pro wChat_client/*.vcxproj)",
-      "Bash(ls wChat_client/*.vcxproj.filters)"
+      "Bash(ls wChat_client/*.vcxproj.filters)",
+      "Bash(xargs grep:*)",
+      "Bash(cmd //c generate_pb.bat)",
+      "Bash(cmd.exe /c \"generate_pb.bat\")",
+      "Bash(cmd.exe /c \"cd /d D:\\\\CPP\\\\network\\\\wChat\\\\proto && generate_pb.bat\")",
+      "Read(//d/library/grpc/visualpro/third_party/protobuf/Debug/**)",
+      "Bash(\"D:/library/grpc/visualpro/third_party/protobuf/Debug/protoc.exe\" --cpp_out=. message.proto)",
+      "Bash(\"D:/library/grpc/visualpro/third_party/protobuf/Debug/protoc.exe\" -I=. --grpc_out=. \"--plugin=protoc-gen-grpc=D:/library/grpc/visualpro/Debug/grpc_cpp_plugin.exe\" message.proto)",
+      "Bash(python -c \"print\\('hello'\\)\")",
+      "Bash(ls -d d:/CPP/network/wChat/wChat_server/wChat_server_tcp*/)",
+      "Bash(python -c ':*)",
+      "Bash(wc -l /d/CPP/network/wChat/wChat_server/wChat_server_tcp/*.cpp /d/CPP/network/wChat/wChat_server/wChat_server_tcp/*.h)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

@@ -19,10 +19,21 @@ public:
     explicit ChatPage(QWidget *parent = nullptr);
     ~ChatPage();
     void SetUserInfo(std::shared_ptr<UserInfo> user_info);
+    // STAGE-C: re-render the current conversation from LocalDb WITHOUT
+    // triggering a new ID_PULL_MESSAGES_REQ. Used by ChatDialog after
+    // a pull response is written to the DB, to avoid a pull → render →
+    // pull → render infinite loop.
+    void RefreshFromLocalDb();
     void AppendChatMsg(std::shared_ptr<TextChatData> msg);
     void AppendImageBubble(const QString& image_path, ChatRole role,
                            const QString& name, const QString& icon);
     QString PopPendingFilePath();
+
+    // STAGE-C: accessor used by ChatDialog when routing pulled messages
+    // to the currently-open conversation.
+    int CurrentPeerUid() const {
+        return _user_info ? _user_info->_uid : 0;
+    }
 protected:
     void paintEvent(QPaintEvent *event);
 

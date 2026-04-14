@@ -6,6 +6,7 @@
 #include "usermgr.h"
 #include "tcpmgr.h"
 #include "filemgr.h"
+#include "localdb.h"
 #include <QUuid>
 #include <QPointer>
 #include <QFile>
@@ -160,11 +161,39 @@ void ChatPage::on_send_btn_clicked()
 void ChatPage::SetUserInfo(std::shared_ptr<UserInfo> user_info)
 {
     _user_info = user_info;
-    //设置ui界面
     ui->title_lb->setText(_user_info->_name);
+
+    // STAGE-C: first paint from LocalDb (instant). Then fire one
+    // ID_PULL_MESSAGES_REQ to reconcile with the server. The response
+    // lands in ChatDialog::slot_pull_messages_rsp, which must call
+    // RefreshFromLocalDb — NOT SetUserInfo — to avoid retriggering
+    // another pull request in an infinite loop.
+    RefreshFromLocalDb();
+
+    const int kPageSize = 30;
+    QJsonObject req;
+    req["uid"] = UserMgr::GetInstance()->GetUid();
+    req["peer_uid"] = user_info->_uid;
+    req["before_msg_db_id"] = 0; // 0 = newest page
+    req["limit"] = kPageSize;
+    QByteArray data = QJsonDocument(req).toJson(QJsonDocument::Compact);
+    emit TcpMgr::GetInstance()->sig_send_data(
+        ReqId::ID_PULL_MESSAGES_REQ, data);
+}
+
+void ChatPage::RefreshFromLocalDb()
+{
+    if (!_user_info) return;
     ui->chat_data_list->removeAllItem();
-    for(auto & msg : user_info->_chat_msgs){
-        AppendChatMsg(msg);
+
+    const int kPageSize = 30;
+    const int peer_uid = _user_info->_uid;
+    const int self_uid = UserMgr::GetInstance()->GetUid();
+
+    auto rows = LocalDb::Inst().LoadRecent(peer_uid, kPageSize);
+    for (const auto& row : rows) {
+        auto tds = LocalDb::RowToTextChatData(row, self_uid);
+        for (const auto& td : tds) AppendChatMsg(td);
     }
 }
 
@@ -232,21 +261,7 @@ void ChatPage::AppendChatMsg(std::shared_ptr<TextChatData> msg)
         return;
     }
 
-    // No routing info means the server didn't mint a download token — nothing
-    // we can do client-side. Leave placeholder.
-    if (msg->_file_token.isEmpty() || msg->_file_host.isEmpty()) {
-        return;
-    }
-
-    // Avoid re-issuing a download if one is already in flight for this msg
-    // (can happen if the user rapidly switches away and back).
-    //
-    // STAGE-A-NEXT: known UX gap — if the user switches chats while the
-    // download is in flight and comes back before it finishes, the new
-    // placeholder is shown but won't refresh until the user opens the chat
-    // once more (because the first lambda's itemGuard is null by then and
-    // this second entry sees _download_pending=true). The right fix needs
-    // a per-msg list of waiting bubbles; deferring until SQLite-era rework.
+    // Avoid re-issuing a download if one is already in flight for this msg.
     if (msg->_download_pending) {
         return;
     }
@@ -257,41 +272,72 @@ void ChatPage::AppendChatMsg(std::shared_ptr<TextChatData> msg)
     QPointer<ChatItemBase> itemGuard(pChatItem);
     QString target_file_id = msg->_file_id;
 
-    // Build a FileChatData for FileMgr::StartDownload.
-    auto file_data = std::make_shared<FileChatData>(
-        msg->_msg_id, msg->_file_id, msg->_file_name,
-        msg->_file_size, 0 /*image*/, msg->_from_uid, msg->_to_uid);
-    file_data->_file_host = msg->_file_host;
-    file_data->_file_port = msg->_file_port;
-    file_data->_file_token = msg->_file_token;
+    // Shared tail: once we have a valid download token, start FileMgr and
+    // wait for sig_download_done to swap the bubble in.
+    auto start_download_when_authed = [this, msg, itemGuard, role, target_file_id]() {
+        auto file_data = std::make_shared<FileChatData>(
+            msg->_msg_id, msg->_file_id, msg->_file_name,
+            msg->_file_size, 0 /*image*/, msg->_from_uid, msg->_to_uid);
+        file_data->_file_host = msg->_file_host;
+        file_data->_file_port = msg->_file_port;
+        file_data->_file_token = msg->_file_token;
 
-    // One-shot connection: disconnect as soon as our file_id matches, so
-    // unrelated downloads in the same session don't pile up handlers.
-    auto conn = std::make_shared<QMetaObject::Connection>();
-    *conn = connect(FileMgr::GetInstance().get(), &FileMgr::sig_download_done,
-                    this, [itemGuard, msg, target_file_id, role, conn]
-                    (QString dl_file_id, QString local_path, int error) {
-        if (dl_file_id != target_file_id) return;
-        QObject::disconnect(*conn);
+        auto conn = std::make_shared<QMetaObject::Connection>();
+        *conn = connect(FileMgr::GetInstance().get(), &FileMgr::sig_download_done,
+                        this, [itemGuard, msg, target_file_id, role, conn]
+                        (QString dl_file_id, QString local_path, int error) {
+            if (dl_file_id != target_file_id) return;
+            QObject::disconnect(*conn);
 
-        msg->_download_pending = false;
-        if (error != 0) {
-            qDebug() << "history image download failed: file_id=" << target_file_id
+            msg->_download_pending = false;
+            if (error != 0) {
+                qDebug() << "history image download failed: file_id=" << target_file_id
+                         << " error=" << error;
+                return;
+            }
+            msg->_local_path = local_path;
+            if (!itemGuard) return;
+            itemGuard->setWidget(new PictureBubble(QPixmap(local_path), role));
+        });
+
+        FileMgr::GetInstance()->StartDownload(file_data);
+    };
+
+    // Fast path: we already have routing info (e.g. realtime file_msg_notify
+    // delivered the token inline). Skip the extra roundtrip.
+    if (!msg->_file_token.isEmpty() && !msg->_file_host.isEmpty()) {
+        start_download_when_authed();
+        return;
+    }
+
+    // STAGE-C: history file message with no token (loaded from LocalDb).
+    // Ask the server to mint a one-shot download token on demand.
+    auto tok_conn = std::make_shared<QMetaObject::Connection>();
+    *tok_conn = connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_download_token_rsp,
+                        this, [msg, target_file_id, start_download_when_authed, tok_conn]
+                        (QString rsp_file_id, QString host, QString port,
+                         QString token, int error) {
+        if (rsp_file_id != target_file_id) return;
+        QObject::disconnect(*tok_conn);
+
+        if (error != 0 || token.isEmpty()) {
+            qDebug() << "get download token failed: file_id=" << target_file_id
                      << " error=" << error;
-            // Leave placeholder. STAGE-A-NEXT: could show "[下载失败]".
+            msg->_download_pending = false;
             return;
         }
-        msg->_local_path = local_path;
-
-        // If the user already left this chat, the ChatItemBase is gone; the
-        // next time they open the conversation AppendChatMsg will hit Case 1
-        // (local path exists) and render immediately. So we just bail here.
-        if (!itemGuard) return;
-
-        itemGuard->setWidget(new PictureBubble(QPixmap(local_path), role));
+        msg->_file_host = host;
+        msg->_file_port = port;
+        msg->_file_token = token;
+        start_download_when_authed();
     });
 
-    FileMgr::GetInstance()->StartDownload(file_data);
+    QJsonObject req;
+    req["uid"] = UserMgr::GetInstance()->GetUid();
+    req["file_id"] = msg->_file_id;
+    QByteArray data = QJsonDocument(req).toJson(QJsonDocument::Compact);
+    emit TcpMgr::GetInstance()->sig_send_data(
+        ReqId::ID_GET_DOWNLOAD_TOKEN_REQ, data);
 }
 
 QString ChatPage::PopPendingFilePath() {

@@ -48,6 +48,14 @@ QString FileMgr::GetCachedPath(const QString& file_id, const QString& file_name)
     return "";
 }
 
+QString FileMgr::BuildCachedPath(const QString& file_id, const QString& file_name) {
+    if (_cache_dir.isEmpty()) return "";
+    QString ext;
+    int dot = file_name.lastIndexOf('.');
+    if (dot >= 0) ext = file_name.mid(dot);
+    return _cache_dir + "/" + file_id + ext;
+}
+
 // =====================================================================
 // Upload
 // =====================================================================

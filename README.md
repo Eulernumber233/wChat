@@ -71,18 +71,25 @@ wChat/
 - `HttpMgr` — 与 GateServer 之间的 HTTP/JSON 请求
 - `TcpMgr` — 与 ChatServer 之间的 TCP 长连接、消息分发
 
-用户数据由 `UserMgr` 统一缓存（个人信息、好友列表、申请列表等）。
+本地数据管理：
+
+- `UserMgr` — 缓存当前登录用户的个人信息、好友列表、申请列表
+- `LocalDb` — 基于 SQLite 的本地消息持久化（`local_messages` / `local_files` / `sync_state` 三表），按用户隔离存储在 `<AppData>/wChat/users/<uid>/db/chat.sqlite`
+- `FileMgr` — 文件上传 / 下载管理，本地缓存目录 `<AppData>/wChat/users/<uid>/files/`
+- `AppPaths` — 按登录用户 uid 隔离的本地目录管理
 
 ## 主要业务流程
 
 系统已实现以下完整端到端流程，关键路径串联了 HTTP、gRPC、TCP、MySQL、Redis 多个组件：
 
-1. **登录** — 客户端 HTTP 登录 → GateServer 校验密码 → gRPC 请求 StatusServer 分配 ChatServer 与 Token → 客户端 TCP 连接 ChatServer → 服务端校验 Token、加载好友列表与历史消息 → 进入主界面
+1. **登录** — 客户端 HTTP 登录 → GateServer 校验密码 → gRPC 请求 StatusServer 分配 ChatServer 与 Token → 客户端 TCP 连接 ChatServer → 服务端校验 Token、加载好友列表（不含历史消息）→ 进入主界面 → 客户端立即请求会话摘要（`ID_PULL_CONV_SUMMARY`）
 2. **注册** — 邮箱验证码（VarifyServer + Redis）→ 用户信息写入 MySQL（存储过程生成 uid）
 3. **找回密码** — 邮箱验证码校验 → 更新 MySQL 中的密码
 4. **搜索好友** — Redis 缓存优先 + MySQL 回源 + 缓存回写
 5. **添加好友 / 同意申请** — 同服直接通过本地 Session 推送，跨服通过 gRPC 转发到对方所在的 ChatServer
 6. **消息发送** — 消息持久化到 MySQL，再通过 Session 或 gRPC 推送到接收方所在的 ChatServer
+7. **历史消息懒加载** — 打开会话时先从本地 SQLite 读取最近 30 条消息（瞬时渲染），再通过 `ID_PULL_MESSAGES` 向服务端拉取增量并写入本地库；历史文件消息通过 `ID_GET_DOWNLOAD_TOKEN` 按需获取一次性下载凭证后从 FileServer 下载
+8. **图片收发** — 发送方通过 ChatServer 获取上传凭证后直连 FileServer 上传，源文件同时 copy 到本地缓存；FileServer 通过 gRPC 通知 ChatServer 写入消息记录并推送接收方；接收方自动下载并替换占位气泡为图片
 
 ## 构建与运行
 
@@ -109,4 +116,4 @@ wChat/
 
 ## 项目状态
 
-当前实现已覆盖账户体系、好友体系与文字消息收发的完整链路，并支持多个 ChatServer 实例之间通过 gRPC 互通。后续可扩展方向包括：消息送达回执 / 已读状态、离线消息推送、图片与文件消息、群聊等。
+当前实现已覆盖账户体系、好友体系、文字与图片消息收发、历史消息懒加载与本地持久化的完整链路，并支持多个 ChatServer 实例之间通过 gRPC 互通。客户端通过 SQLite 实现消息本地镜像，登录时仅拉取会话摘要，打开会话时按需分页加载，离线期间收到的消息在下次登录后自动补齐。后续可扩展方向包括：消息送达回执 / 已读状态、大文件分片与断点续传、群聊等。

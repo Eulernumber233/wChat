@@ -2,6 +2,7 @@
 #include "RedisMgr.h"
 #include "MysqlMgr.h"
 #include "UserMgr.h"
+#include "CServer.h"
 
 ChatServiceImpl::ChatServiceImpl()
 {
@@ -123,8 +124,40 @@ Status ChatServiceImpl::NotifyTextChatMsg(::grpc::ServerContext* context, const 
 	return Status::OK;
 }
 
-void ChatServiceImpl::RegisterServer(std::shared_ptr<CServer> pServer) {
+Status ChatServiceImpl::NotifyKickUser(::grpc::ServerContext* context,
+	const KickUserReq* request, KickUserRsp* response)
+{
+	int uid = request->uid();
+	std::cout << "NotifyKickUser: received kick request for uid=" << uid
+		<< " reason=" << request->reason() << std::endl;
 
+	auto session = UserMgr::GetInstance()->GetSession(uid);
+	if (!session) {
+		// 用户不在本机或已下线
+		response->set_error(0);
+		response->set_was_online(false);
+		return Status::OK;
+	}
+
+	// 向旧客户端发送踢人通知 + 延迟 Close socket
+	Json::Value notify;
+	notify["error"] = ErrorCodes::Success;
+	notify["reason"] = request->reason();
+	std::string sid = session->GetSessionId();
+	session->SendAndClose(notify.toStyledString(), ID_NOTIFY_KICK_USER);
+
+	// 移除 UserMgr 映射（按 session_id 匹配不会误删新 session）
+	// CServer::_sessions 的清理由 socket 关闭后 async_read 的 EOF 回调自动完成
+	UserMgr::GetInstance()->RmvUserSession(uid, sid);
+
+	response->set_error(0);
+	response->set_was_online(true);
+	std::cout << "NotifyKickUser: kicked uid=" << uid << " session=" << sid << std::endl;
+	return Status::OK;
+}
+
+void ChatServiceImpl::RegisterServer(std::shared_ptr<CServer> pServer) {
+	_p_server = pServer;
 }
 
 bool ChatServiceImpl::GetBaseInfo(std::string base_key, int uid, std::shared_ptr<UserInfo>& userinfo) {

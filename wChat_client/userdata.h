@@ -117,6 +117,13 @@ struct FriendInfo {
     QString _back;
     QString _last_msg;
     std::vector<std::shared_ptr<TextChatData>> _chat_msgs;
+
+    // STAGE-C: conversation summary populated by ID_PULL_CONV_SUMMARY_RSP.
+    // _last_msg_db_id == 0 means "no messages yet" (fresh conversation).
+    qint64  _last_msg_db_id = 0;
+    int     _last_msg_type  = 0;
+    qint64  _last_msg_time  = 0;   // unix seconds
+    int     _unread_count   = 0;
 };
 
 struct UserInfo {
@@ -182,6 +189,7 @@ struct TextChatData{
     // STAGE-A additions
     int _msg_type = MSG_TYPE_TEXT;  // 1=text, 2=image, 3=file, 4=audio
     int _msg_db_id = 0;             // server chat_messages.id; 0 for realtime msgs
+    qint64 _send_time = 0;          // unix seconds; 0 for outgoing not-yet-persisted
 
     // File-message fields (only valid when _msg_type != TEXT)
     QString _file_id;
@@ -202,18 +210,20 @@ struct TextChatData{
 };
 
 struct TextChatMsg{
-    TextChatMsg(int fromuid, int touid, QJsonArray arrays):
-        _from_uid(fromuid),_to_uid(touid){
+    TextChatMsg(int fromuid, int touid, QJsonArray arrays, qint64 msg_db_id = 0):
+        _to_uid(touid),_from_uid(fromuid),_msg_db_id(msg_db_id){
         for(auto  msg_data : arrays){
             auto msg_obj = msg_data.toObject();
             auto content = msg_obj["content"].toString();
             auto msgid = msg_obj["msgid"].toString();
             auto msg_ptr = std::make_shared<TextChatData>(msgid, content,fromuid, touid);
+            msg_ptr->_msg_db_id = msg_db_id;
             _chat_msgs.push_back(msg_ptr);
         }
     }
     int _to_uid;
     int _from_uid;
+    qint64 _msg_db_id = 0;  // STAGE-C: 0 means "cross-server forwarded, id lost"
     std::vector<std::shared_ptr<TextChatData>> _chat_msgs;
 };
 
@@ -232,6 +242,9 @@ struct FileChatData {
     int     _file_type;     // 0=image, 1=file, 2=audio
     int     _from_uid;
     int     _to_uid;
+
+    // STAGE-C: server chat_messages.id (0 for cross-server forwarded)
+    qint64  _msg_db_id = 0;
 
     // Filled by FileMgr after download, or set immediately for sender
     QString _local_path;    // cache/files/<file_id>.<ext>

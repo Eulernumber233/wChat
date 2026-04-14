@@ -125,12 +125,24 @@ message TextChatMsgRsp {
   repeated TextChatData textmsgs = 4;
 }
 
+// Kick-user messages (cross-server duplicate-login eviction)
+message KickUserReq {
+  int32  uid    = 1;
+  string reason = 2;   // e.g. "duplicate_login"
+}
+
+message KickUserRsp {
+  int32 error      = 1;
+  bool  was_online = 2; // true if the user was actually connected and kicked
+}
+
 service ChatService {
   rpc NotifyAddFriend(AddFriendReq) returns (AddFriendRsp) {}
   rpc RplyAddFriend(RplyFriendReq) returns (RplyFriendRsp) {}
   rpc SendChatMsg(SendChatMsgReq) returns (SendChatMsgRsp) {}
   rpc NotifyAuthFriend(AuthFriendReq) returns (AuthFriendRsp) {}
   rpc NotifyTextChatMsg(TextChatMsgReq) returns (TextChatMsgRsp) {}
+  rpc NotifyKickUser(KickUserReq) returns (KickUserRsp) {}
 }
 
 // =====================================================================

@@ -26,11 +26,13 @@ public slots:
     void slotSwitchReset(); // 登录窗口切换找回密码窗口
     void slotSwitchLogin2();// 找回密码窗口返回登录窗口
     void slotSwitchchat();
+    void slotBackToLogin(QString reason); // 从聊天界面回到登录（被踢/断线）
 private:
     Ui::MainWindow *ui = nullptr;
     LoginDialog* _login_dlg = nullptr;
     RegistDialog* _regist_dlg = nullptr;
     ResetDialog* _reset_dlg = nullptr;
     ChatDialog* _chat_dlg = nullptr;
+    bool _switching_to_login = false; // 防止 slotBackToLogin 重入
 };
 #endif // MAINWINDOW_H

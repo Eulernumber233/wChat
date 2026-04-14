@@ -5,7 +5,6 @@
 #include "RedisMgr.h"
 #include "UserMgr.h"
 #include "ChatGrpcClient.h"
-//#include "DistLock.h"
 #include <string>
 #include "CServer.h"
 using namespace std;
@@ -108,6 +107,38 @@ void LogicSystem::RegisterCallBacks() {
 		placeholders::_1, placeholders::_2, placeholders::_3);
 }
 
+bool LogicSystem::ValidateSession(std::shared_ptr<CSession> session) {
+	// 已经在关闭流程中的 session 直接拒绝，不再重复踢
+	if (session->IsClosing()) return false;
+
+	int uid = session->GetUserId();
+	if (uid <= 0) return false;
+
+	std::string uid_str = std::to_string(uid);
+	std::string stored_sid;
+	bool ok = RedisMgr::GetInstance()->Get(
+		USER_SESSION_PREFIX + uid_str, stored_sid);
+
+	if (!ok) {
+		// Redis 读取失败（可能是临时不可达），放行，不踢人
+		return true;
+	}
+
+	if (stored_sid != session->GetSessionId()) {
+		// session 已被新登录顶替：发通知并关闭 socket
+		// 不调 ClearSession——socket 关闭后 async_read EOF 回调会自动清理 _sessions 和 Redis
+		std::cout << "ValidateSession: session invalidated for uid=" << uid << std::endl;
+		Json::Value kick;
+		kick["error"] = ErrorCodes::Success;
+		kick["reason"] = "session_replaced";
+		session->SendAndClose(kick.toStyledString(), ID_NOTIFY_KICK_USER);
+		int uid_int = session->GetUserId();
+		UserMgr::GetInstance()->RmvUserSession(uid_int, session->GetSessionId());
+		return false;
+	}
+	return true;
+}
+
 void LogicSystem::LoginHandler(shared_ptr<CSession> session, const short &msg_id, const string &msg_data) {
 	Json::Reader reader;
 	Json::Value root;
@@ -189,70 +220,76 @@ void LogicSystem::LoginHandler(shared_ptr<CSession> session, const short &msg_id
 		obj["back"] = friend_ele->back;
 		rtvalue["friend_list"].append(obj);
 	}
-	auto server_name = ConfigMgr::Inst().GetValue("SelfServer", "Name");
-	
-	//session���û�uid
-	session->SetUserId(uid);
-	//Ϊ�û����õ�¼ip server������
-	std::string  ipkey = USERIPPREFIX + uid_str;
-	RedisMgr::GetInstance()->Set(ipkey, server_name);
-	//uid��session�󶨹���,�����Ժ����˲���
-	UserMgr::GetInstance()->SetUserSession(uid, session);
-	std::string  uid_session_key = USER_SESSION_PREFIX + uid_str;
-	RedisMgr::GetInstance()->Set(uid_session_key, session->GetSessionId());
-	//{
-	//	//�˴����ӷֲ�ʽ�����ø��̶߳�ռ��¼
-	//	//ƴ���û�ip��Ӧ��key
-	//	auto lock_key = LOCK_PREFIX + uid_str;
-	//	auto identifier = RedisMgr::GetInstance()->acquireLock(lock_key, LOCK_TIME_OUT, ACQUIRE_TIME_OUT);
-	//	//����defer����
-	//	Defer defer2([this, identifier, lock_key]() {
-	//		RedisMgr::GetInstance()->releaseLock(lock_key, identifier);
-	//		});
-	//	//�˴��жϸ��û��Ƿ��ڱ𴦻��߱���������¼
-	//	std::string uid_ip_value = "";
-	//	auto uid_ip_key = USERIPPREFIX + uid_str;
-	//	bool b_ip = RedisMgr::GetInstance()->Get(uid_ip_key, uid_ip_value);
-	//	//˵���û��Ѿ���¼�ˣ��˴�Ӧ���ߵ�֮ǰ���û���¼״̬
-	//	if (b_ip) {
-	//		//��ȡ��ǰ������ip��Ϣ
-	//		auto& cfg = ConfigMgr::Inst();
-	//		auto self_name = cfg["SelfServer"]["Name"];
-	//		//���֮ǰ��¼�ķ������͵�ǰ��ͬ����ֱ���ڱ��������ߵ�
-	//		if (uid_ip_value == self_name) {
-	//			//���Ҿ��е�����
-	//			auto old_session = UserMgr::GetInstance()->GetSession(uid);
-	//			//�˴�Ӧ�÷���������Ϣ
-	//			if (old_session) {
-	//				old_session->NotifyOffline(uid);
-	//				//����ɵ�����
-	//				_p_server->ClearSession(old_session->GetSessionId());
-	//			}
-	//		}
-	//		else {
-	//			//������Ǳ�����������֪ͨgrpc֪ͨ�����������ߵ�
-	//			//����֪ͨ
-	//			KickUserReq kick_req;
-	//			kick_req.set_uid(uid);
-	//			ChatGrpcClient::GetInstance()->NotifyKickUser(uid_ip_value, kick_req);
-	//		}
-	//	}
-	//	//session���û�uid
-	//	session->SetUserId(uid);
-	//	//Ϊ�û����õ�¼ip server������
-	//	std::string  ipkey = USERIPPREFIX + uid_str;
-	//	RedisMgr::GetInstance()->Set(ipkey, server_name);
-	//	//uid��session�󶨹���,�����Ժ����˲���
-	//	UserMgr::GetInstance()->SetUserSession(uid, session);
-	//	std::string  uid_session_key = USER_SESSION_PREFIX + uid_str;
-	//	RedisMgr::GetInstance()->Set(uid_session_key, session->GetSessionId());
-	//}
+	auto& cfg = ConfigMgr::Inst();
+	auto server_name = cfg.GetValue("SelfServer", "Name");
+
+	// ===== Anti-duplicate-login: distributed lock + kick-before-write =====
+	{
+		auto lock_key = LOCK_PREFIX + uid_str;
+		auto identifier = RedisMgr::GetInstance()->acquireLock(lock_key, LOCK_TIME_OUT, ACQUIRE_TIME_OUT);
+		Defer defer_lock([&identifier, &lock_key]() {
+			RedisMgr::GetInstance()->releaseLock(lock_key, identifier);
+		});
+
+		if (identifier.empty()) {
+			// 获取锁失败（超时）：说明有并发登录正在处理，本次放弃
+			// 客户端收到错误码后可以重试登录
+			std::cout << "LoginHandler: failed to acquire lock for uid=" << uid << std::endl;
+			rtvalue["error"] = ErrorCodes::RPCFailed;
+			return;
+		}
+
+		// Check if this uid is already logged in somewhere
+		std::string old_server;
+		auto uid_ip_key = USERIPPREFIX + uid_str;
+		bool b_ip = RedisMgr::GetInstance()->Get(uid_ip_key, old_server);
+
+		if (b_ip && !old_server.empty()) {
+			if (old_server == server_name) {
+				// Same-server kick: 发送踢人通知 + 从 _sessions 中移除旧 session
+				auto old_session = UserMgr::GetInstance()->GetSession(uid);
+				if (old_session) {
+					std::cout << "LoginHandler: kicking old session (same server) uid=" << uid << std::endl;
+					Json::Value kick_notify;
+					kick_notify["error"] = ErrorCodes::Success;
+					kick_notify["reason"] = "duplicate_login";
+					std::string old_sid = old_session->GetSessionId();
+					old_session->SendAndClose(kick_notify.toStyledString(), ID_NOTIFY_KICK_USER);
+					// 只清 UserMgr；_sessions map 的清理由 socket 关闭后的 EOF 回调自动完成
+					UserMgr::GetInstance()->RmvUserSession(uid, old_sid);
+				}
+			}
+			else {
+				// Cross-server kick via gRPC (3s timeout)
+				std::cout << "LoginHandler: kicking old session (cross-server: "
+					<< old_server << ") uid=" << uid << std::endl;
+				KickUserReq kick_req;
+				kick_req.set_uid(uid);
+				kick_req.set_reason("duplicate_login");
+				auto kick_rsp = ChatGrpcClient::GetInstance()->NotifyKickUser(old_server, kick_req);
+				if (kick_rsp.error() != 0) {
+					std::cout << "LoginHandler: cross-server kick failed, proceeding anyway uid="
+						<< uid << std::endl;
+				}
+			}
+		}
+
+		// Kick done (or attempted); now register the new session
+		session->SetUserId(uid);
+		session->RefreshHeartbeat();
+		std::string ipkey = USERIPPREFIX + uid_str;
+		RedisMgr::GetInstance()->Set(ipkey, server_name);
+		UserMgr::GetInstance()->SetUserSession(uid, session);
+		std::string uid_session_key = USER_SESSION_PREFIX + uid_str;
+		RedisMgr::GetInstance()->Set(uid_session_key, session->GetSessionId());
+	}
 
 	return;
 }
 
 void LogicSystem::SearchInfo(std::shared_ptr<CSession> session, const short& msg_id, const string& msg_data)
 {
+	if (!ValidateSession(session)) return;
 	Json::Reader reader;
 	Json::Value root;
 	reader.parse(msg_data, root);
@@ -278,6 +315,7 @@ void LogicSystem::SearchInfo(std::shared_ptr<CSession> session, const short& msg
 
 void LogicSystem::AddFriendApply(std::shared_ptr<CSession> session, const short& msg_id, const string& msg_data)
 {
+	if (!ValidateSession(session)) return;
 	Json::Reader reader;
 	Json::Value root;
 	reader.parse(msg_data, root);
@@ -356,7 +394,8 @@ void LogicSystem::AddFriendApply(std::shared_ptr<CSession> session, const short&
 }
 
 void LogicSystem::AuthFriendApply(std::shared_ptr<CSession> session, const short& msg_id, const string& msg_data) {
-	
+	if (!ValidateSession(session)) return;
+
 	Json::Reader reader;
 	Json::Value root;
 	reader.parse(msg_data, root);
@@ -452,6 +491,7 @@ void LogicSystem::AuthFriendApply(std::shared_ptr<CSession> session, const short
 }
 
 void LogicSystem::DealChatTextMsg(std::shared_ptr<CSession> session, const short& msg_id, const string& msg_data) {
+	if (!ValidateSession(session)) return;
 	Json::Reader reader;
 	Json::Value root;
 	reader.parse(msg_data, root);
@@ -522,11 +562,10 @@ void LogicSystem::DealChatTextMsg(std::shared_ptr<CSession> session, const short
 }
 
 void LogicSystem::HeartBeatHandler(std::shared_ptr<CSession> session, const short& msg_id, const string& msg_data) {
-	Json::Reader reader;
-	Json::Value root;
-	reader.parse(msg_data, root);
-	auto uid = root["fromuid"].asInt();
-	std::cout << "receive heart beat msg, uid is " << uid << std::endl;
+	// 已被踢的 session 不应刷新心跳（否则僵尸 session 永远不会超时）
+	if (!ValidateSession(session)) return;
+	// 刷新心跳时间戳
+	session->RefreshHeartbeat();
 	Json::Value  rtvalue;
 	rtvalue["error"] = ErrorCodes::Success;
 	session->Send(rtvalue.toStyledString(), ID_HEARTBEAT_RSP);
@@ -539,6 +578,7 @@ void LogicSystem::HeartBeatHandler(std::shared_ptr<CSession> session, const shor
 // =====================================================================
 void LogicSystem::FileUploadReqHandler(std::shared_ptr<CSession> session,
 	const short& msg_id, const string& msg_data) {
+	if (!ValidateSession(session)) return;
 	Json::Reader reader;
 	Json::Value root;
 	reader.parse(msg_data, root);
@@ -959,6 +999,7 @@ bool LogicSystem::GetFriendList(int self_id, std::vector<std::shared_ptr<UserInf
 //                    unread_count}, ... ] }
 void LogicSystem::PullConvSummaryHandler(std::shared_ptr<CSession> session,
 	const short& msg_id, const std::string& msg_data) {
+	if (!ValidateSession(session)) return;
 	Json::Reader reader;
 	Json::Value root;
 	reader.parse(msg_data, root);
@@ -983,6 +1024,7 @@ void LogicSystem::PullConvSummaryHandler(std::shared_ptr<CSession> session,
 // the client is expected to reverse or use id-sorted render order.
 void LogicSystem::PullMessagesHandler(std::shared_ptr<CSession> session,
 	const short& msg_id, const std::string& msg_data) {
+	if (!ValidateSession(session)) return;
 	Json::Reader reader;
 	Json::Value root;
 	reader.parse(msg_data, root);
@@ -1014,6 +1056,7 @@ void LogicSystem::PullMessagesHandler(std::shared_ptr<CSession> session,
 //                   "file_port": "...", "file_token": "..." }
 void LogicSystem::GetDownloadTokenHandler(std::shared_ptr<CSession> session,
 	const short& msg_id, const std::string& msg_data) {
+	if (!ValidateSession(session)) return;
 	Json::Reader reader;
 	Json::Value root;
 	reader.parse(msg_data, root);

@@ -4,6 +4,8 @@
 #include "filemgr.h"
 #include "picturebubble.h"
 #include "chatitembase.h"
+#include "localdb.h"
+#include <QDateTime>
 ChatDialog::ChatDialog(QWidget *parent):
     QDialog(parent), ui(new Ui::ChatDialog),_mode(ChatUIMode::ChatMode),
     _state(ChatUIMode::ChatMode),_b_loading(false),_cur_chat_uid(0),_last_widget(nullptr)
@@ -112,16 +114,60 @@ ChatDialog::ChatDialog(QWidget *parent):
 
     //连接对端消息通知
     connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_text_chat_msg, this, &ChatDialog::slot_text_chat_msg);
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_text_chat_msg_rsp, this, &ChatDialog::slot_text_chat_msg_rsp);
 
     // File transfer connections
     connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_file_upload_rsp,
             this, &ChatDialog::slot_file_upload_rsp);
     connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_file_msg_notify,
             this, &ChatDialog::slot_file_msg_notify);
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_file_upload_persisted,
+            this, &ChatDialog::slot_file_upload_persisted);
+
+    // STAGE-C: conversation summary (fires once after login)
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_conv_summary,
+            this, &ChatDialog::slot_conv_summary);
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_pull_messages_rsp,
+            this, &ChatDialog::slot_pull_messages_rsp);
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_download_token_rsp,
+            this, &ChatDialog::slot_download_token_rsp);
+
+    // 心跳定时器：每 30 秒发送一次心跳包
+    _heartbeat_timer = new QTimer(this);
+    connect(_heartbeat_timer, &QTimer::timeout, this, &ChatDialog::sendHeartbeat);
+    _heartbeat_timer->start(30000); // 30秒
+}
+
+void ChatDialog::sendHeartbeat()
+{
+    int uid = UserMgr::GetInstance()->GetUid();
+    if (uid <= 0) return; // Reset 后不再发送
+
+    // 检查上次心跳回复是否超时（90 秒，对应 3 次心跳周期未响应）
+    // 用于检测"半死 TCP 连接"——socket 还开着但链路已断，send 不会立即报错
+    const qint64 HEARTBEAT_TIMEOUT_MS = 90000;
+    auto tcp = TcpMgr::GetInstance();
+    qint64 last_rsp = tcp->GetLastHeartbeatRspMs();
+    qint64 now_ms = QDateTime::currentMSecsSinceEpoch();
+    if (last_rsp > 0 && (now_ms - last_rsp) > HEARTBEAT_TIMEOUT_MS) {
+        qWarning() << "Heartbeat response timeout:" << (now_ms - last_rsp) << "ms";
+        // 主动关闭连接，触发 sig_connection_lost → slotBackToLogin
+        tcp->CloseConnection();
+        return;
+    }
+
+    QJsonObject obj;
+    obj["fromuid"] = uid;
+    QByteArray data = QJsonDocument(obj).toJson(QJsonDocument::Compact);
+    emit tcp->sig_send_data(ReqId::ID_HEART_BEAT_REQ, data);
 }
 
 ChatDialog::~ChatDialog()
 {
+    if (_heartbeat_timer) {
+        _heartbeat_timer->stop();
+        _heartbeat_timer->disconnect(); // 切断所有信号连接，防止已入队的 timeout 继续触发
+    }
     delete ui;
 }
 
@@ -691,6 +737,10 @@ void ChatDialog::slot_append_send_chat_msg(std::shared_ptr<TextChatData> msgdata
 
 void ChatDialog::slot_text_chat_msg(std::shared_ptr<TextChatMsg> msg)
 {
+    // STAGE-C: persist same-server text messages (msg_db_id > 0). Cross-server
+    // forwards arrive with 0 and rely on the next SetUserInfo refresh.
+    PersistTextMsgToLocalDb(msg);
+
     auto find_iter = _chat_items_added.find(msg->_from_uid);
     if(find_iter != _chat_items_added.end()){
         qDebug() << "set chat item msg, uid is " << msg->_from_uid;
@@ -767,16 +817,81 @@ void ChatDialog::slot_file_upload_rsp(QString file_id, QString file_token,
     }
 
     qDebug() << "Starting upload: file_id=" << file_id << " path=" << local_path;
+
+    // STAGE-C: copy the source file into the per-user cache under its
+    // server-assigned file_id so the sender has a permanent local copy
+    // that survives the source being moved/deleted. GetCachedPath in
+    // future sessions will hit this file directly.
+    QString target = FileMgr::GetInstance()->BuildCachedPath(
+        file_id, QFileInfo(local_path).fileName());
+    if (!target.isEmpty() && target != local_path) {
+        if (QFile::exists(target)) QFile::remove(target);
+        if (QFile::copy(local_path, target)) {
+            qDebug() << "sender-side file cached at" << target;
+        } else {
+            qWarning() << "sender-side cache copy failed:" << local_path
+                       << "->" << target;
+            target.clear();
+        }
+    }
+    // Remember {file_id -> cached copy path} for slot_file_upload_persisted.
+    _pending_file_copies.insert(file_id, target.isEmpty() ? local_path : target);
+
     FileMgr::GetInstance()->StartUpload(file_id, file_token, host, port, local_path);
+}
+
+void ChatDialog::slot_file_upload_persisted(std::shared_ptr<FileChatData> file_data) {
+    // STAGE-C: the file message is now live in MySQL (chat_messages) with
+    // the msg_db_id we got. Mirror it into LocalDb so the sender's UI
+    // stays consistent after switching chats.
+    QString cached_path = _pending_file_copies.take(file_data->_file_id);
+
+    // Build the content JSON matching exactly what GetMessagesPage returns
+    // (server stores a single object for file messages).
+    QJsonObject content;
+    content["msgid"] = file_data->_msg_id;
+    content["file_id"] = file_data->_file_id;
+    content["file_name"] = file_data->_file_name;
+    content["file_size"] = static_cast<double>(file_data->_file_size);
+    content["file_type"] = file_data->_file_type;
+
+    LocalDb::MsgRow row;
+    row.msg_db_id = file_data->_msg_db_id;
+    row.peer_uid  = file_data->_to_uid; // sender path: peer is receiver
+    row.direction = 1;                   // send
+    row.msg_type  = MSG_TYPE_IMAGE + file_data->_file_type;
+    row.content   = QString::fromUtf8(
+        QJsonDocument(content).toJson(QJsonDocument::Compact));
+    row.send_time = QDateTime::currentSecsSinceEpoch();
+    row.status    = 0;
+    QVector<LocalDb::MsgRow> rows; rows.append(row);
+    LocalDb::Inst().UpsertMessages(rows);
+
+    qint64 cur_hwm = LocalDb::Inst().GetLastSyncedMsgId(row.peer_uid);
+    if (row.msg_db_id > cur_hwm) {
+        LocalDb::Inst().SetLastSyncedMsgId(row.peer_uid, row.msg_db_id);
+    }
+
+    // Also record the file in local_files so future opens hit the cached path.
+    if (!cached_path.isEmpty()) {
+        LocalDb::FileRow frow;
+        frow.file_id   = file_data->_file_id;
+        frow.file_name = file_data->_file_name;
+        frow.file_size = file_data->_file_size;
+        frow.file_type = row.msg_type;
+        frow.local_path = cached_path;
+        frow.download_status = 2; // "done" — we just wrote it
+        frow.last_access = QDateTime::currentSecsSinceEpoch();
+        LocalDb::Inst().UpsertFile(frow);
+    }
 }
 
 void ChatDialog::slot_file_msg_notify(std::shared_ptr<FileChatData> file_data) {
     qDebug() << "Received file message: file_id=" << file_data->_file_id
              << " from=" << file_data->_from_uid;
 
-    // Persist this file message into the friend's _chat_msgs so it survives
-    // switching chats within the same session. STAGE-A: lives in memory only.
-    // STAGE-C: will be inserted into local SQLite.
+    // Keep the legacy in-memory mirror for consistency with old code paths
+    // that still read _chat_msgs. UI rendering now reads from LocalDb.
     int msg_type = MSG_TYPE_IMAGE + file_data->_file_type; // 0->IMAGE, 1->FILE, 2->AUDIO
     auto chat_msg = std::make_shared<TextChatData>(
         file_data->_msg_id, msg_type,
@@ -788,6 +903,35 @@ void ChatDialog::slot_file_msg_notify(std::shared_ptr<FileChatData> file_data) {
     std::vector<std::shared_ptr<TextChatData>> vec;
     vec.push_back(chat_msg);
     UserMgr::GetInstance()->AppendFriendChatMsg(file_data->_from_uid, vec);
+
+    // STAGE-C: mirror to LocalDb immediately when we have a msg_db_id
+    // (same-server path). Cross-server notifies still arrive with 0 and
+    // fall back to the next SetUserInfo refresh.
+    if (file_data->_msg_db_id > 0) {
+        QJsonObject content;
+        content["msgid"] = file_data->_msg_id;
+        content["file_id"] = file_data->_file_id;
+        content["file_name"] = file_data->_file_name;
+        content["file_size"] = static_cast<double>(file_data->_file_size);
+        content["file_type"] = file_data->_file_type;
+
+        LocalDb::MsgRow row;
+        row.msg_db_id = file_data->_msg_db_id;
+        row.peer_uid  = file_data->_from_uid; // receiver path: peer is sender
+        row.direction = 0;
+        row.msg_type  = msg_type;
+        row.content   = QString::fromUtf8(
+            QJsonDocument(content).toJson(QJsonDocument::Compact));
+        row.send_time = QDateTime::currentSecsSinceEpoch();
+        row.status    = 0;
+        QVector<LocalDb::MsgRow> rows; rows.append(row);
+        LocalDb::Inst().UpsertMessages(rows);
+
+        qint64 hwm = LocalDb::Inst().GetLastSyncedMsgId(row.peer_uid);
+        if (row.msg_db_id > hwm) {
+            LocalDb::Inst().SetLastSyncedMsgId(row.peer_uid, row.msg_db_id);
+        }
+    }
 
     // Always download from server (no local cache check)
     // This avoids stale/corrupt cache issues and ensures data consistency
@@ -805,10 +949,20 @@ void ChatDialog::slot_file_msg_notify(std::shared_ptr<FileChatData> file_data) {
             qDebug() << "File download failed: file_id=" << file_id << " error=" << error;
             return;
         }
-        // Remember the local path on the history entry so re-opening the chat
-        // can render the image from disk. Actually rendering from history is
-        // STAGE-A-NEXT (A.5).
         chat_msg->_local_path = local_path;
+
+        // STAGE-C: record the downloaded file in local_files so future
+        // opens of this conversation hit Case 1 (_local_path prefilled by
+        // RowToTextChatData) without re-downloading.
+        LocalDb::FileRow frow;
+        frow.file_id   = chat_msg->_file_id;
+        frow.file_name = chat_msg->_file_name;
+        frow.file_size = chat_msg->_file_size;
+        frow.file_type = chat_msg->_msg_type;
+        frow.local_path = local_path;
+        frow.download_status = 2;
+        frow.last_access = QDateTime::currentSecsSinceEpoch();
+        LocalDb::Inst().UpsertFile(frow);
 
         // Display image bubble regardless of which chat is active
         auto fi = UserMgr::GetInstance()->GetFriendById(from_uid);
@@ -820,5 +974,98 @@ void ChatDialog::slot_file_msg_notify(std::shared_ptr<FileChatData> file_data) {
     });
 
     FileMgr::GetInstance()->StartDownload(file_data);
+}
+
+// =====================================================================
+// STAGE-C: conversation summary handler
+// =====================================================================
+
+void ChatDialog::slot_conv_summary(QJsonArray summaries) {
+    qDebug() << "conv summary received, count=" << summaries.size();
+    UserMgr::GetInstance()->ApplyConvSummaries(summaries);
+    // STAGE-C.4b TODO: refresh ChatUserList to show last_msg_preview /
+    // unread badges from the newly populated FriendInfo fields. For C.4a
+    // we only confirm the data reached UserMgr.
+}
+
+// STAGE-C: shared helper to persist a realtime text message (same-server
+// path only; msg_db_id > 0). Used by both incoming notify and own-send rsp.
+static void PersistTextMsgToLocalDb(const std::shared_ptr<TextChatMsg>& msg) {
+    if (msg->_msg_db_id <= 0) return;
+    int self_uid = UserMgr::GetInstance()->GetUid();
+    int peer_uid = (msg->_from_uid == self_uid) ? msg->_to_uid : msg->_from_uid;
+    int direction = (msg->_from_uid == self_uid) ? 1 : 0;
+
+    QJsonArray arr;
+    for (const auto& d : msg->_chat_msgs) {
+        QJsonObject o;
+        o["msgid"] = d->_msg_id;
+        o["content"] = d->_msg_content;
+        arr.append(o);
+    }
+    QString content_str = QString::fromUtf8(
+        QJsonDocument(arr).toJson(QJsonDocument::Compact));
+
+    LocalDb::MsgRow row;
+    row.msg_db_id = msg->_msg_db_id;
+    row.peer_uid  = peer_uid;
+    row.direction = direction;
+    row.msg_type  = MSG_TYPE_TEXT;
+    row.content   = content_str;
+    row.send_time = QDateTime::currentSecsSinceEpoch();
+    row.status    = 0;
+    QVector<LocalDb::MsgRow> rows; rows.append(row);
+    LocalDb::Inst().UpsertMessages(rows);
+
+    qint64 cur_hwm = LocalDb::Inst().GetLastSyncedMsgId(peer_uid);
+    if (msg->_msg_db_id > cur_hwm) {
+        LocalDb::Inst().SetLastSyncedMsgId(peer_uid, msg->_msg_db_id);
+    }
+}
+
+void ChatDialog::slot_text_chat_msg_rsp(std::shared_ptr<TextChatMsg> msg) {
+    // Own-text outgoing echo. Just persist; UI already rendered the bubble
+    // optimistically via slot_append_send_chat_msg.
+    PersistTextMsgToLocalDb(msg);
+}
+
+void ChatDialog::slot_pull_messages_rsp(int peer_uid, QJsonArray messages, bool has_more) {
+    Q_UNUSED(has_more);
+    qDebug() << "pull messages rsp peer=" << peer_uid
+             << " count=" << messages.size();
+
+    // 1. Persist to LocalDb so subsequent opens hit cache.
+    int self_uid = UserMgr::GetInstance()->GetUid();
+    QVector<LocalDb::MsgRow> rows;
+    LocalDb::RowsFromServerMessages(messages, self_uid, rows);
+    if (rows.isEmpty()) return;
+    LocalDb::Inst().UpsertMessages(rows);
+
+    // 2. Update sync high-water mark to the max msg_db_id we've seen.
+    qint64 max_id = LocalDb::Inst().GetLastSyncedMsgId(peer_uid);
+    for (const auto& r : rows) {
+        if (r.msg_db_id > max_id) max_id = r.msg_db_id;
+    }
+    LocalDb::Inst().SetLastSyncedMsgId(peer_uid, max_id);
+
+    // 3. If the user is currently viewing this peer, re-render from DB.
+    //    CRUCIAL: use RefreshFromLocalDb, NOT SetUserInfo. SetUserInfo
+    //    itself fires another ID_PULL_MESSAGES_REQ, which would loop
+    //    forever (pull → render → pull → render → ...).
+    if (peer_uid == _cur_chat_uid) {
+        ui->chat_page->RefreshFromLocalDb();
+    }
+}
+
+void ChatDialog::slot_download_token_rsp(QString file_id, QString host, QString port,
+                                          QString token, int error) {
+    Q_UNUSED(file_id);
+    Q_UNUSED(host);
+    Q_UNUSED(port);
+    Q_UNUSED(token);
+    Q_UNUSED(error);
+    // STAGE-C.4b: wiring slot; the actual on-demand download flow is kicked
+    // off from ChatPage and listened on the FileMgr side. This slot is kept
+    // for future use (e.g. retry UI, permission errors surfaced to user).
 }
 

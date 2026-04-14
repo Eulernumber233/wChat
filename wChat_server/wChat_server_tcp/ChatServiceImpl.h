@@ -18,8 +18,8 @@ using message::ChatService;
 using message::TextChatMsgReq;
 using message::TextChatMsgRsp;
 using message::TextChatData;
-//using message::KickUserReq;
-//using message::KickUserRsp;
+using message::KickUserReq;
+using message::KickUserRsp;
 
 class ChatServiceImpl final : public ChatService::Service
 {
@@ -36,9 +36,9 @@ public:
 
 	bool GetBaseInfo(std::string base_key, int uid, std::shared_ptr<UserInfo>& userinfo);
 
-	//接受rpc踢人请求
-	//Status NotifyKickUser(::grpc::ServerContext* context,
-	//	const KickUserReq* request, KickUserRsp* response) override;
+	// 璺ㄦ湇韪汉 RPC 瀹炵幇
+	Status NotifyKickUser(::grpc::ServerContext* context,
+		const KickUserReq* request, KickUserRsp* response) override;
 
 	void RegisterServer(std::shared_ptr<CServer> pServer);
 private:

@@ -54,9 +54,11 @@ int main(int argc, char* argv[])
         CServer s(io_context, atoi(port_str.c_str()));
         io_context.run();
 
+        // 先等 gRPC 线程完全退出，确保没有请求再访问 CServer/UserMgr
+        grpc_server_thread.join();
+
         RedisMgr::GetInstance()->HDel(LOGIN_COUNT, server_name);
         RedisMgr::GetInstance()->Close();
-        grpc_server_thread.join();
         
     }
     catch (std::exception& e) {

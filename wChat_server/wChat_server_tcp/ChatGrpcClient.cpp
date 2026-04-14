@@ -11,7 +11,7 @@ ChatConPool::ChatConPool(size_t poolSize, std::string host, std::string port)
 {
 	for (size_t i = 0;i < poolSize_;++i) {
 		std::shared_ptr<Channel>channel = grpc::CreateChannel(host + ":" + port, grpc::InsecureChannelCredentials());
-		connections_.push(ChatService::NewStub(channel));// newstub ·µ»ØÓÒÖµ
+		connections_.push(ChatService::NewStub(channel));// newstub ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
 	}
 }
 
@@ -32,7 +32,7 @@ std::unique_ptr<ChatService::Stub>ChatConPool::getConnection() {
         }
         return !connections_.empty();
         });
-    //Èç¹ûÍ£Ö¹ÔòÖ±½Ó·µ»Ø¿ÕÖ¸Õë
+    //ï¿½ï¿½ï¿½Í£Ö¹ï¿½ï¿½Ö±ï¿½Ó·ï¿½ï¿½Ø¿ï¿½Ö¸ï¿½ï¿½
     if (b_stop_) {
         return  nullptr;
     }
@@ -159,6 +159,37 @@ TextChatMsgRsp ChatGrpcClient::NotifyTextChatMsg(std::string server_ip, const Te
 	if (!status.ok()) {
 		rsp.set_error(ErrorCodes::RPCFailed);
 		return rsp;
+	}
+
+	return rsp;
+}
+
+KickUserRsp ChatGrpcClient::NotifyKickUser(std::string server_ip, const KickUserReq& req)
+{
+	KickUserRsp rsp;
+	rsp.set_error(0);
+
+	auto find_iter = _pools.find(server_ip);
+	if (find_iter == _pools.end()) {
+		std::cout << "NotifyKickUser: no pool for server [" << server_ip << "]" << std::endl;
+		rsp.set_error(ErrorCodes::RPCFailed);
+		return rsp;
+	}
+
+	auto& pool = find_iter->second;
+	ClientContext context;
+	// 3 ç§’è¶…æ—¶ï¼Œé˜²æ­¢é˜»å¡žç™»å½•æµç¨‹
+	context.set_deadline(std::chrono::system_clock::now() +
+		std::chrono::seconds(3));
+
+	auto stub = pool->getConnection();
+	Status status = stub->NotifyKickUser(&context, req, &rsp);
+	pool->returnConnection(std::move(stub));
+
+	if (!status.ok()) {
+		std::cout << "NotifyKickUser: gRPC failed for server [" << server_ip
+			<< "] error=" << status.error_message() << std::endl;
+		rsp.set_error(ErrorCodes::RPCFailed);
 	}
 
 	return rsp;
