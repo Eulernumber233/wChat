@@ -15,7 +15,15 @@
       "Bash(python -c \"print\\('hello'\\)\")",
       "Bash(ls -d d:/CPP/network/wChat/wChat_server/wChat_server_tcp*/)",
       "Bash(python -c ':*)",
-      "Bash(wc -l /d/CPP/network/wChat/wChat_server/wChat_server_tcp/*.cpp /d/CPP/network/wChat/wChat_server/wChat_server_tcp/*.h)"
+      "Bash(wc -l /d/CPP/network/wChat/wChat_server/wChat_server_tcp/*.cpp /d/CPP/network/wChat/wChat_server/wChat_server_tcp/*.h)",
+      "Bash(python -m pip --version)",
+      "Bash(python -m venv .venv)",
+      "Bash(./.venv/Scripts/python.exe -m pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple)",
+      "Bash(./.venv/Scripts/python.exe -m pip install -e \".[dev]\" -i https://pypi.tuna.tsinghua.edu.cn/simple)",
+      "Bash(./.venv/Scripts/python.exe -c ' *)",
+      "Bash(./.venv/Scripts/python.exe -m pytest -q)",
+      "Bash(./.venv/Scripts/python.exe -c \"import fastapi; print\\('fastapi at:', fastapi.__file__\\)\")",
+      "Bash(./wChat_AgentServer/.venv/Scripts/python.exe -c \"import fastapi, langgraph, pydantic_settings; print\\('all OK in venv'\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp"

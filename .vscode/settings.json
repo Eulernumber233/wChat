@@ -1,0 +1,8 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/wChat_AgentServer/.venv/Scripts/python.exe",
+  "python.analysis.extraPaths": ["${workspaceFolder}/wChat_AgentServer"],
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["wChat_AgentServer/tests"],
+  "python.testing.cwd": "${workspaceFolder}/wChat_AgentServer",
+  "python.terminal.activateEnvironment": true
+}

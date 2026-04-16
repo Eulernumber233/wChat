@@ -136,6 +136,7 @@ wChat/
 | 1025 / 1026 | `ID_PULL_CONV_SUMMARY` 请求 / 回包 | C ↔ ChatServer | TCP（登录后自动拉一次，返回每个会话的 last_msg/unread） |
 | 1027 / 1028 | `ID_PULL_MESSAGES` 请求 / 回包 | C ↔ ChatServer | TCP（打开会话时拉 30 条，或滚屏加载更老一页） |
 | 1029 / 1030 | `ID_GET_DOWNLOAD_TOKEN` 请求 / 回包 | C ↔ ChatServer | TCP（历史文件消息的按需下载凭证） |
+| 1031 | `ID_NOTIFY_KICK_USER` | ChatServer → C | TCP（被踢下线通知，携带 `reason`；详见 §8.5） |
 | 1101 / 1102 | 文件上传 请求 / 回包 | C ↔ ChatServer | TCP |
 | 1103 | `ID_FILE_NOTIFY_COMPLETE` | ChatServer → C（发送方） | TCP（上传完成 + 带 msg_db_id 让发送方写 LocalDb） |
 | 1105 | `ID_FILE_MSG_NOTIFY` | ChatServer → C（接收方） | TCP |
@@ -175,12 +176,16 @@ wChat/
 
 **Redis 常用 key 前缀**（出现在多个服务的逻辑函数里，搜代码时按这些前缀找）：
 
-- `usertokenprefix_<uid>` — 登录 token，登录后由 StatusServer 写入，由 ChatServer 校验
-- `useripprefix_<uid>` — 该 uid 当前所在的 ChatServer 名字，**这是跨服路由的关键**
-- `userbaseinfo_<uid>` — 用户基础信息缓存（搜索好友 / 加载好友列表时优先查此处）
+- `utoken_<uid>` — 登录 token，登录后由 StatusServer 写入，由 ChatServer 校验
+- `uip_<uid>` — 该 uid 当前所在的 ChatServer 名字，**这是跨服路由的关键**
+- `usession_<uid>` — 当前活跃 session 的 UUID，**被动踢除的真相来源**（见 §8.5）
+- `ubaseinfo_<uid>` — 用户基础信息缓存（搜索好友 / 加载好友列表时优先查此处）
+- `lock_<uid>` — 登录互斥分布式锁（`SET NX EX`）
 - `code_prefix<email>` — 邮件验证码（VarifyServer 写、Gate 读）
 
-> 改任何"按 uid 找服务器"的逻辑时，记得 `useripprefix_` 这条线：登录时写入、消息转发时读取、下线时清理。
+前缀宏定义在 ChatServer `core.h` 的 `USERIPPREFIX`/`USERTOKENPREFIX`/`USER_SESSION_PREFIX`/`USER_BASE_INFO`/`LOCK_PREFIX`。
+
+> 改任何"按 uid 找服务器"的逻辑时，记得 `uip_` 这条线：登录时写入、消息转发时读取、下线时清理。
 
 ---
 
@@ -258,6 +263,52 @@ Client B: TcpMgr 收 ID_NOTIFY_TEXT_CHAT_MSG_REQ（含 msg_db_id）→ PersistTe
 - 注册：`Client → Gate(/user_register) → 校验 Redis 验证码 → MysqlMgr::RegUser（调用存储过程 reg_user）`
 - 找回密码：`Client → Gate(/reset_pwd) → 校验验证码 → MysqlMgr::UpdatePwd`
 
+### 8.5 防重复登录 + 心跳检测（三层防护）
+
+**核心不变量**：同一 uid 在整个系统中**最多一个活跃 session**。由三层机制共同保证：
+
+**第 1 层 —— 登录时主动踢人**（LoginHandler）：
+```
+LoginHandler:
+  ├─ 分布式锁 Redis SET lock_<uid> NX EX → acquireLock 失败则返回 RPCFailed 让客户端重试
+  ├─ GET uip_<uid> → old_server
+  ├─ old_server == self?
+  │    ├─ YES: old_session->SendAndClose(ID_NOTIFY_KICK_USER) + UserMgr::RmvUserSession
+  │    └─ NO:  gRPC ChatGrpcClient::NotifyKickUser(old_server) → 对端 ChatServiceImpl 做同样的本地清理
+  ├─ SET uip_<uid> = self / SET usession_<uid> = new_sid（新 session 覆盖）
+  └─ UserMgr::SetUserSession + session->RefreshHeartbeat
+```
+
+**第 2 层 —— 被动校验兜底**（`LogicSystem::ValidateSession`，所有业务 handler 入口都调）：
+- 每条业务消息进来先校验 `usession_<uid>` 是否仍等于自己的 session id
+- 不等 → 本 session 已被新登录顶替 → `SendAndClose(ID_NOTIFY_KICK_USER)` + `RmvUserSession`
+- Redis GET 失败 → 放行（防止 Redis 抖动误踢全员）
+
+**第 3 层 —— 心跳超时扫描**（`CServer::HeartbeatCheckLoop`）：
+- 每 15 秒扫描 `_sessions`，踢掉 90 秒无心跳的僵尸 session
+- 清理路径统一走 `CServer::ClearSession`
+
+**Session 清理职责分离**（重要）：
+- `UserMgr::RmvUserSession(uid, sid)` — 立即生效，按 sid 匹配防误删
+- `CServer::ClearSession(sid)` — 从 `_sessions` map 清理 + Redis 清理（只在 `usession_` 仍属自己时清）
+- 踢人路径**只调 RmvUserSession**，不直接调 ClearSession。`_sessions` 的清理由 socket 关闭后 `async_read` 返回 EOF 的回调触发（因此必须用 `SendAndClose` 异步关 socket，绝不能让 Send 调用对已 close 的 socket 写）
+- 心跳超时和客户端断线路径则调 `ClearSession` 完成全量清理
+
+**客户端双向心跳**：
+- 客户端每 30 秒发 `ID_HEART_BEAT_REQ` (1023)；服务端 `HeartBeatHandler` 回 `ID_HEARTBEAT_RSP` (1024) 并刷新 session 心跳戳
+- 客户端 `TcpMgr` 注册 1024 handler 刷新 `_last_heartbeat_rsp_ms`；`ChatDialog::sendHeartbeat` 每次发送前检查 90 秒未响应 → `CloseConnection` → `sig_connection_lost` → `MainWindow::slotBackToLogin`
+- 这是应用层 keepalive，解决 TCP "半死连接"问题（拔网线后 TCP 层可能几分钟才报错）
+
+**客户端被踢/断线 UI 流程**：
+- `ID_NOTIFY_KICK_USER` → `TcpMgr::_kick_pending=true` → `sig_kick_user` → `slotBackToLogin`
+- `QTcpSocket::disconnected` → 若 `_kick_pending` 则跳过（避免重复弹窗）→ 否则 `sig_connection_lost` → `slotBackToLogin`
+- `slotBackToLogin` 用 `_switching_to_login` 防重入，**先切换 widget（销毁 ChatDialog 停掉心跳 timer）再 `UserMgr::Reset()`**，否则 timer 回调访问 `_user_info=nullptr` 崩溃（已加空指针保护 + timer disconnect）
+
+**修改踢人逻辑的红线**：
+1. 不要在 Send 和 Close 之间有其他代码——只能用 `CSession::SendAndClose`，它把 Close post 到 io_context 保证 async_write 先完成
+2. 不要在踢人路径里直接删 Redis `uip_`/`usession_`——新 session 马上会覆盖，直接删会出现"踢旧的时刻同时把新的也清了"的时序窗口
+3. 不要在 `ChatServiceImpl`/`LogicSystem` 里持有 `CServer*`——CServer 是 main 的栈对象，生命周期不匹配（之前的崩溃就是 null `_p_server` 引起的）
+
 ---
 
 ## 9. 修改代码时的 "全局观" 速查
@@ -269,8 +320,10 @@ Client B: TcpMgr 收 ID_NOTIFY_TEXT_CHAT_MSG_REQ（含 msg_db_id）→ PersistTe
 | **新增 / 修改 MySQL 字段** | `wchatmysql.sql` + 用到该表的 `MysqlDao::*` SQL（多个服务都有自己的副本） + 字段消费方（结构体 `UserInfo` / `TextChatData` / 等） |
 | **修改 Redis key 含义** | 写入方 + 所有读出方（grep `usertokenprefix_` / `useripprefix_` / `userbaseinfo_` / `code_prefix`） |
 | **修改任意公共类**（CServer / LogicSystem / Mgr 等） | 4 个 C++ 服务下的同名文件**通常需要同步**——确认是否所有服务都有相同需求；不要假设是共享代码 |
-| **新增"按 uid 推消息"的业务** | 模板：先 `Redis Get useripprefix_<uid>` → 同服走 `UserMgr::GetSession` → 跨服走 `ChatGrpcClient` + `ChatServiceImpl` 加新方法（要扩 proto） |
+| **新增"按 uid 推消息"的业务** | 模板：先 `Redis Get uip_<uid>` → 同服走 `UserMgr::GetSession` → 跨服走 `ChatGrpcClient` + `ChatServiceImpl` 加新方法（要扩 proto） |
 | **客户端新增界面与服务端交互** | HTTP 业务找 `HttpMgr` + Gate 的 `LogicSystem::_post_handlers`；TCP 业务找 `TcpMgr::sig_send_data` + ChatServer 的 `LogicSystem::_fun_callbacks` |
+| **新增需要用户已登录的业务 handler** | 在 ChatServer handler 入口加 `if (!ValidateSession(session)) return;`（见 §8.5 第 2 层）；否则僵尸 session 的消息会被处理 |
+| **改踢人 / 断线 / 心跳逻辑** | 先读 §8.5 三条红线；改完端到端测：同服双登、跨服双登、客户端崩溃、服务端崩溃、拔网线、快速连续 3 次登录 |
 
 ---
 
@@ -297,8 +350,11 @@ Client B: TcpMgr 收 ID_NOTIFY_TEXT_CHAT_MSG_REQ（含 msg_db_id）→ PersistTe
 2. **proto 副本不一致风险**：`message.proto` 在每个服务里都有一份，改 RPC 接口时容易漏。
 3. **VarifyServer 是 Node.js**：Redis key 前缀和 C++ 服务的命名习惯略不同（Node 端在 `const.js` 里定义）。
 4. **配置硬编码**：MySQL 密码 / Redis 密码直接写在 `config.ini`，不要把这些 ini 当作敏感信息暴露到公开仓库的"机密"用途——如需公开请先脱敏。
-5. **uid → 服务器映射的清理**：用户下线时需要清掉 `useripprefix_<uid>`，否则会导致跨服转发指向已离线的会话。改下线 / 心跳超时逻辑时要注意。
+5. **uid → 服务器映射的清理**：用户下线时需要清掉 `uip_<uid>`，否则会导致跨服转发指向已离线的会话。改下线 / 心跳超时逻辑时要注意。
 6. **客户端登录是阻塞式 gRPC**：Gate 调 Status 时是同步等待的，Status 响应慢会拖累 Gate 线程，`StatusServer` 不要塞重逻辑。
+7. **Boost.Asio socket 已关闭后再 Send 会崩**：`CSession::Send` 入口必须检查 `_b_close`。踢人要用 `SendAndClose`（post 延迟关 socket），不要手写"Send 完直接 Close"。
+8. **CRLF 换行敏感**：本仓库 C++ 源文件是 CRLF，新文件或经工具改写过的文件如果变成 LF，MSVC 某些配置下会报莫名其妙的"未声明的标识符"错。新建或批量改写后用 `unix2dos` 统一。
+9. **栈对象 CServer 不能放进 shared_ptr**：main 里 `CServer s(...)` 是栈对象，`ChatServiceImpl` / `LogicSystem` 如果持有 `shared_ptr<CServer>` 会空悬（以前的 `RegisterServer` / `SetServer` 从未被调用，`_p_server` 始终是 null）。跨组件拿 CServer 指针一律改走"不依赖 CServer"的路径——让 socket 关闭后的 EOF 回调去 `ClearSession`。
 
 ---
 
@@ -311,3 +367,86 @@ Client B: TcpMgr 收 ID_NOTIFY_TEXT_CHAT_MSG_REQ（含 msg_db_id）→ PersistTe
 - **不要假设服务间是共享代码**：见 §11.1。改公共组件时一定要 grep 一遍是哪几个服务用到。
 - **当 LabReport 与代码冲突时**：以代码为准，并提示用户更新 `wChat_LabReport.txt`。LabReport 是设计原稿，代码是事实。
 - **保持本文件简短**：只记"高层 + 易错点"。具体函数签名、字段名变了不必更新这里——让代码自己说话。
+
+---
+
+## 13. AgentServer（智能回复子系统，Python 独立服务）
+
+**进度状态（截至 2026-04-16）**：M1 完成，骨架 + Agent 核心 + 5 个 Preset + 22 个测试通过；**未接入网络**（gRPC 与 ChatServer 通信、SSE 流式、HTTP 鉴权全部留 TODO 至 M2）。
+
+### 13.1 一句话定位
+独立 Python 微服务 `wChat_AgentServer/`，与 4 个 C++ 服务平级。基于 LangGraph + DeepSeek，给客户端 ChatPage 提供"读取最近聊天 → 分析意图 → 生成 N 条候选回复"的 AI 辅助。
+
+### 13.2 技术栈选型与原因
+- **Python 3.12 + FastAPI + uvicorn** —— LLM/Agent 生态在 Python 最成熟；与 C++ 主链解耦避免拖慢 IM
+- **LangGraph 0.2.76** —— 状态图描述 Agent 流程，比手写 while 循环结构清晰
+- **DeepSeek API（OpenAI 兼容）** —— 复用 `openai` SDK，换 Qwen/Moonshot 只换 base_url
+- **Pydantic 2** —— 所有跨层数据契约
+- **MockBackend** —— 替代未来 gRPC 客户端，让 Agent 在没有 ChatServer 的情况下能完整跑通
+
+### 13.3 目录结构（详见 [wChat_AgentServer/README.md](wChat_AgentServer/README.md)）
+```
+wChat_AgentServer/
+├── app/
+│   ├── api/        HTTP 路由（FastAPI）
+│   ├── agent/      LangGraph 节点 + 编译图 + AgentService 门面
+│   ├── tools/      ToolRegistry + 4 个工具 + MockBackend
+│   ├── llm/        LLMProvider 抽象 + DeepSeek 实现
+│   ├── presets/    场景预设加载（config/presets.yaml）
+│   ├── memory/     短期会话记忆（内存 dict，M2 换 Redis）
+│   ├── schemas/    Pydantic 契约（与客户端 TextChatData 字段对齐）
+│   ├── config/     .env + agent.ini 加载
+│   └── rpc/        gRPC 客户端占位（M2 实现，proto 草案在 rpc/README.md）
+├── config/         presets.yaml + agent.ini.example
+└── tests/          22 个用例，FakeLLM 不消耗 DeepSeek 额度
+```
+
+### 13.4 已实现功能
+- HTTP 端点：`POST /agent/suggest_reply`、`POST /agent/refine`、`GET /agent/presets`、`GET /agent/health`（`/agent/suggest_reply/stream` 返回 501，M2 实现）
+- Agent 流程：`analyze_intent → fetch_profile/history/summary（按需）→ generate_candidates`
+- 5 个内置 Preset：礼貌拒绝 / 关心安慰 / 幽默化解 / 正式商务 / 暧昧试探
+- 追问润色：`/refine` 基于 session 快照单点重生成
+- 候选数量强制对齐（多了截断，少了占位填充）
+- LLM 返回非法 JSON 的容错路径
+
+### 13.5 数据契约对齐（必须保持）
+`app/schemas/chat.py` 的 `TextChatData` 字段必须与以下三处保持一致，否则未来客户端发来的 JSON 会反序列化失败：
+- 客户端 [wChat_client/userdata.h:172](wChat_client/userdata.h#L172) `TextChatData`
+- 客户端 [wChat_client/global.h:89](wChat_client/global.h#L89) `MsgType` 枚举
+- ChatServer [wChat_server/wChat_server_tcp/MysqlDao.h:257](wChat_server/wChat_server_tcp/MysqlDao.h#L257) `GetMessagesPage` 输出
+
+注意 `msg_db_id` 用 **str** 在 wire 上传，因为 jsoncpp（C++ 侧）不支持 int64（见 §1）。
+
+### 13.6 配置
+- **密钥** 走 `.env`（gitignored）：`DEEPSEEK_API_KEY=sk-xxx`
+- **参数** 走 `config/agent.ini`（gitignored）：端口、温度、候选数、Backend 模式等
+- 优先级：env > ini > 代码默认值
+- 模板：`.env.example`、`config/agent.ini.example`（提交到 git）
+
+### 13.7 启动与测试
+```powershell
+cd wChat_AgentServer
+.venv\Scripts\Activate.ps1          # 虚拟环境已建好
+pytest                              # 22 个用例,FakeLLM 不烧钱
+uvicorn app.main:app --reload --port 8200   # 启服务
+```
+VSCode 用户：项目根的 `.vscode/launch.json` 已配好 F5 启动项（AgentServer + Pytest）；`.vscode/settings.json` 把解释器指向 `wChat_AgentServer/.venv/`。
+
+### 13.8 M2 待办（接入 wChat 主链时做）
+1. `proto/message.proto` 新增 `AgentDataService`（`GetChatHistory` / `GetFriendProfile`），proto 草案见 [wChat_AgentServer/app/rpc/README.md](wChat_AgentServer/app/rpc/README.md)
+2. ChatServer 实现对应 RPC，复用 `MysqlDao::GetMessagesPage` + Redis `ubaseinfo_<uid>`
+3. Python 侧实现 `GrpcAgentDataClient`（接口形状已与 `MockBackend` 对齐，一行换实现）
+4. HTTP 鉴权：`Authorization: Bearer <token>` 校验 Redis `utoken_<uid>`
+5. SSE 流式：`/agent/suggest_reply/stream` 接通 LangGraph 的 `astream` API
+6. Redis 替换 InMemoryStore，支持多副本 + TTL
+7. 限流（`agent.ini` 的 `RateLimit.PerUserPerDay` 已留配置位）
+8. 客户端 `ChatPage` 加 AI 面板 UI
+
+### 13.9 修改 AgentServer 时的检查清单
+| 修改类型 | 必须同步检查 |
+|---|---|
+| **改 schemas/chat.py 字段** | 客户端 `TextChatData` + ChatServer SQL + 测试 fixtures |
+| **加新 Preset** | 只改 `config/presets.yaml`,无需代码改动；重启服务生效（无热更新） |
+| **加新工具** | `app/tools/` 新建文件 + `app/api/deps.py::_tool_factory` 注册 + 系统提示词的工具调用规则 |
+| **换 LLM provider** | 实现 `LLMProvider` 协议 + 改 `app/api/deps.py::_agent_service` 实例化 |
+| **改 Agent 图拓扑** | `app/agent/graph.py::build_graph` + 同步更新本节的"已实现功能"

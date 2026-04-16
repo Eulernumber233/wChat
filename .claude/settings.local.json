@@ -7,7 +7,14 @@
       "Bash(\"D:/library/grpc/visualpro/third_party/protobuf/Debug/protoc.exe\" -I=\".\" --grpc_out=\".\" --plugin=protoc-gen-grpc=\"D:/library/grpc/visualpro/Debug/grpc_cpp_plugin.exe\" \"message.proto\")",
       "Bash(xxd \"d:/CPP/network/wChat/wChat_server/wChat_server_tcp/ChatServiceImpl.cpp\")",
       "Bash(grep -n \"NotifyUploadDone\" /d/CPP/network/wChat/wChat_server/wChat_FileServer/*.cpp)",
-      "Bash(grep -n \"RegisterFile\\\\|UpdateFileStatus\\\\|GetFileInfo\\\\|AddFileMessage\" /d/CPP/network/wChat/wChat_server/wChat_server_tcp/*.cpp)"
+      "Bash(grep -n \"RegisterFile\\\\|UpdateFileStatus\\\\|GetFileInfo\\\\|AddFileMessage\" /d/CPP/network/wChat/wChat_server/wChat_server_tcp/*.cpp)",
+      "Bash(./.venv/Scripts/python.exe -c \"from app.main import app; print\\('app loaded:', app.title\\)\")",
+      "Bash(./.venv/Scripts/python.exe -m pip show h11 httpcore respx)",
+      "Bash(./.venv/Scripts/python.exe -m pip show h11 httpcore respx httpx)",
+      "Bash(./.venv/Scripts/python.exe -c \"import h11; print\\('h11 from:', h11.__file__\\)\")",
+      "Bash(./.venv/Scripts/python.exe -c \"import sys; [print\\(p\\) for p in sys.path]\")",
+      "Bash(./.venv/Scripts/python.exe -m pip install --force-reinstall --no-deps h11 httpcore -i https://pypi.tuna.tsinghua.edu.cn/simple)",
+      "Bash(./.venv/Scripts/python.exe -c \"import h11, httpcore, httpx, respx; print\\('all OK'\\)\")"
     ]
   }
 }

@@ -1,0 +1,40 @@
+presets:
+  - id: polite_decline
+    name: 礼貌拒绝
+    description: 对方提出了一个你不想接受的请求/邀约,需要委婉拒绝不伤感情
+    style_hints:
+      - 委婉但明确,不给对方错误的期待
+      - 先共情再拒绝
+      - 不找过度的借口,不反复解释
+
+  - id: comfort
+    name: 关心安慰
+    description: 对方情绪低落或遇到困难,需要共情和支持
+    style_hints:
+      - 共情优先,先接住情绪再说道理
+      - 不急着给建议或说教
+      - 提供陪伴感而不是解决方案
+
+  - id: humor_deflect
+    name: 幽默化解
+    description: 对方话题有点尴尬/敏感,用玩笑带过
+    style_hints:
+      - 自嘲优先,不冒犯对方
+      - 轻量级玩笑,不要刻意
+      - 顺势把话题往轻松方向引
+
+  - id: formal_business
+    name: 正式商务
+    description: 工作场景,需要专业简洁
+    style_hints:
+      - 书面化表达,避免口语词
+      - 结构清晰,信息完整
+      - 明确下一步行动或时间点
+
+  - id: flirty
+    name: 暧昧试探
+    description: 有好感的异性/对象对话,想进一步但不过火
+    style_hints:
+      - 留白,不把话说满
+      - 不直白表达,用暗示和调侃
+      - 保持话题延续性,给对方回应空间

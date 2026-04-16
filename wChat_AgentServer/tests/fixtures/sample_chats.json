@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": "朋友突然借钱",
+    "self_uid": 1001,
+    "peer_uid": 2002,
+    "friend_profile": {
+      "uid": 2002,
+      "name": "zhangsan",
+      "nick": "老张",
+      "sex": 1,
+      "desc": "大学室友,毕业后一年联系两三次"
+    },
+    "messages": [
+      {"msg_db_id": "101", "from_uid": 2002, "to_uid": 1001, "msg_type": 1, "content": "在吗", "send_time": 1713150000, "direction": 0},
+      {"msg_db_id": "102", "from_uid": 1001, "to_uid": 2002, "msg_type": 1, "content": "在的 咋了", "send_time": 1713150030, "direction": 1},
+      {"msg_db_id": "103", "from_uid": 2002, "to_uid": 1001, "msg_type": 1, "content": "兄弟 能借我五千块应急不 下个月发工资马上还你", "send_time": 1713150080, "direction": 0}
+    ]
+  },
+  {
+    "scenario": "对象情绪低落",
+    "self_uid": 1001,
+    "peer_uid": 3003,
+    "friend_profile": {
+      "uid": 3003,
+      "name": "xiaoli",
+      "nick": "小李",
+      "sex": 0,
+      "desc": "女朋友,恋爱一年"
+    },
+    "messages": [
+      {"msg_db_id": "201", "from_uid": 3003, "to_uid": 1001, "msg_type": 1, "content": "今天项目又被老板骂了", "send_time": 1713200000, "direction": 0},
+      {"msg_db_id": "202", "from_uid": 3003, "to_uid": 1001, "msg_type": 1, "content": "感觉自己好没用 做啥都做不好", "send_time": 1713200030, "direction": 0}
+    ]
+  },
+  {
+    "scenario": "同事邀约不想去",
+    "self_uid": 1001,
+    "peer_uid": 4004,
+    "friend_profile": {
+      "uid": 4004,
+      "name": "wangwu",
+      "nick": "老王",
+      "sex": 1,
+      "desc": "公司同部门同事"
+    },
+    "messages": [
+      {"msg_db_id": "301", "from_uid": 4004, "to_uid": 1001, "msg_type": 1, "content": "周六部门团建 去唱K 来不", "send_time": 1713260000, "direction": 0}
+    ]
+  }
+]
