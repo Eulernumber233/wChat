@@ -69,6 +69,12 @@ void TcpMgr::slot_tcp_connect(ServerInfo si)
     _last_heartbeat_rsp_ms = QDateTime::currentMSecsSinceEpoch(); // 初始化为当前时间
     _host = si.Host;
     _port = static_cast<uint16_t>(si.Port.toUInt());
+    // M2: persist AgentServer endpoint that StatusServer dispatched at
+    // login. Done here (not after CHAT_LOGIN_RSP) because ServerInfo is
+    // the only carrier of this data — by the time we hit chat login rsp
+    // we'd have lost it. UserMgr::Reset() clears these alongside token.
+    UserMgr::GetInstance()->SetAgentEndpoint(si.AgentHost, si.AgentPort);
+    UserMgr::GetInstance()->SetToken(si.Token);
     _socket.connectToHost(si.Host, _port);
 }
 
@@ -185,7 +191,14 @@ void TcpMgr::initHandlers()
         auto certification = jsonObj["certification"].toString();
         auto user_info = std::make_shared<UserInfo>(uid, name, nick, icon, sex,"",certification);
         UserMgr::GetInstance()->SetUserInfo(user_info);
-        UserMgr::GetInstance()->SetToken(jsonObj["token"].toString());
+        // Token is already set from the Gate login response (via
+        // LoginDialog → ServerInfo → TcpMgr::slot_tcp_connect).
+        // ChatServer's CHAT_LOGIN_RSP does NOT echo the token back,
+        // so reading jsonObj["token"] here would overwrite the valid
+        // token with an empty string — breaking Agent auth.
+        if (jsonObj.contains("token") && !jsonObj["token"].toString().isEmpty()) {
+            UserMgr::GetInstance()->SetToken(jsonObj["token"].toString());
+        }
 
         // STAGE-B: bind per-user paths before parsing history so that
         // UserMgr::AppendFriendList can probe the per-user file cache

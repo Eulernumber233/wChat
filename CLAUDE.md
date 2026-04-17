@@ -68,8 +68,9 @@ wChat/
 | GateServer | HTTP (Beast) | 8080 | 注册 / 登录 / 找回密码 / 获取验证码的 HTTP 入口。无状态，所有业务靠 gRPC 转发到 Status / Varify，靠 MySQL/Redis 落地。 |
 | StatusServer | gRPC | 50052 | 接收 Gate 的 `GetChatServer` 请求，按负载分配某个 ChatServer 的 (Host, Port)，生成与 uid 绑定的 Token 写入 Redis。 |
 | VarifyServer (Node.js) | gRPC | 50051 | 收到 `GetVarifyCode` → 生成 4 位验证码 → 写 Redis（带 TTL）→ 用 nodemailer 发邮件。 |
-| ChatServer（多实例） | TCP + gRPC | 实例 1：TCP 8090 / RPC 50055；实例 2：TCP 8091 / RPC 50056；… | 与客户端长连接，处理好友 / 消息业务。同时作为 gRPC server 接收其他 ChatServer 的转发请求。同一份可执行文件通过 `configs/chatserverN.ini` 启动多个实例。`[PeerServer]` 小节列出其他对端。 |
+| ChatServer（多实例） | TCP + gRPC | 实例 1：TCP 8090 / RPC 50055；实例 2：TCP 8091 / RPC 50056；… | 与客户端长连接，处理好友 / 消息业务。同时作为 gRPC server 接收其他 ChatServer 的转发请求 + 为 AgentServer 提供 `AgentDataService`（读历史/读资料）。同一份可执行文件通过 `configs/chatserverN.ini` 启动多个实例。`[PeerServer]` 小节列出其他对端。 |
 | FileServer（规划中） | TCP + gRPC | TCP 8100 | 文件上传 / 下载。ChatServer 生成一次性 file_token 授权上传下载。完成设计见 `docs/FileServer_Design.md`。 |
+| AgentServer（M1 完成，M2 接线中） | HTTP (FastAPI) + SSE | 8200 | Python 独立服务。给客户端 `ChatPage` 提供 AI 智能回复建议。自身**不直连 MySQL**，通过 gRPC 调 ChatServer 的 `AgentDataService` 取上下文；**直连 Redis** 校验 `utoken_<uid>` + 做会话记忆/限流。详见 §13。 |
 
 > 端口、密码、数据库名都在各服务的 ini 里。ChatServer 实例样例见 `wChat_server/wChat_server_tcp/configs/chatserver1.ini`；Gate / Status / Varify 的配置仍在各自目录下的 `config.ini`。
 
@@ -136,7 +137,7 @@ wChat/
 | 1025 / 1026 | `ID_PULL_CONV_SUMMARY` 请求 / 回包 | C ↔ ChatServer | TCP（登录后自动拉一次，返回每个会话的 last_msg/unread） |
 | 1027 / 1028 | `ID_PULL_MESSAGES` 请求 / 回包 | C ↔ ChatServer | TCP（打开会话时拉 30 条，或滚屏加载更老一页） |
 | 1029 / 1030 | `ID_GET_DOWNLOAD_TOKEN` 请求 / 回包 | C ↔ ChatServer | TCP（历史文件消息的按需下载凭证） |
-| 1031 | `ID_NOTIFY_KICK_USER` | ChatServer → C | TCP（被踢下线通知，携带 `reason`；详见 §8.5） |
+| 1031 | `ID_NOTIFY_KICK_USER` | ChatServer → C | TCP（被踢下线通知，携带 `reason`；详见 §8.6） |
 | 1101 / 1102 | 文件上传 请求 / 回包 | C ↔ ChatServer | TCP |
 | 1103 | `ID_FILE_NOTIFY_COMPLETE` | ChatServer → C（发送方） | TCP（上传完成 + 带 msg_db_id 让发送方写 LocalDb） |
 | 1105 | `ID_FILE_MSG_NOTIFY` | ChatServer → C（接收方） | TCP |
@@ -178,7 +179,7 @@ wChat/
 
 - `utoken_<uid>` — 登录 token，登录后由 StatusServer 写入，由 ChatServer 校验
 - `uip_<uid>` — 该 uid 当前所在的 ChatServer 名字，**这是跨服路由的关键**
-- `usession_<uid>` — 当前活跃 session 的 UUID，**被动踢除的真相来源**（见 §8.5）
+- `usession_<uid>` — 当前活跃 session 的 UUID，**被动踢除的真相来源**（见 §8.6）
 - `ubaseinfo_<uid>` — 用户基础信息缓存（搜索好友 / 加载好友列表时优先查此处）
 - `lock_<uid>` — 登录互斥分布式锁（`SET NX EX`）
 - `code_prefix<email>` — 邮件验证码（VarifyServer 写、Gate 读）
@@ -258,12 +259,49 @@ Client B: TcpMgr 收 ID_NOTIFY_TEXT_CHAT_MSG_REQ（含 msg_db_id）→ PersistTe
 - 加好友：`Client → ChatServer A (AddFriendApply) → MysqlMgr 写 friend_apply → Redis 查对方所在服务器 → 同服 Session 推 / 跨服 gRPC NotifyAddFriend → Client B 收到 ID_NOTIFY_ADD_FRIEND_REQ → ApplyFriendPage 显示`
 - 同意：`Client B → ChatServer (AuthFriendApply) → MysqlMgr 更新 friend_apply 状态 + AddFriend 双向插入 + 创建 chat_conversations → 路由通知邀请方 → 双方 ChatDialog/ContactList 同时更新`
 
-### 8.4 注册 / 找回密码 / 验证码
+### 8.4 AI 智能回复（AgentServer 接线后）
+```
+① 登录阶段：客户端同时拿到 ChatServer 和 AgentServer 地址
+Client → Gate(/user_login) → Status::GetChatServer
+    Status 选定 ChatServer + 选定 AgentServer + 写 utoken_<uid>
+    返回 {chat_host, chat_port, agent_host, agent_port, token}
+Client: UserMgr 同时保存 chat_* 和 agent_* 地址
+
+② AI 请求阶段：客户端直连 AgentServer，AgentServer 反过来调 ChatServer 拿数据
+Client(ChatPage AI 面板)
+  └─ HTTP POST http://<agent_host>:<agent_port>/agent/suggest_reply
+       Header: Authorization: Bearer <token>
+       Body  : {self_uid, peer_uid, recent_messages, preset_id, num_candidates}
+       ▼
+AgentServer::/agent/suggest_reply
+  ├─ require_auth: Redis GET utoken_<uid> == token?（Agent 直连 Redis，不走 ChatServer）
+  ├─ RateLimit: Redis INCR agent_quota_<uid>_<date>（日限）
+  ├─ LangGraph: analyze_intent → fetch_profile/history/summary → generate
+  │    各 fetch_* 节点按需通过 gRPC 调 ChatServer::AgentDataService
+  │    └─ gRPC GetChatHistory(self_uid, peer_uid, limit, before_id, auth_token)
+  │         └─▶ ChatServer::AgentDataServiceImpl
+  │                ├─ 校验 metadata 里的 token == Redis utoken_<self_uid>
+  │                └─ MysqlDao::GetMessagesPage（复用现有 SQL）
+  │    └─ gRPC GetFriendProfile(self_uid, peer_uid, auth_token)
+  │         └─▶ ChatServer: 先 Redis ubaseinfo_<peer_uid>，miss 走 MySQL
+  └─ LLM 调 DeepSeek 生成 N 条候选 → MemoryStore(Redis) 存快照
+       ▼
+Client: 展示候选；用户选中后 fill 到输入框或直接发
+
+③ 追问润色: 客户端拿 session_id + candidate_index + instruction → /agent/refine
+   AgentServer: MemoryStore 取快照 → LLM 单点重生成 → 返回单条
+```
+
+> **为什么 Agent 不直连 MySQL**：权限边界（token 校验、好友关系校验）、热缓存（`ubaseinfo_<uid>`）都集中在 ChatServer，让 Agent 再实现一遍会产生两份漂移的副本。DB schema 变更的同步面也只剩"C++ 副本们"，不会扩散到 Python。
+>
+> **为什么客户端不经 Gate 反代 Agent**：AI 请求耗时秒级 + SSE 流式，Gate 反代会成为瓶颈且难透传分片。由 Status 在登录时一次性下发 `agent_host/port`，沿用现有的 ChatServer 调度模型，对称简洁。
+
+### 8.5 注册 / 找回密码 / 验证码
 - 验证码：`Client → Gate(/get_varifycode) → gRPC → VarifyServer(Node.js) → Redis SET email→code (TTL) → nodemailer 发邮件`
 - 注册：`Client → Gate(/user_register) → 校验 Redis 验证码 → MysqlMgr::RegUser（调用存储过程 reg_user）`
 - 找回密码：`Client → Gate(/reset_pwd) → 校验验证码 → MysqlMgr::UpdatePwd`
 
-### 8.5 防重复登录 + 心跳检测（三层防护）
+### 8.6 防重复登录 + 心跳检测（三层防护）
 
 **核心不变量**：同一 uid 在整个系统中**最多一个活跃 session**。由三层机制共同保证：
 
@@ -322,8 +360,8 @@ LoginHandler:
 | **修改任意公共类**（CServer / LogicSystem / Mgr 等） | 4 个 C++ 服务下的同名文件**通常需要同步**——确认是否所有服务都有相同需求；不要假设是共享代码 |
 | **新增"按 uid 推消息"的业务** | 模板：先 `Redis Get uip_<uid>` → 同服走 `UserMgr::GetSession` → 跨服走 `ChatGrpcClient` + `ChatServiceImpl` 加新方法（要扩 proto） |
 | **客户端新增界面与服务端交互** | HTTP 业务找 `HttpMgr` + Gate 的 `LogicSystem::_post_handlers`；TCP 业务找 `TcpMgr::sig_send_data` + ChatServer 的 `LogicSystem::_fun_callbacks` |
-| **新增需要用户已登录的业务 handler** | 在 ChatServer handler 入口加 `if (!ValidateSession(session)) return;`（见 §8.5 第 2 层）；否则僵尸 session 的消息会被处理 |
-| **改踢人 / 断线 / 心跳逻辑** | 先读 §8.5 三条红线；改完端到端测：同服双登、跨服双登、客户端崩溃、服务端崩溃、拔网线、快速连续 3 次登录 |
+| **新增需要用户已登录的业务 handler** | 在 ChatServer handler 入口加 `if (!ValidateSession(session)) return;`（见 §8.6 第 2 层）；否则僵尸 session 的消息会被处理 |
+| **改踢人 / 断线 / 心跳逻辑** | 先读 §8.6 三条红线；改完端到端测：同服双登、跨服双登、客户端崩溃、服务端崩溃、拔网线、快速连续 3 次登录 |
 
 ---
 
@@ -372,19 +410,38 @@ LoginHandler:
 
 ## 13. AgentServer（智能回复子系统，Python 独立服务）
 
-**进度状态（截至 2026-04-16）**：M1 完成，骨架 + Agent 核心 + 5 个 Preset + 22 个测试通过；**未接入网络**（gRPC 与 ChatServer 通信、SSE 流式、HTTP 鉴权全部留 TODO 至 M2）。
+**进度状态（截至 2026-04-16）**：M1 完成，骨架 + Agent 核心 + 5 个 Preset + 22 个测试通过；**M2 进行中**——架构决策已对齐（见 §13.3），gRPC / SSE / 鉴权 / Redis memory / 客户端 UI 分步实现。
 
 ### 13.1 一句话定位
 独立 Python 微服务 `wChat_AgentServer/`，与 4 个 C++ 服务平级。基于 LangGraph + DeepSeek，给客户端 ChatPage 提供"读取最近聊天 → 分析意图 → 生成 N 条候选回复"的 AI 辅助。
 
-### 13.2 技术栈选型与原因
+### 13.2 架构决策（M2 定稿）
+
+以下三条是 M1 → M2 过渡时对齐的核心设计，动这三条就得重读本节：
+
+1. **Agent 不直连 MySQL，走 ChatServer 的 gRPC `AgentDataService`**
+   - 理由：权限边界（token 校验、好友可见性）和热缓存（`ubaseinfo_<uid>`）都已经在 ChatServer 里，Agent 再实现一份会产生两份漂移的副本。
+   - Agent **直连 Redis** 只为一件事：校验 `utoken_<uid>` + 会话记忆/限流计数（不碰业务数据）。
+   - 例外：未来 RAG 的向量库是 Agent 独有的，那部分直连无妨。
+
+2. **客户端定位 Agent 靠 StatusServer 下发，不走 Gate 反代、不走硬编码**
+   - 登录时 `Status::GetChatServer` 响应里**同时下发** `{chat_host, chat_port, agent_host, agent_port, token}`。
+   - 客户端 `UserMgr` 把 `agent_*` 也存下来；`ChatPage` AI 面板直连 `http://agent_host:agent_port/agent/...`。
+   - 拒绝 Gate 反代：AI 秒级耗时 + SSE 流式穿反代麻烦；拒绝客户端经 ChatServer 转发：会阻塞聊天主路径。
+
+3. **AgentServer 独立进程、独立协议**
+   - 对客户端：HTTP + SSE（快路径，不挤占 ChatServer）
+   - 对 ChatServer：gRPC 只用来拿数据（慢路径，和正常聊天互不影响）
+   - ChatServer 的 gRPC server 同时承载原有的 `ChatService`（跨服务转发）和新增的 `AgentDataService`（数据查询），端口复用，`main.cc` 里多注册一个 service 即可。
+
+### 13.3 技术栈选型与原因
 - **Python 3.12 + FastAPI + uvicorn** —— LLM/Agent 生态在 Python 最成熟；与 C++ 主链解耦避免拖慢 IM
 - **LangGraph 0.2.76** —— 状态图描述 Agent 流程，比手写 while 循环结构清晰
 - **DeepSeek API（OpenAI 兼容）** —— 复用 `openai` SDK，换 Qwen/Moonshot 只换 base_url
 - **Pydantic 2** —— 所有跨层数据契约
 - **MockBackend** —— 替代未来 gRPC 客户端，让 Agent 在没有 ChatServer 的情况下能完整跑通
 
-### 13.3 目录结构（详见 [wChat_AgentServer/README.md](wChat_AgentServer/README.md)）
+### 13.4 目录结构（详见 [wChat_AgentServer/README.md](wChat_AgentServer/README.md)）
 ```
 wChat_AgentServer/
 ├── app/
@@ -401,7 +458,7 @@ wChat_AgentServer/
 └── tests/          22 个用例，FakeLLM 不消耗 DeepSeek 额度
 ```
 
-### 13.4 已实现功能
+### 13.5 已实现功能
 - HTTP 端点：`POST /agent/suggest_reply`、`POST /agent/refine`、`GET /agent/presets`、`GET /agent/health`（`/agent/suggest_reply/stream` 返回 501，M2 实现）
 - Agent 流程：`analyze_intent → fetch_profile/history/summary（按需）→ generate_candidates`
 - 5 个内置 Preset：礼貌拒绝 / 关心安慰 / 幽默化解 / 正式商务 / 暧昧试探
@@ -409,7 +466,7 @@ wChat_AgentServer/
 - 候选数量强制对齐（多了截断，少了占位填充）
 - LLM 返回非法 JSON 的容错路径
 
-### 13.5 数据契约对齐（必须保持）
+### 13.6 数据契约对齐（必须保持）
 `app/schemas/chat.py` 的 `TextChatData` 字段必须与以下三处保持一致，否则未来客户端发来的 JSON 会反序列化失败：
 - 客户端 [wChat_client/userdata.h:172](wChat_client/userdata.h#L172) `TextChatData`
 - 客户端 [wChat_client/global.h:89](wChat_client/global.h#L89) `MsgType` 枚举
@@ -417,13 +474,13 @@ wChat_AgentServer/
 
 注意 `msg_db_id` 用 **str** 在 wire 上传，因为 jsoncpp（C++ 侧）不支持 int64（见 §1）。
 
-### 13.6 配置
+### 13.7 配置
 - **密钥** 走 `.env`（gitignored）：`DEEPSEEK_API_KEY=sk-xxx`
 - **参数** 走 `config/agent.ini`（gitignored）：端口、温度、候选数、Backend 模式等
 - 优先级：env > ini > 代码默认值
 - 模板：`.env.example`、`config/agent.ini.example`（提交到 git）
 
-### 13.7 启动与测试
+### 13.8 启动与测试
 ```powershell
 cd wChat_AgentServer
 .venv\Scripts\Activate.ps1          # 虚拟环境已建好
@@ -432,17 +489,46 @@ uvicorn app.main:app --reload --port 8200   # 启服务
 ```
 VSCode 用户：项目根的 `.vscode/launch.json` 已配好 F5 启动项（AgentServer + Pytest）；`.vscode/settings.json` 把解释器指向 `wChat_AgentServer/.venv/`。
 
-### 13.8 M2 待办（接入 wChat 主链时做）
-1. `proto/message.proto` 新增 `AgentDataService`（`GetChatHistory` / `GetFriendProfile`），proto 草案见 [wChat_AgentServer/app/rpc/README.md](wChat_AgentServer/app/rpc/README.md)
-2. ChatServer 实现对应 RPC，复用 `MysqlDao::GetMessagesPage` + Redis `ubaseinfo_<uid>`
-3. Python 侧实现 `GrpcAgentDataClient`（接口形状已与 `MockBackend` 对齐，一行换实现）
-4. HTTP 鉴权：`Authorization: Bearer <token>` 校验 Redis `utoken_<uid>`
-5. SSE 流式：`/agent/suggest_reply/stream` 接通 LangGraph 的 `astream` API
-6. Redis 替换 InMemoryStore，支持多副本 + TTL
-7. 限流（`agent.ini` 的 `RateLimit.PerUserPerDay` 已留配置位）
-8. 客户端 `ChatPage` 加 AI 面板 UI
+### 13.9 M2 实施步骤（已对齐架构，按以下顺序推进）
 
-### 13.9 修改 AgentServer 时的检查清单
+每步独立可测；前 2 步对 C++ 侧零侵入，风险低。
+
+**Step 1 —— 鉴权 + Redis 会话记忆 + 限流（纯 Python）**
+- `app/security/auth.py`：`require_auth` 依赖，Header `Authorization: Bearer <token>` → Agent 自己连 Redis GET `utoken_<uid>` 校验。
+- `app/memory/redis_store.py`：`MemoryStore` 的 Redis 实现（key `agent_session:<sid>`，TTL 1h）；`[Memory] Backend=memory|redis` 切换。
+- `app/security/rate_limit.py`：Redis INCR `agent_quota_<uid>_<YYYYMMDD>` + EXPIRE 到当日 24:00。
+- 用 `fakeredis` 做单测，不依赖真 Redis。
+
+**Step 2 —— proto 扩展 + Python stub 生成**
+- [proto/message.proto](proto/message.proto) 新增 `AgentDataService`（`GetChatHistory` / `GetFriendProfile`），proto 草案见 [wChat_AgentServer/app/rpc/README.md](wChat_AgentServer/app/rpc/README.md)。
+- [proto/generate_pb.bat](proto/generate_pb.bat) 追加 Python grpc 生成到 `wChat_AgentServer/app/rpc/gen/`，加 `__init__.py`、pytest ignore。
+- **同时**在 `GetChatServerRsp` proto 里加 `agent_host` / `agent_port` 字段（为 Step 4 铺路）。
+
+**Step 3 —— ChatServer 实现 `AgentDataService`（C++）**
+- 新建 `wChat_server_tcp/AgentDataServiceImpl.{h,cc}`（与 `ChatServiceImpl` 分文件）。
+- `GetChatHistory` 走 `MysqlDao::GetMessagesPage`（复用）；`GetFriendProfile` 先 Redis `ubaseinfo_<peer_uid>` 后 MySQL 兜底。
+- Token 校验：从 gRPC metadata 读 `auth_token`，与 Redis `utoken_<self_uid>` 比对。
+- `main.cc` 把 `AgentDataServiceImpl` 注册到已有的 gRPC server（端口复用 50055 / 50056）。
+
+**Step 4 —— StatusServer 下发 `agent_host/port` + 客户端登录链路接入**
+- `wChat_StatusServer` 读 `[AgentServer]` 配置段（host + port）或按 AgentServer 实例池做简单轮询。
+- `StatusServiceImpl::GetChatServer` 响应多塞 `agent_host/agent_port`。
+- Gate `/user_login` JSON 回包透传这两个字段。
+- 客户端 `HttpMgr` 登录响应解析 + `UserMgr` 保存 `agent_host/agent_port`。
+
+**Step 5 —— Python 侧 `GrpcAgentDataClient`**
+- 实现 `app/rpc/agent_data_client.py`（`grpc.aio.insecure_channel` + metadata 带 token）。
+- proto row ↔ `TextChatData` / `UserProfile` 映射；`msg_db_id` int64 → str（jsoncpp 约束，见 §1）。
+- `deps.py::_backend()` 按 `settings.backend.mode` 分叉 mock / grpc；统一 `AgentDataClient` Protocol。
+
+**Step 6 —— SSE 流式**
+- 把 `suggest_stream.py` 从 501 改成 `StreamingResponse`；LangGraph `astream` 驱动；事件序列 `intent → candidate_delta×N → candidate_done×N → done`。
+
+**Step 7 —— 客户端 `ChatPage` AI 面板 UI**
+- 输入框旁加"AI 建议"按钮 → 弹面板（Preset 选择 + 候选列表 + 追问输入框）。
+- 走 `QNetworkAccessManager` 直连 `http://<agent_host>:<agent_port>/agent/suggest_reply`，Header 带登录 token。
+
+### 13.10 修改 AgentServer 时的检查清单
 | 修改类型 | 必须同步检查 |
 |---|---|
 | **改 schemas/chat.py 字段** | 客户端 `TextChatData` + ChatServer SQL + 测试 fixtures |

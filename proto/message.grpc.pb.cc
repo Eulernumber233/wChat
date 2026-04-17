@@ -559,5 +559,108 @@ FileService::Service::~Service() {
 }
 
 
+static const char* AgentDataService_method_names[] = {
+  "/message.AgentDataService/GetChatHistory",
+  "/message.AgentDataService/GetFriendProfile",
+};
+
+std::unique_ptr< AgentDataService::Stub> AgentDataService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
+  (void)options;
+  std::unique_ptr< AgentDataService::Stub> stub(new AgentDataService::Stub(channel));
+  return stub;
+}
+
+AgentDataService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
+  : channel_(channel), rpcmethod_GetChatHistory_(AgentDataService_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_GetFriendProfile_(AgentDataService_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  {}
+
+::grpc::Status AgentDataService::Stub::GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::message::GetChatHistoryRsp* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::message::GetChatHistoryReq, ::message::GetChatHistoryRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_GetChatHistory_, context, request, response);
+}
+
+void AgentDataService::Stub::experimental_async::GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::message::GetChatHistoryReq, ::message::GetChatHistoryRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetChatHistory_, context, request, response, std::move(f));
+}
+
+void AgentDataService::Stub::experimental_async::GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetChatHistory_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::message::GetChatHistoryRsp>* AgentDataService::Stub::PrepareAsyncGetChatHistoryRaw(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::message::GetChatHistoryRsp, ::message::GetChatHistoryReq, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_GetChatHistory_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::message::GetChatHistoryRsp>* AgentDataService::Stub::AsyncGetChatHistoryRaw(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncGetChatHistoryRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status AgentDataService::Stub::GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::message::GetFriendProfileRsp* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::message::GetFriendProfileReq, ::message::GetFriendProfileRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_GetFriendProfile_, context, request, response);
+}
+
+void AgentDataService::Stub::experimental_async::GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::message::GetFriendProfileReq, ::message::GetFriendProfileRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetFriendProfile_, context, request, response, std::move(f));
+}
+
+void AgentDataService::Stub::experimental_async::GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetFriendProfile_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::message::GetFriendProfileRsp>* AgentDataService::Stub::PrepareAsyncGetFriendProfileRaw(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::message::GetFriendProfileRsp, ::message::GetFriendProfileReq, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_GetFriendProfile_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::message::GetFriendProfileRsp>* AgentDataService::Stub::AsyncGetFriendProfileRaw(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncGetFriendProfileRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+AgentDataService::Service::Service() {
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      AgentDataService_method_names[0],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< AgentDataService::Service, ::message::GetChatHistoryReq, ::message::GetChatHistoryRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](AgentDataService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::message::GetChatHistoryReq* req,
+             ::message::GetChatHistoryRsp* resp) {
+               return service->GetChatHistory(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      AgentDataService_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< AgentDataService::Service, ::message::GetFriendProfileReq, ::message::GetFriendProfileRsp, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](AgentDataService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::message::GetFriendProfileReq* req,
+             ::message::GetFriendProfileRsp* resp) {
+               return service->GetFriendProfile(ctx, req, resp);
+             }, this)));
+}
+
+AgentDataService::Service::~Service() {
+}
+
+::grpc::Status AgentDataService::Service::GetChatHistory(::grpc::ServerContext* context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status AgentDataService::Service::GetFriendProfile(::grpc::ServerContext* context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+
 }  // namespace message
 

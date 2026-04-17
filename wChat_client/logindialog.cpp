@@ -181,10 +181,16 @@ void LoginDialog::initHttpHandlers()
         si.Port = jsonObj["port"].toString();
         si.Token = jsonObj["token"].toString();
 
+        // M2: AgentServer address (optional). Absent key or empty string
+        // both mean "no AI features on this deploy".
+        si.AgentHost = jsonObj.contains("agent_host") ? jsonObj["agent_host"].toString() : QString();
+        si.AgentPort = jsonObj.contains("agent_port") ? jsonObj["agent_port"].toInt() : 0;
+
         _uid = si.Uid;
         _token = si.Token;
         qDebug()<< "email is " << email << " uid is " << si.Uid <<" host is "
-                 << si.Host << " Port is " << si.Port << " Token is " << si.Token;
+                 << si.Host << " Port is " << si.Port << " Token is " << si.Token
+                 << " AgentHost is " << si.AgentHost << " AgentPort is " << si.AgentPort;
         emit sig_connect_tcp(si);
     });
 }

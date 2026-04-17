@@ -24,7 +24,7 @@ ChatConPool::~ChatConPool()
 	}
 }
 
-std::unique_ptr<ChatService::Stub>ChatConPool::getConnection() {
+std::unique_ptr<ChatService::Stub> ChatConPool::getConnection() {
     std::unique_lock<std::mutex> lock(mutex_);
     cond_.wait(lock, [this] {
         if (b_stop_) {
@@ -36,7 +36,7 @@ std::unique_ptr<ChatService::Stub>ChatConPool::getConnection() {
     if (b_stop_) {
         return  nullptr;
     }
-    auto context = std::move(connections_.front());
+	std::unique_ptr<ChatService::Stub> context = std::move(connections_.front());
     connections_.pop();
     return context;
 }

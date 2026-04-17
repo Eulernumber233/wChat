@@ -30,7 +30,7 @@ async def test_get_chat_history_respects_limit(mock_backend):
 
 @pytest.mark.asyncio
 async def test_get_friend_profile_found(mock_backend):
-    tool = GetFriendProfileTool(mock_backend, peer_uid=2002)
+    tool = GetFriendProfileTool(mock_backend, self_uid=1001, peer_uid=2002)
     r = await tool.run()
     assert r.ok
     assert r.data["name"] == "zhangsan"
@@ -38,7 +38,7 @@ async def test_get_friend_profile_found(mock_backend):
 
 @pytest.mark.asyncio
 async def test_get_friend_profile_missing(mock_backend):
-    tool = GetFriendProfileTool(mock_backend, peer_uid=99999)
+    tool = GetFriendProfileTool(mock_backend, self_uid=1001, peer_uid=99999)
     r = await tool.run()
     assert not r.ok
     assert r.error == "profile_not_found"

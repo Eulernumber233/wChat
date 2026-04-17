@@ -15,8 +15,16 @@ public:
     friend class Singleton<UserMgr>;
     ~ UserMgr();
     void SetToken(QString token);
+    QString GetToken() const { return _token; }
     int GetUid();
     QString GetName();
+
+    // M2: AgentServer endpoint cached from login response. The AI panel
+    // reads these; HasAgent() is the gate for showing AI UI at all.
+    void SetAgentEndpoint(const QString& host, int port);
+    QString GetAgentHost() const { return _agent_host; }
+    int     GetAgentPort() const { return _agent_port; }
+    bool    HasAgent() const { return !_agent_host.isEmpty() && _agent_port > 0; }
     std::vector<std::shared_ptr<ApplyInfo>>GetApplyList();
     std::shared_ptr<UserInfo> GetUserInfo();
     bool AlreadyApply(int uid);
@@ -44,6 +52,8 @@ public:
 private:
     UserMgr();
     QString _token;
+    QString _agent_host;   // M2: empty string when deploy has no AgentServer
+    int     _agent_port = 0;
     std::vector<std::shared_ptr<ApplyInfo>>_apply_list;//申请列表
     std::shared_ptr<UserInfo> _user_info;
     QMap<int,std::shared_ptr<FriendInfo>>_friend_map;

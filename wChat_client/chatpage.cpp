@@ -11,19 +11,22 @@
 #include <QPointer>
 #include <QFile>
 #include <QPixmap>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QScrollArea>
 ChatPage::ChatPage(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ChatPage)
 {
     ui->setupUi(this);
-    //设置按钮样式
     ui->send_btn->SetState("normal","hover","press");
-
-    //设置图标样式
     ui->emo_lb->SetState("normal","hover","press","normal","hover","press");
     ui->file_lb->SetState("normal","hover","press","normal","hover","press");
 
     connect(ui->chatEdit,&MessageTextEdit::send,this,&ChatPage::on_send_btn_clicked);
+
+    setupAiPanel();
 }
 
 ChatPage::~ChatPage()
@@ -162,6 +165,15 @@ void ChatPage::SetUserInfo(std::shared_ptr<UserInfo> user_info)
 {
     _user_info = user_info;
     ui->title_lb->setText(_user_info->_name);
+
+    // M2: show AI button only when AgentServer is available
+    if (_ai_toggle_btn) {
+        _ai_toggle_btn->setVisible(UserMgr::GetInstance()->HasAgent());
+    }
+    // hide panel when switching conversations
+    if (_ai_panel) {
+        _ai_panel->setVisible(false);
+    }
 
     // STAGE-C: first paint from LocalDb (instant). Then fire one
     // ID_PULL_MESSAGES_REQ to reconcile with the server. The response
@@ -353,4 +365,361 @@ void ChatPage::AppendImageBubble(const QString& image_path, ChatRole role,
     PictureBubble* pBubble = new PictureBubble(QPixmap(image_path), role);
     pChatItem->setWidget(pBubble);
     ui->chat_data_list->appendChatItem(pChatItem);
+}
+
+// ================================================================
+// AI Suggestion Panel (M2 Step 7)
+// ================================================================
+
+static const char* AI_BTN_STYLE =
+    "QPushButton { background: #7c5cfc; color: white; border-radius: 3px; font-size: 11px; }"
+    "QPushButton:hover { background: #6a4de0; }"
+    "QPushButton:disabled { background: #cccccc; }";
+
+void ChatPage::setupAiPanel()
+{
+    auto* toolLayout = qobject_cast<QHBoxLayout*>(ui->tool_wid->layout());
+    if (!toolLayout) return;
+
+    _ai_toggle_btn = new QPushButton("AI", ui->tool_wid);
+    _ai_toggle_btn->setObjectName("ai_toggle_btn");
+    _ai_toggle_btn->setFixedSize(36, 25);
+    _ai_toggle_btn->setStyleSheet(
+        "QPushButton { background: #7c5cfc; color: white; border-radius: 4px;"
+        "  font-size: 12px; font-weight: bold; }"
+        "QPushButton:hover { background: #6a4de0; }"
+        "QPushButton:pressed { background: #5a3ec0; }"
+        "QPushButton:disabled { background: #cccccc; }"
+    );
+    _ai_toggle_btn->setVisible(false);
+    toolLayout->insertWidget(toolLayout->count() - 1, _ai_toggle_btn);
+    connect(_ai_toggle_btn, &QPushButton::clicked, this, &ChatPage::onAiToggleClicked);
+
+    _ai_panel = new QWidget(this);
+    _ai_panel->setObjectName("ai_panel");
+    _ai_panel->setStyleSheet(
+        "#ai_panel { background: #f8f7ff; border: 1px solid #e0ddf5; border-radius: 6px;"
+        "  margin: 2px 4px; padding: 6px; }"
+    );
+    _ai_panel->setVisible(false);
+
+    auto* panelLayout = new QVBoxLayout(_ai_panel);
+    panelLayout->setContentsMargins(6, 4, 6, 4);
+    panelLayout->setSpacing(4);
+
+    // row 1: preset + custom prompt + request + close
+    auto* topRow = new QHBoxLayout;
+    topRow->setSpacing(4);
+
+    _ai_preset_combo = new QComboBox;
+    _ai_preset_combo->setFixedSize(90, 26);
+    _ai_preset_combo->addItem(QString::fromUtf8("自动"), "");
+    _ai_preset_combo->addItem(QString::fromUtf8("礼貌拒绝"), "polite_decline");
+    _ai_preset_combo->addItem(QString::fromUtf8("关心安慰"), "comfort");
+    _ai_preset_combo->addItem(QString::fromUtf8("幽默化解"), "humor_deflect");
+    _ai_preset_combo->addItem(QString::fromUtf8("正式商务"), "formal_business");
+    _ai_preset_combo->addItem(QString::fromUtf8("暧昧试探"), "flirty");
+    topRow->addWidget(_ai_preset_combo);
+
+    _ai_custom_prompt = new QLineEdit;
+    _ai_custom_prompt->setFixedHeight(26);
+    _ai_custom_prompt->setPlaceholderText(QString::fromUtf8("补充背景（可选）如：我们昨天刚吵过架 / 他是我领导"));
+    _ai_custom_prompt->setStyleSheet("QLineEdit { font-size: 11px; padding: 2px 4px; }");
+    topRow->addWidget(_ai_custom_prompt, 1);
+
+    _ai_request_btn = new QPushButton(QString::fromUtf8("获取建议"));
+    _ai_request_btn->setFixedSize(70, 26);
+    _ai_request_btn->setStyleSheet(AI_BTN_STYLE);
+    topRow->addWidget(_ai_request_btn);
+
+    auto* closeBtn = new QPushButton("X");
+    closeBtn->setFixedSize(26, 26);
+    closeBtn->setStyleSheet("QPushButton { border: none; font-weight: bold; }");
+    topRow->addWidget(closeBtn);
+
+    panelLayout->addLayout(topRow);
+
+    _ai_status_label = new QLabel;
+    _ai_status_label->setStyleSheet("QLabel { color: #888; font-size: 11px; }");
+    _ai_status_label->setVisible(false);
+    panelLayout->addWidget(_ai_status_label);
+
+    _ai_candidates_container = new QWidget;
+    _ai_candidates_layout = new QVBoxLayout(_ai_candidates_container);
+    _ai_candidates_layout->setContentsMargins(0, 0, 0, 0);
+    _ai_candidates_layout->setSpacing(3);
+    panelLayout->addWidget(_ai_candidates_container);
+
+    auto* mainLayout = qobject_cast<QVBoxLayout*>(ui->chat_data_wid->layout());
+    if (mainLayout) {
+        int toolIdx = mainLayout->indexOf(ui->tool_wid);
+        mainLayout->insertWidget(toolIdx + 1, _ai_panel);
+    }
+
+    connect(_ai_request_btn, &QPushButton::clicked, this, &ChatPage::onAiRequestClicked);
+    connect(closeBtn, &QPushButton::clicked, [this]() { _ai_panel->setVisible(false); });
+}
+
+void ChatPage::onAiToggleClicked()
+{
+    _ai_panel->setVisible(!_ai_panel->isVisible());
+}
+
+QJsonArray ChatPage::buildRecentMessagesJson(int limit)
+{
+    QJsonArray arr;
+    if (!_user_info) return arr;
+
+    int self_uid = UserMgr::GetInstance()->GetUid();
+    int peer_uid = _user_info->_uid;
+    auto rows = LocalDb::Inst().LoadRecent(peer_uid, limit);
+    for (const auto& row : rows) {
+        auto tds = LocalDb::RowToTextChatData(row, self_uid);
+        for (const auto& td : tds) {
+            if (td->_msg_type != MSG_TYPE_TEXT) continue;
+            QJsonObject m;
+            m["msg_db_id"]  = QString::number(td->_msg_db_id);
+            m["from_uid"]   = td->_from_uid;
+            m["to_uid"]     = td->_to_uid;
+            m["msg_type"]   = td->_msg_type;
+            m["content"]    = td->_msg_content;
+            m["send_time"]  = static_cast<double>(td->_send_time);
+            m["direction"]  = (td->_from_uid == self_uid) ? 1 : 0;
+            arr.append(m);
+        }
+    }
+    return arr;
+}
+
+QNetworkRequest ChatPage::makeAgentRequest(const QString& path)
+{
+    QString host  = UserMgr::GetInstance()->GetAgentHost();
+    int port      = UserMgr::GetInstance()->GetAgentPort();
+    QString token = UserMgr::GetInstance()->GetToken();
+    int self_uid  = UserMgr::GetInstance()->GetUid();
+
+    QUrl url(QString("http://%1:%2%3").arg(host).arg(port).arg(path));
+    QNetworkRequest req(url);
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    req.setRawHeader("Authorization", ("Bearer " + token).toUtf8());
+    req.setRawHeader("X-Self-Uid", QString::number(self_uid).toUtf8());
+    return req;
+}
+
+void ChatPage::clearCandidatesUi()
+{
+    QLayoutItem* item;
+    while ((item = _ai_candidates_layout->takeAt(0)) != nullptr) {
+        delete item->widget();
+        delete item;
+    }
+    _ai_candidate_texts.clear();
+}
+
+void ChatPage::renderCandidates(const QJsonArray& candidates)
+{
+    clearCandidatesUi();
+    for (int i = 0; i < candidates.size(); ++i) {
+        QJsonObject c = candidates[i].toObject();
+        QString style   = c["style"].toString();
+        QString content = c["content"].toString();
+        _ai_candidate_texts.append(content);
+
+        auto* row = new QWidget;
+        auto* rowLayout = new QHBoxLayout(row);
+        rowLayout->setContentsMargins(2, 2, 2, 2);
+        rowLayout->setSpacing(4);
+
+        auto* label = new QLabel(QString("[%1] %2").arg(style, content));
+        label->setWordWrap(true);
+        label->setStyleSheet("QLabel { font-size: 12px; color: #333; }");
+        rowLayout->addWidget(label, 1);
+
+        auto* refineBtn = new QPushButton(QString::fromUtf8("润色"));
+        refineBtn->setFixedSize(40, 24);
+        refineBtn->setStyleSheet(AI_BTN_STYLE);
+        int idx = i;
+        connect(refineBtn, &QPushButton::clicked, [this, idx]() {
+            onCandidateRefineClicked(idx);
+        });
+        rowLayout->addWidget(refineBtn);
+
+        auto* useBtn = new QPushButton(QString::fromUtf8("采用"));
+        useBtn->setFixedSize(40, 24);
+        useBtn->setStyleSheet(AI_BTN_STYLE);
+        connect(useBtn, &QPushButton::clicked, [this, idx]() {
+            onCandidateUseClicked(idx);
+        });
+        rowLayout->addWidget(useBtn);
+
+        _ai_candidates_layout->addWidget(row);
+    }
+}
+
+void ChatPage::onAiRequestClicked()
+{
+    if (!UserMgr::GetInstance()->HasAgent()) {
+        _ai_status_label->setText(QString::fromUtf8("AI 服务不可用"));
+        _ai_status_label->setVisible(true);
+        return;
+    }
+    if (!_user_info) return;
+
+    auto recentMsgs = buildRecentMessagesJson(10);
+    if (recentMsgs.isEmpty()) {
+        _ai_status_label->setText(QString::fromUtf8("没有可分析的文本消息"));
+        _ai_status_label->setVisible(true);
+        return;
+    }
+
+    _ai_request_btn->setEnabled(false);
+    _ai_status_label->setText(QString::fromUtf8("正在生成建议..."));
+    _ai_status_label->setVisible(true);
+    _ai_custom_prompt->setPlaceholderText(QString::fromUtf8("补充背景（可选）如：我们昨天刚吵过架 / 他是我领导"));
+    clearCandidatesUi();
+
+    int self_uid = UserMgr::GetInstance()->GetUid();
+    QString presetId = _ai_preset_combo->currentData().toString();
+    QString customPrompt = _ai_custom_prompt->text().trimmed();
+
+    QJsonObject body;
+    body["self_uid"]         = self_uid;
+    body["peer_uid"]         = _user_info->_uid;
+    body["recent_messages"]  = recentMsgs;
+    body["num_candidates"]   = 3;
+    if (!presetId.isEmpty())
+        body["preset_id"] = presetId;
+    if (!customPrompt.isEmpty())
+        body["custom_prompt"] = customPrompt;
+
+    QByteArray data = QJsonDocument(body).toJson(QJsonDocument::Compact);
+    auto* reply = _ai_nam.post(makeAgentRequest("/agent/suggest_reply"), data);
+    connect(reply, &QNetworkReply::finished, [this, reply]() {
+        onAiReplyFinished(reply);
+    });
+}
+
+void ChatPage::onAiReplyFinished(QNetworkReply* reply)
+{
+    _ai_request_btn->setEnabled(true);
+    reply->deleteLater();
+
+    if (reply->error() != QNetworkReply::NoError) {
+        int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        QString errDetail;
+        if (httpStatus == 429)
+            errDetail = QString::fromUtf8("今日使用次数已达上限");
+        else if (httpStatus == 401)
+            errDetail = QString::fromUtf8("认证失败，请重新登录");
+        else if (httpStatus == 404)
+            errDetail = QString::fromUtf8("预设不存在");
+        else
+            errDetail = QString::fromUtf8("请求失败: ") + reply->errorString();
+        _ai_status_label->setText(errDetail);
+        _ai_status_label->setVisible(true);
+        return;
+    }
+
+    QByteArray raw = reply->readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(raw);
+    if (!doc.isObject()) {
+        _ai_status_label->setText(QString::fromUtf8("响应解析失败"));
+        return;
+    }
+    QJsonObject obj = doc.object();
+
+    _ai_session_id = obj["session_id"].toString();
+    QString intent = obj["intent_analysis"].toString();
+
+    _ai_status_label->setText(QString::fromUtf8("意图分析: ") + intent);
+    _ai_status_label->setVisible(true);
+
+    renderCandidates(obj["candidates"].toArray());
+
+    _ai_custom_prompt->clear();
+    _ai_custom_prompt->setPlaceholderText(QString::fromUtf8("修改指令（如：其实我想答应但不想太主动 / 再简短些）"));
+}
+
+void ChatPage::onCandidateUseClicked(int index)
+{
+    if (index < 0 || index >= _ai_candidate_texts.size()) return;
+    ui->chatEdit->setText(_ai_candidate_texts[index]);
+    _ai_panel->setVisible(false);
+}
+
+void ChatPage::onCandidateRefineClicked(int index)
+{
+    if (index < 0 || index >= _ai_candidate_texts.size()) return;
+    if (_ai_session_id.isEmpty()) {
+        _ai_status_label->setText(QString::fromUtf8("请先获取建议"));
+        _ai_status_label->setVisible(true);
+        return;
+    }
+
+    // simple input: reuse the custom_prompt lineEdit as the refine instruction
+    QString instruction = _ai_custom_prompt->text().trimmed();
+    if (instruction.isEmpty()) {
+        _ai_status_label->setText(QString::fromUtf8("请在提示词框中输入润色指令，如「再简短些」"));
+        _ai_status_label->setVisible(true);
+        return;
+    }
+
+    _ai_request_btn->setEnabled(false);
+    _ai_status_label->setText(
+        QString::fromUtf8("正在润色第 %1 条...").arg(index + 1));
+    _ai_status_label->setVisible(true);
+
+    QJsonObject body;
+    body["session_id"]      = _ai_session_id;
+    body["candidate_index"] = index;
+    body["instruction"]     = instruction;
+
+    QByteArray data = QJsonDocument(body).toJson(QJsonDocument::Compact);
+    auto* reply = _ai_nam.post(makeAgentRequest("/agent/refine"), data);
+
+    connect(reply, &QNetworkReply::finished, [this, reply, index]() {
+        onRefineReplyFinished(reply, index);
+    });
+}
+
+void ChatPage::onRefineReplyFinished(QNetworkReply* reply, int index)
+{
+    _ai_request_btn->setEnabled(true);
+    reply->deleteLater();
+
+    if (reply->error() != QNetworkReply::NoError) {
+        int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        QString err;
+        if (httpStatus == 404)
+            err = QString::fromUtf8("会话已过期，请重新获取建议");
+        else
+            err = QString::fromUtf8("润色失败: ") + reply->errorString();
+        _ai_status_label->setText(err);
+        return;
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+    if (!doc.isObject()) return;
+
+    QJsonObject c = doc.object();
+    QString style   = c["style"].toString();
+    QString content = c["content"].toString();
+
+    if (index >= 0 && index < _ai_candidate_texts.size()) {
+        _ai_candidate_texts[index] = content;
+    }
+
+    // update the label in the UI row
+    auto* rowWidget = _ai_candidates_layout->itemAt(index)
+                          ? _ai_candidates_layout->itemAt(index)->widget()
+                          : nullptr;
+    if (rowWidget) {
+        auto* label = rowWidget->findChild<QLabel*>();
+        if (label)
+            label->setText(QString("[%1] %2").arg(style, content));
+    }
+
+    _ai_status_label->setText(
+        QString::fromUtf8("第 %1 条已润色").arg(index + 1));
+    _ai_custom_prompt->clear();
 }

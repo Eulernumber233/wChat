@@ -29,8 +29,16 @@ class MockBackend:
             self._fixtures[key] = scen
 
     async def fetch_history(
-        self, self_uid: int, peer_uid: int, limit: int, before_msg_db_id: int = 0
+        self,
+        self_uid: int,
+        peer_uid: int,
+        limit: int,
+        before_msg_db_id: int = 0,
+        *,
+        auth_token: str = "",
     ) -> list[TextChatData]:
+        # auth_token ignored — MockBackend trusts all callers by design
+        del auth_token
         scen = self._fixtures.get((self_uid, peer_uid))
         if not scen:
             return []
@@ -39,7 +47,10 @@ class MockBackend:
             msgs = [m for m in msgs if int(m.msg_db_id) < before_msg_db_id]
         return msgs[-limit:]
 
-    async def fetch_profile(self, peer_uid: int) -> UserProfile | None:
+    async def fetch_profile(
+        self, self_uid: int, peer_uid: int, *, auth_token: str = ""
+    ) -> UserProfile | None:
+        del self_uid, auth_token  # fixtures key on peer_uid alone
         for (_, p), scen in self._fixtures.items():
             if p == peer_uid and "friend_profile" in scen:
                 return UserProfile(**scen["friend_profile"])

@@ -23,7 +23,19 @@
       "Bash(./.venv/Scripts/python.exe -c ' *)",
       "Bash(./.venv/Scripts/python.exe -m pytest -q)",
       "Bash(./.venv/Scripts/python.exe -c \"import fastapi; print\\('fastapi at:', fastapi.__file__\\)\")",
-      "Bash(./wChat_AgentServer/.venv/Scripts/python.exe -c \"import fastapi, langgraph, pydantic_settings; print\\('all OK in venv'\\)\")"
+      "Bash(./wChat_AgentServer/.venv/Scripts/python.exe -c \"import fastapi, langgraph, pydantic_settings; print\\('all OK in venv'\\)\")",
+      "Bash(/d/Qt/6.9.1/mingw_64/bin/qmake.exe ../../wChat_client.pro -spec win32-g++ 'CONFIG+=debug' 'CONFIG+=qml_debug')",
+      "Bash(export PATH=\"/d/Qt/6.9.1/mingw_64/bin:/d/Qt/Tools/mingw1310_64/bin:$PATH\")",
+      "Bash(mingw32-make -j4)",
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_grpc_client.py -v)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_api.py::test_stream_endpoint_returns_sse -v)",
+      "Bash(.venv/Scripts/python.exe -m pytest -v)",
+      "Read(//d/CPP/network/wChat/wChat_client/build/Desktop_Qt_6_9_1_MinGW_64_bit-Debug/**)",
+      "Bash(grep -n \"sig_pull_messages_rsp\\\\|slot_pull_messages_rsp\" \"/d/CPP/network/wChat/wChat_client/\"*.cpp)",
+      "Bash(grep -n \"ID_PULL_CONV_SUMMARY_REQ\\\\|ID_PULL_MESSAGES_REQ\\\\|ID_CHAT_LOGIN_RSP\\\\|ID_PULL_MESSAGES_RSP\\\\|ID_PULL_CONV_SUMMARY_RSP\" \"/d/CPP/network/wChat/wChat_client/\"*.h)",
+      "Bash(grep -n \"slot_conv_summary\\\\|sig_conv_summary\" \"/d/CPP/network/wChat/wChat_client/\"*.cpp)",
+      "Bash(curl -s -X POST http://127.0.0.1:8200/agent/suggest_reply -H 'Content-Type: application/json' -H 'Authorization: Bearer test-token' -H 'X-Self-Uid: 13' -d '{\"self_uid\":13,\"peer_uid\":14,\"recent_messages\":[{\"msg_db_id\":\"1\",\"from_uid\":14,\"to_uid\":13,\"msg_type\":1,\"content\":\"hi\",\"send_time\":1,\"direction\":0}],\"num_candidates\":1}')"
     ],
     "additionalDirectories": [
       "\\tmp"

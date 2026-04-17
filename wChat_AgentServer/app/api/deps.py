@@ -13,6 +13,7 @@ from ..llm.deepseek import DeepSeekProvider
 from ..memory.in_memory import get_memory_store
 from ..tools.base import ToolRegistry
 from ..tools.chat_context import (
+    ChatBackend,
     GetChatHistoryTool,
     GetFriendProfileTool,
     GetRelationshipSummaryTool,
@@ -22,18 +23,35 @@ from ..tools.search import SearchPastSimilarTool
 
 
 @lru_cache(maxsize=1)
-def _backend() -> MockBackend:
+def _backend() -> ChatBackend:
+    """Data backend for the agent.
+
+    `mock`: fixture-driven (tests, local dev without ChatServer)
+    `grpc`: real AgentDataService on ChatServer, dispatched via
+            settings.backend.grpc_targets (comma-separated).
+
+    Both satisfy the ChatBackend Protocol (fetch_history + fetch_profile).
+    """
     s = get_settings()
-    # TODO(milestone-2): if s.backend.mode == "grpc", return GrpcAgentDataClient
+    if s.backend.mode == "grpc":
+        # lazy import so `mock` mode doesn't pay the grpc descriptor load
+        from ..rpc.agent_data_client import GrpcAgentDataClient
+
+        return GrpcAgentDataClient()  # reads targets from settings
     return MockBackend(fixture_path=s.backend.fixture_path)
 
 
-def _tool_factory(self_uid: int, peer_uid: int) -> ToolRegistry:
+def _tool_factory(self_uid: int, peer_uid: int, auth_token: str) -> ToolRegistry:
+    """Per-request tool registry.
+
+    auth_token is forwarded to every tool so the gRPC backend can attach
+    it to each RPC call (ChatServer validates against Redis utoken_<uid>).
+    """
     reg = ToolRegistry()
-    backend = _backend()  # ← MockBackend 单例,懒加载
-    reg.register(GetChatHistoryTool(backend, self_uid, peer_uid))
-    reg.register(GetFriendProfileTool(backend, peer_uid))
-    reg.register(GetRelationshipSummaryTool(backend, self_uid, peer_uid))
+    backend = _backend()  # backend singleton (mock or grpc); safe to share
+    reg.register(GetChatHistoryTool(backend, self_uid, peer_uid, auth_token))
+    reg.register(GetFriendProfileTool(backend, self_uid, peer_uid, auth_token))
+    reg.register(GetRelationshipSummaryTool(backend, self_uid, peer_uid, auth_token))
     reg.register(SearchPastSimilarTool(enabled=get_settings().agent.enable_rag))
     return reg
 

@@ -1,8 +1,20 @@
 # wChat AgentServer
 
 LLM-powered smart reply suggestion service for the wChat IM system.
-Independent Python microservice; calls no C++ services this milestone
-(data comes from `MockBackend` + JSON fixtures).
+Independent Python microservice. 本服务**不直连 MySQL**——业务数据通过
+gRPC 调 ChatServer 的 `AgentDataService` 拿；只**直连 Redis** 做 token
+校验和会话记忆。客户端经由 StatusServer 在登录时拿到的 `agent_host/port`
+直连本服务。
+
+| 关系 | 协议 | 用途 |
+|---|---|---|
+| Client ↔ AgentServer | HTTP + SSE | 提建议、润色、流式 |
+| AgentServer ↔ ChatServer | gRPC `AgentDataService` | 取聊天历史、好友资料 |
+| AgentServer ↔ Redis | 直连 | 校验 `utoken_<uid>`、会话记忆、限流计数 |
+| AgentServer ↔ DeepSeek | HTTP | LLM 推理 |
+
+M1 阶段以 `MockBackend` + fixture 替代 gRPC，可完全离线跑通。M2 进行中，
+分步骤接入真实网络链路，详见项目根 [CLAUDE.md](../CLAUDE.md) §13.9。
 
 ## Quick start
 
@@ -41,7 +53,7 @@ Endpoints:
 | GET    | `/agent/presets`              | implemented      |
 | POST   | `/agent/suggest_reply`        | implemented      |
 | POST   | `/agent/refine`               | implemented      |
-| GET    | `/agent/suggest_reply/stream` | **501 reserved** |
+| POST   | `/agent/suggest_reply/stream` | implemented (SSE) |
 
 OpenAPI UI: `http://localhost:8200/docs`.
 
@@ -126,16 +138,26 @@ POST /agent/suggest_reply
   SuggestReplyResponse
 ```
 
-## What's deferred to Milestone 2 (network integration)
+## Milestone 2 路线（已对齐架构，分步推进）
 
-- Actual gRPC client to ChatServer (`app/rpc/agent_data_client.py` is a
-  placeholder). See [app/rpc/README.md](app/rpc/README.md) for proto additions.
-- SSE streaming endpoint (plumbing present in `app/llm/streaming.py`,
-  route returns 501 for now).
-- Auth: `Authorization: Bearer <token>` is accepted but not validated.
-- Redis-backed session memory + rate limiting.
-- Real `get_relationship_summary` (currently returns a stub string).
-- RAG (`search_past_similar` returns empty list when disabled).
+按这个顺序做，每步独立可跑测试：
+
+1. **鉴权 + Redis memory + 限流**（纯 Python，C++ 侧零改动）
+   - `Authorization: Bearer <token>` → Agent 直连 Redis 查 `utoken_<uid>`
+   - `MemoryStore` Redis 实现（TTL 1h，key `agent_session:<sid>`）
+   - `agent_quota_<uid>_<date>` INCR + 日末过期
+2. **proto 扩展**：[proto/message.proto](../proto/message.proto) 新增 `AgentDataService` + 给 `GetChatServerRsp` 加 `agent_host/agent_port`
+3. **ChatServer 实现 `AgentDataService`**（C++）：`GetChatHistory` 复用 `MysqlDao::GetMessagesPage`；`GetFriendProfile` Redis → MySQL 兜底
+4. **StatusServer 下发 Agent 地址** + 客户端登录链路保存
+5. **Python `GrpcAgentDataClient`** 接替 `MockBackend`（接口形状已对齐，deps.py 一行切换）
+6. **SSE 流式**：`/agent/suggest_reply/stream` 从 501 改成真正流式（LangGraph `astream`）
+7. **客户端 `ChatPage` AI 面板 UI**
+
+未来但不急：
+- 真 `get_relationship_summary`（当前是 stub）
+- RAG `search_past_similar`（当前返回空列表）
+
+详细拆解见项目根 [CLAUDE.md](../CLAUDE.md) §13.9。
 
 ## Adding a preset
 

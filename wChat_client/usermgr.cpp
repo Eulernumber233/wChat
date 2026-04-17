@@ -8,6 +8,12 @@ void UserMgr::SetToken(QString token)
 {
     _token = token;
 }
+
+void UserMgr::SetAgentEndpoint(const QString& host, int port)
+{
+    _agent_host = host;
+    _agent_port = port;
+}
 UserMgr::UserMgr()
     :_user_info(nullptr),_chat_loaded(0),_contact_loaded(0)
 {
@@ -251,6 +257,8 @@ bool UserMgr::IsLoadConFin()
 void UserMgr::Reset()
 {
     _token.clear();
+    _agent_host.clear();
+    _agent_port = 0;
     _user_info = nullptr;
     _apply_list.clear();
     _friend_map.clear();

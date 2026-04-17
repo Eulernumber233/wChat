@@ -14,7 +14,23 @@
       "Bash(./.venv/Scripts/python.exe -c \"import h11; print\\('h11 from:', h11.__file__\\)\")",
       "Bash(./.venv/Scripts/python.exe -c \"import sys; [print\\(p\\) for p in sys.path]\")",
       "Bash(./.venv/Scripts/python.exe -m pip install --force-reinstall --no-deps h11 httpcore -i https://pypi.tuna.tsinghua.edu.cn/simple)",
-      "Bash(./.venv/Scripts/python.exe -c \"import h11, httpcore, httpx, respx; print\\('all OK'\\)\")"
+      "Bash(./.venv/Scripts/python.exe -c \"import h11, httpcore, httpx, respx; print\\('all OK'\\)\")",
+      "Bash(d:/CPP/network/wChat/wChat_AgentServer/.venv/Scripts/python.exe --version)",
+      "Bash(d:/CPP/network/wChat/wChat_AgentServer/.venv/Scripts/python.exe -c \"import fakeredis, redis, grpc, grpc_tools; print\\('fakeredis', fakeredis.__version__\\); print\\('redis', redis.__version__\\); print\\('grpc', grpc.__version__\\); print\\('grpc_tools OK'\\)\")",
+      "Bash(d:/CPP/network/wChat/wChat_AgentServer/.venv/Scripts/python.exe -c ' *)",
+      "Bash(.venv/Scripts/python.exe -m pip install -e \".[dev]\")",
+      "Bash(.venv/Scripts/python.exe -m pytest -q)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_api.py tests/test_auth.py tests/test_memory_redis.py tests/test_rate_limit.py -v)",
+      "Bash(mkdir -p d:/CPP/network/wChat/wChat_AgentServer/app/rpc/gen)",
+      "Bash(../wChat_AgentServer/.venv/Scripts/python.exe -m grpc_tools.protoc -I. --python_out=../wChat_AgentServer/app/rpc/gen --grpc_python_out=../wChat_AgentServer/app/rpc/gen message.proto)",
+      "Bash(.venv/Scripts/python.exe -m pytest)",
+      "Bash(ls d:/CPP/network/wChat/wChat_server/wChat_server_tcp/*.h d:/CPP/network/wChat/wChat_server/wChat_server_tcp/*.cc)",
+      "Bash(ls d:/CPP/network/wChat/wChat_server/wChat_server_tcp/*.cpp)",
+      "Bash(ls d:/CPP/network/wChat/wChat_server/wChat_server_tcp/*.vcxproj)",
+      "Bash(ls -la d:/CPP/network/wChat/proto/*.pb.*)",
+      "Read(//d/CPP/network/wChat/**)",
+      "Read(//d/library/grpc/visualpro/Debug/**)",
+      "Read(//d/CPP/network/wChat/wChat_client/build/Desktop_Qt_6_9_1_MinGW_64_bit-Debug/**)"
     ]
   }
 }

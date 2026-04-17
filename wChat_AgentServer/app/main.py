@@ -31,6 +31,13 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
         s.llm.model,
     )
     yield
+    # graceful shutdown — close the grpc channel if we opened one
+    if s.backend.mode == "grpc":
+        from .api.deps import _backend
+
+        backend = _backend()
+        if hasattr(backend, "close"):
+            await backend.close()
 
 
 def create_app() -> FastAPI:

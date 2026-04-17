@@ -4,9 +4,9 @@
 #include "RedisMgr.h"
 
 std::string generate_unique_string() {
-    // ´´½¨UUID¶ÔÏó
+    // ï¿½ï¿½ï¿½ï¿½UUIDï¿½ï¿½ï¿½ï¿½
     boost::uuids::uuid uuid = boost::uuids::random_generator()();
-    // ½«UUID×ª»»Îª×Ö·û´®
+    // ï¿½ï¿½UUID×ªï¿½ï¿½Îªï¿½Ö·ï¿½ï¿½ï¿½
     std::string unique_string = to_string(uuid);
     return unique_string;
 }
@@ -19,13 +19,13 @@ ChatServer StatusServiceImpl::getChatServer() {
     //auto minServer = _servers.begin()->second;
     //auto count_str = RedisMgr::GetInstance()->HGet(LOGIN_COUNT, minServer.name);
     //if (count_str.empty()) {
-    //    //²»´æÔÚÔòÄ¬ÈÏÉèÖÃÎª×î´ó
+    //    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½
     //    minServer.con_count = INT_MAX;
     //}
     //else {
     //    minServer.con_count = std::stoi(count_str);
     //}
-    //// Ê¹ÓÃ·¶Î§»ùÓÚforÑ­»·
+    //// Ê¹ï¿½Ã·ï¿½Î§ï¿½ï¿½ï¿½ï¿½forÑ­ï¿½ï¿½
     //for (auto& server : _servers) {
     //    if (server.second.name == minServer.name) {
     //        continue;
@@ -52,6 +52,25 @@ Status StatusServiceImpl::GetChatServer(ServerContext* context, const GetChatSer
     reply->set_port(server.port);
     reply->set_error(ErrorCodes::Success);
     reply->set_token(generate_unique_string());
+
+    // M2: dispatch an AgentServer in the same response so the client
+    // never needs a second round-trip to find the AI endpoint.
+    // Empty pool â†’ send empty host / port 0; client hides AI UI.
+    AgentServer agent;
+    if (getAgentServer(agent)) {
+        reply->set_agent_host(agent.host);
+        try {
+            reply->set_agent_port(std::stoi(agent.port));
+        } catch (...) {
+            // malformed config â€” treat as no agent rather than crash
+            reply->set_agent_host("");
+            reply->set_agent_port(0);
+        }
+    } else {
+        reply->set_agent_host("");
+        reply->set_agent_port(0);
+    }
+
     insertToken(request->uid(), reply->token());
     return Status::OK;
 }
@@ -114,4 +133,40 @@ StatusServiceImpl::StatusServiceImpl() {
         NUM_SERVER++;
     }
 
+    // M2: AgentServer pool. Entirely optional â€” missing section is fine.
+    // Section layout mirrors [ChatServers]:
+    //   [AgentServers] Name = AgentServer1,AgentServer2,...
+    //   [AgentServer1] Name=agent1 Host=... Port=...
+    auto agent_list = cfg["AgentServers"]["Name"];
+    if (!agent_list.empty()) {
+        std::stringstream ass(agent_list);
+        std::string token;
+        while (std::getline(ass, token, ',')) {
+            // allow whitespace around commas
+            auto trim_l = token.find_first_not_of(" \t");
+            auto trim_r = token.find_last_not_of(" \t");
+            if (trim_l == std::string::npos) continue;
+            token = token.substr(trim_l, trim_r - trim_l + 1);
+
+            if (cfg[token]["Name"].empty()) continue;
+            AgentServer a;
+            a.name = cfg[token]["Name"];
+            a.host = cfg[token]["Host"];
+            a.port = cfg[token]["Port"];
+            _agent_servers.push_back(a);
+            std::cout << "agent.name :" << a.name << " agent.host :"
+                << a.host << " agent.port :" << a.port << std::endl;
+        }
+    }
+    if (_agent_servers.empty()) {
+        std::cout << "[StatusServer] no AgentServer configured â€” AI features disabled for clients" << std::endl;
+    }
+}
+
+bool StatusServiceImpl::getAgentServer(AgentServer& out) {
+    std::lock_guard<std::mutex> guard(_agent_mtx);
+    if (_agent_servers.empty()) return false;
+    out = _agent_servers[_agent_rr % _agent_servers.size()];
+    _agent_rr = (_agent_rr + 1) % _agent_servers.size();
+    return true;
 }

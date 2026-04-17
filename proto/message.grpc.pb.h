@@ -2471,6 +2471,465 @@ class FileService final {
   typedef WithStreamedUnaryMethod_NotifyUploadDone<WithStreamedUnaryMethod_RegisterDownloadAuth<Service > > StreamedService;
 };
 
+class AgentDataService final {
+ public:
+  static constexpr char const* service_full_name() {
+    return "message.AgentDataService";
+  }
+  class StubInterface {
+   public:
+    virtual ~StubInterface() {}
+    virtual ::grpc::Status GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::message::GetChatHistoryRsp* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::GetChatHistoryRsp>> AsyncGetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::GetChatHistoryRsp>>(AsyncGetChatHistoryRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::GetChatHistoryRsp>> PrepareAsyncGetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::GetChatHistoryRsp>>(PrepareAsyncGetChatHistoryRaw(context, request, cq));
+    }
+    virtual ::grpc::Status GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::message::GetFriendProfileRsp* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::GetFriendProfileRsp>> AsyncGetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::GetFriendProfileRsp>>(AsyncGetFriendProfileRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::GetFriendProfileRsp>> PrepareAsyncGetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::message::GetFriendProfileRsp>>(PrepareAsyncGetFriendProfileRaw(context, request, cq));
+    }
+    class experimental_async_interface {
+     public:
+      virtual ~experimental_async_interface() {}
+      virtual void GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      virtual void GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+    };
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    typedef class experimental_async_interface async_interface;
+    #endif
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    async_interface* async() { return experimental_async(); }
+    #endif
+    virtual class experimental_async_interface* experimental_async() { return nullptr; }
+  private:
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::message::GetChatHistoryRsp>* AsyncGetChatHistoryRaw(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::message::GetChatHistoryRsp>* PrepareAsyncGetChatHistoryRaw(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::message::GetFriendProfileRsp>* AsyncGetFriendProfileRaw(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::message::GetFriendProfileRsp>* PrepareAsyncGetFriendProfileRaw(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::grpc::CompletionQueue* cq) = 0;
+  };
+  class Stub final : public StubInterface {
+   public:
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
+    ::grpc::Status GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::message::GetChatHistoryRsp* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::GetChatHistoryRsp>> AsyncGetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::GetChatHistoryRsp>>(AsyncGetChatHistoryRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::GetChatHistoryRsp>> PrepareAsyncGetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::GetChatHistoryRsp>>(PrepareAsyncGetChatHistoryRaw(context, request, cq));
+    }
+    ::grpc::Status GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::message::GetFriendProfileRsp* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::GetFriendProfileRsp>> AsyncGetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::GetFriendProfileRsp>>(AsyncGetFriendProfileRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::GetFriendProfileRsp>> PrepareAsyncGetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::message::GetFriendProfileRsp>>(PrepareAsyncGetFriendProfileRaw(context, request, cq));
+    }
+    class experimental_async final :
+      public StubInterface::experimental_async_interface {
+     public:
+      void GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void GetChatHistory(::grpc::ClientContext* context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      void GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void GetFriendProfile(::grpc::ClientContext* context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+     private:
+      friend class Stub;
+      explicit experimental_async(Stub* stub): stub_(stub) { }
+      Stub* stub() { return stub_; }
+      Stub* stub_;
+    };
+    class experimental_async_interface* experimental_async() override { return &async_stub_; }
+
+   private:
+    std::shared_ptr< ::grpc::ChannelInterface> channel_;
+    class experimental_async async_stub_{this};
+    ::grpc::ClientAsyncResponseReader< ::message::GetChatHistoryRsp>* AsyncGetChatHistoryRaw(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::message::GetChatHistoryRsp>* PrepareAsyncGetChatHistoryRaw(::grpc::ClientContext* context, const ::message::GetChatHistoryReq& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::message::GetFriendProfileRsp>* AsyncGetFriendProfileRaw(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::message::GetFriendProfileRsp>* PrepareAsyncGetFriendProfileRaw(::grpc::ClientContext* context, const ::message::GetFriendProfileReq& request, ::grpc::CompletionQueue* cq) override;
+    const ::grpc::internal::RpcMethod rpcmethod_GetChatHistory_;
+    const ::grpc::internal::RpcMethod rpcmethod_GetFriendProfile_;
+  };
+  static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+
+  class Service : public ::grpc::Service {
+   public:
+    Service();
+    virtual ~Service();
+    virtual ::grpc::Status GetChatHistory(::grpc::ServerContext* context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response);
+    virtual ::grpc::Status GetFriendProfile(::grpc::ServerContext* context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response);
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_GetChatHistory : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_GetChatHistory() {
+      ::grpc::Service::MarkMethodAsync(0);
+    }
+    ~WithAsyncMethod_GetChatHistory() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetChatHistory(::grpc::ServerContext* /*context*/, const ::message::GetChatHistoryReq* /*request*/, ::message::GetChatHistoryRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetChatHistory(::grpc::ServerContext* context, ::message::GetChatHistoryReq* request, ::grpc::ServerAsyncResponseWriter< ::message::GetChatHistoryRsp>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_GetFriendProfile : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_GetFriendProfile() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
+    ~WithAsyncMethod_GetFriendProfile() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetFriendProfile(::grpc::ServerContext* /*context*/, const ::message::GetFriendProfileReq* /*request*/, ::message::GetFriendProfileRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetFriendProfile(::grpc::ServerContext* context, ::message::GetFriendProfileReq* request, ::grpc::ServerAsyncResponseWriter< ::message::GetFriendProfileRsp>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_GetChatHistory<WithAsyncMethod_GetFriendProfile<Service > > AsyncService;
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_GetChatHistory : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithCallbackMethod_GetChatHistory() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::message::GetChatHistoryReq, ::message::GetChatHistoryRsp>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::message::GetChatHistoryReq* request, ::message::GetChatHistoryRsp* response) { return this->GetChatHistory(context, request, response); }));}
+    void SetMessageAllocatorFor_GetChatHistory(
+        ::grpc::experimental::MessageAllocator< ::message::GetChatHistoryReq, ::message::GetChatHistoryRsp>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(0);
+    #endif
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::message::GetChatHistoryReq, ::message::GetChatHistoryRsp>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_GetChatHistory() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetChatHistory(::grpc::ServerContext* /*context*/, const ::message::GetChatHistoryReq* /*request*/, ::message::GetChatHistoryRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* GetChatHistory(
+      ::grpc::CallbackServerContext* /*context*/, const ::message::GetChatHistoryReq* /*request*/, ::message::GetChatHistoryRsp* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* GetChatHistory(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::message::GetChatHistoryReq* /*request*/, ::message::GetChatHistoryRsp* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_GetFriendProfile : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithCallbackMethod_GetFriendProfile() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::message::GetFriendProfileReq, ::message::GetFriendProfileRsp>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::message::GetFriendProfileReq* request, ::message::GetFriendProfileRsp* response) { return this->GetFriendProfile(context, request, response); }));}
+    void SetMessageAllocatorFor_GetFriendProfile(
+        ::grpc::experimental::MessageAllocator< ::message::GetFriendProfileReq, ::message::GetFriendProfileRsp>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(1);
+    #endif
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::message::GetFriendProfileReq, ::message::GetFriendProfileRsp>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_GetFriendProfile() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetFriendProfile(::grpc::ServerContext* /*context*/, const ::message::GetFriendProfileReq* /*request*/, ::message::GetFriendProfileRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* GetFriendProfile(
+      ::grpc::CallbackServerContext* /*context*/, const ::message::GetFriendProfileReq* /*request*/, ::message::GetFriendProfileRsp* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* GetFriendProfile(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::message::GetFriendProfileReq* /*request*/, ::message::GetFriendProfileRsp* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+  typedef ExperimentalWithCallbackMethod_GetChatHistory<ExperimentalWithCallbackMethod_GetFriendProfile<Service > > CallbackService;
+  #endif
+
+  typedef ExperimentalWithCallbackMethod_GetChatHistory<ExperimentalWithCallbackMethod_GetFriendProfile<Service > > ExperimentalCallbackService;
+  template <class BaseClass>
+  class WithGenericMethod_GetChatHistory : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_GetChatHistory() {
+      ::grpc::Service::MarkMethodGeneric(0);
+    }
+    ~WithGenericMethod_GetChatHistory() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetChatHistory(::grpc::ServerContext* /*context*/, const ::message::GetChatHistoryReq* /*request*/, ::message::GetChatHistoryRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_GetFriendProfile : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_GetFriendProfile() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
+    ~WithGenericMethod_GetFriendProfile() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetFriendProfile(::grpc::ServerContext* /*context*/, const ::message::GetFriendProfileReq* /*request*/, ::message::GetFriendProfileRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_GetChatHistory : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_GetChatHistory() {
+      ::grpc::Service::MarkMethodRaw(0);
+    }
+    ~WithRawMethod_GetChatHistory() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetChatHistory(::grpc::ServerContext* /*context*/, const ::message::GetChatHistoryReq* /*request*/, ::message::GetChatHistoryRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetChatHistory(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_GetFriendProfile : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_GetFriendProfile() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
+    ~WithRawMethod_GetFriendProfile() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetFriendProfile(::grpc::ServerContext* /*context*/, const ::message::GetFriendProfileReq* /*request*/, ::message::GetFriendProfileRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetFriendProfile(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_GetChatHistory : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithRawCallbackMethod_GetChatHistory() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetChatHistory(context, request, response); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_GetChatHistory() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetChatHistory(::grpc::ServerContext* /*context*/, const ::message::GetChatHistoryReq* /*request*/, ::message::GetChatHistoryRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* GetChatHistory(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* GetChatHistory(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_GetFriendProfile : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithRawCallbackMethod_GetFriendProfile() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetFriendProfile(context, request, response); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_GetFriendProfile() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetFriendProfile(::grpc::ServerContext* /*context*/, const ::message::GetFriendProfileReq* /*request*/, ::message::GetFriendProfileRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* GetFriendProfile(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* GetFriendProfile(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_GetChatHistory : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_GetChatHistory() {
+      ::grpc::Service::MarkMethodStreamed(0,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::message::GetChatHistoryReq, ::message::GetChatHistoryRsp>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::message::GetChatHistoryReq, ::message::GetChatHistoryRsp>* streamer) {
+                       return this->StreamedGetChatHistory(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_GetChatHistory() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status GetChatHistory(::grpc::ServerContext* /*context*/, const ::message::GetChatHistoryReq* /*request*/, ::message::GetChatHistoryRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedGetChatHistory(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::message::GetChatHistoryReq,::message::GetChatHistoryRsp>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_GetFriendProfile : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_GetFriendProfile() {
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::message::GetFriendProfileReq, ::message::GetFriendProfileRsp>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::message::GetFriendProfileReq, ::message::GetFriendProfileRsp>* streamer) {
+                       return this->StreamedGetFriendProfile(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_GetFriendProfile() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status GetFriendProfile(::grpc::ServerContext* /*context*/, const ::message::GetFriendProfileReq* /*request*/, ::message::GetFriendProfileRsp* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedGetFriendProfile(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::message::GetFriendProfileReq,::message::GetFriendProfileRsp>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_GetChatHistory<WithStreamedUnaryMethod_GetFriendProfile<Service > > StreamedUnaryService;
+  typedef Service SplitStreamedService;
+  typedef WithStreamedUnaryMethod_GetChatHistory<WithStreamedUnaryMethod_GetFriendProfile<Service > > StreamedService;
+};
+
 }  // namespace message
 
 

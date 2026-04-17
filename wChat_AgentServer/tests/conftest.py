@@ -5,12 +5,15 @@ import json
 from pathlib import Path
 from typing import Any, AsyncIterator
 
+import fakeredis.aioredis
 import pytest
 
 from app.agent.graph import AgentService
+from app.config.settings import get_settings, reset_settings
 from app.llm.base import LLMChunk, LLMProvider, LLMResponse
-from app.memory.in_memory import InMemoryStore
+from app.memory.in_memory import InMemoryStore, reset_memory_store
 from app.presets.loader import load_presets
+from app.redis_client import reset_redis_client, set_redis_client
 from app.tools.base import ToolRegistry
 from app.tools.chat_context import (
     GetChatHistoryTool,
@@ -22,6 +25,25 @@ from app.tools.search import SearchPastSimilarTool
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "sample_chats.json"
 PRESETS_PATH = Path(__file__).parent.parent / "config" / "presets.yaml"
+
+
+@pytest.fixture
+def fake_redis():
+    """Fresh fakeredis client for each test, injected into app.redis_client."""
+    r = fakeredis.aioredis.FakeRedis(decode_responses=True)
+    set_redis_client(r)
+    yield r
+    reset_redis_client()
+
+
+@pytest.fixture(autouse=True)
+def _reset_settings_and_memory():
+    """Keep each test hermetic: reload settings + drop cached MemoryStore."""
+    reset_settings()
+    reset_memory_store()
+    yield
+    reset_settings()
+    reset_memory_store()
 
 
 class FakeLLM(LLMProvider):
@@ -48,9 +70,19 @@ class FakeLLM(LLMProvider):
         content = self._responses[0] if len(self._responses) == 1 else self._responses.pop(0)
         return LLMResponse(content=content, prompt_tokens=10, completion_tokens=20)
 
-    async def stream(  # pragma: no cover - not used in unit tests
-        self, *args: Any, **kwargs: Any
+    async def stream(
+        self,
+        messages: list[dict[str, Any]],
+        *,
+        tools: list[dict[str, Any]] | None = None,
+        response_format: dict[str, Any] | None = None,
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
     ) -> AsyncIterator[LLMChunk]:
+        self.calls.append(messages)
+        content = self._responses[0] if len(self._responses) == 1 else self._responses.pop(0)
+        # simulate streaming: emit the entire content as one delta chunk
+        yield LLMChunk(delta=content)
         yield LLMChunk(delta="", finish_reason="stop")
 
 
@@ -65,11 +97,11 @@ def preset_store():
 
 
 def build_agent_service(llm: LLMProvider, backend: MockBackend) -> AgentService:
-    def factory(self_uid: int, peer_uid: int) -> ToolRegistry:
+    def factory(self_uid: int, peer_uid: int, auth_token: str) -> ToolRegistry:
         reg = ToolRegistry()
-        reg.register(GetChatHistoryTool(backend, self_uid, peer_uid))
-        reg.register(GetFriendProfileTool(backend, peer_uid))
-        reg.register(GetRelationshipSummaryTool(backend, self_uid, peer_uid))
+        reg.register(GetChatHistoryTool(backend, self_uid, peer_uid, auth_token))
+        reg.register(GetFriendProfileTool(backend, self_uid, peer_uid, auth_token))
+        reg.register(GetRelationshipSummaryTool(backend, self_uid, peer_uid, auth_token))
         reg.register(SearchPastSimilarTool(enabled=False))
         return reg
 

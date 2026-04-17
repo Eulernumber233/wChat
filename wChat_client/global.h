@@ -118,6 +118,11 @@ struct ServerInfo{
     QString Port;
     QString Token;
     int Uid;
+    // M2: AgentServer endpoint dispatched by StatusServer at login time.
+    // Empty AgentHost / 0 AgentPort means the deploy has no AgentServer
+    // configured — UI should hide AI features.
+    QString AgentHost;
+    int AgentPort = 0;
 };
 
 enum ChatUIMode{

@@ -47,9 +47,53 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM =====================================================================
+REM Also regenerate Python gRPC stubs for AgentServer (M2+).
+REM Uses the venv's grpc_tools so it picks up a matching grpcio / protobuf.
+REM Skipped gracefully if the venv doesn't exist yet (dev hasn't set up
+REM AgentServer).
+REM =====================================================================
+
+set AGENT_PY=..\wChat_AgentServer\.venv\Scripts\python.exe
+set AGENT_GEN_DIR=..\wChat_AgentServer\app\rpc\gen
+
+if not exist "%AGENT_PY%" (
+    echo.
+    echo [skip] AgentServer venv not found at %AGENT_PY%
+    echo        Skipping Python stub generation.
+    goto :done
+)
+
+if not exist "%AGENT_GEN_DIR%" (
+    mkdir "%AGENT_GEN_DIR%"
+)
+
+echo Generating protobuf + gRPC Python files ...
+"%AGENT_PY%" -m grpc_tools.protoc ^
+    -I. ^
+    --python_out="%AGENT_GEN_DIR%" ^
+    --grpc_python_out="%AGENT_GEN_DIR%" ^
+    message.proto
+if errorlevel 1 (
+    echo [ERROR] python grpc_tools.protoc failed.
+    pause
+    exit /b 1
+)
+
+REM Ensure the gen directory is an importable package. Some tools also
+REM need a guard so the generated message_pb2_grpc.py can `import message_pb2`
+REM locally — we fix that by writing a tiny __init__.py that extends sys.path.
+> "%AGENT_GEN_DIR%\__init__.py" echo import os, sys
+>> "%AGENT_GEN_DIR%\__init__.py" echo sys.path.insert(0, os.path.dirname(__file__))
+
+:done
 echo.
 echo Done. Generated files:
 dir /b message.pb.* message.grpc.pb.*
+if exist "%AGENT_GEN_DIR%\message_pb2.py" (
+    echo [python] %AGENT_GEN_DIR%\message_pb2.py
+    echo [python] %AGENT_GEN_DIR%\message_pb2_grpc.py
+)
 echo.
 pause
 endlocal

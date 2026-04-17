@@ -54,13 +54,41 @@ class AgentConfig:
 
 @dataclass
 class BackendConfig:
-    mode: str = "mock"  # "mock" | "grpc"
+    mode: str = "mock"  # 选择信息获取方式 "mock" | "grpc"
     fixture_path: str = "tests/fixtures/sample_chats.json"
+    # gRPC target of ChatServer (AgentDataService). Multi-instance reserved:
+    # comma-separated list -> simple round-robin at channel creation.
+    grpc_targets: str = "127.0.0.1:50055"
 
 
 @dataclass
 class RateLimitConfig:
     per_user_per_day: int = 100
+    enabled: bool = True
+
+
+@dataclass
+class AuthConfig:
+    # "off": accept any (or missing) Bearer — dev convenience
+    # "redis": GET utoken_<uid> must equal the Bearer token
+    mode: str = "redis"
+    # Redis key template; {uid} is substituted
+    token_key_template: str = "utoken_{uid}"
+
+
+@dataclass
+class MemoryConfig:
+    backend: str = "memory"  # "memory" | "redis"
+    session_ttl_seconds: int = 3600
+    session_key_template: str = "agent_session:{sid}"
+
+
+@dataclass
+class RedisConfig:
+    host: str = "127.0.0.1"
+    port: int = 6380
+    password: str = "123456"
+    db: int = 0
 
 
 @dataclass
@@ -70,6 +98,9 @@ class Settings:
     agent: AgentConfig = field(default_factory=AgentConfig)
     backend: BackendConfig = field(default_factory=BackendConfig)
     rate_limit: RateLimitConfig = field(default_factory=RateLimitConfig)
+    auth: AuthConfig = field(default_factory=AuthConfig)
+    memory: MemoryConfig = field(default_factory=MemoryConfig)
+    redis: RedisConfig = field(default_factory=RedisConfig)
     presets_path: str = "config/presets.yaml"
 
 
@@ -126,11 +157,34 @@ def load_settings() -> Settings:
     if ini.has_section("Backend"):
         s.backend.mode = ini.get("Backend", "Mode", fallback=s.backend.mode)
         s.backend.fixture_path = ini.get("Backend", "FixturePath", fallback=s.backend.fixture_path)
+        s.backend.grpc_targets = ini.get("Backend", "GrpcTargets", fallback=s.backend.grpc_targets)
 
     if ini.has_section("RateLimit"):
         s.rate_limit.per_user_per_day = ini.getint(
             "RateLimit", "PerUserPerDay", fallback=s.rate_limit.per_user_per_day
         )
+        s.rate_limit.enabled = _get_bool(ini, "RateLimit", "Enabled", s.rate_limit.enabled)
+
+    if ini.has_section("Auth"):
+        s.auth.mode = ini.get("Auth", "Mode", fallback=s.auth.mode)
+        s.auth.token_key_template = ini.get(
+            "Auth", "TokenKeyTemplate", fallback=s.auth.token_key_template
+        )
+
+    if ini.has_section("Memory"):
+        s.memory.backend = ini.get("Memory", "Backend", fallback=s.memory.backend)
+        s.memory.session_ttl_seconds = ini.getint(
+            "Memory", "SessionTtlSeconds", fallback=s.memory.session_ttl_seconds
+        )
+        s.memory.session_key_template = ini.get(
+            "Memory", "SessionKeyTemplate", fallback=s.memory.session_key_template
+        )
+
+    if ini.has_section("Redis"):
+        s.redis.host = ini.get("Redis", "Host", fallback=s.redis.host)
+        s.redis.port = ini.getint("Redis", "Port", fallback=s.redis.port)
+        s.redis.password = ini.get("Redis", "Password", fallback=s.redis.password)
+        s.redis.db = ini.getint("Redis", "Db", fallback=s.redis.db)
 
     return s
 
