@@ -1,24 +1,27 @@
 # wChat — 基于分布式架构的即时通讯系统
 
-wChat 是一个使用 C++ / Qt 开发的分布式即时通讯系统，包含图形界面客户端与多个职责分离的后端服务。系统支持用户注册登录、邮箱验证码、密码找回、好友搜索与添加、实时消息收发以及历史消息持久化等核心 IM 场景，并面向高并发与分布式协同进行了设计。
+wChat 是一个使用 C++ / Qt 开发的分布式即时通讯系统，包含图形界面客户端与多个职责分离的后端服务。系统支持用户注册登录、邮箱验证码、密码找回、好友搜索与添加、实时消息收发、历史消息持久化等核心 IM 场景，并集成了基于 LLM 的 AI 智能回复辅助子系统，面向高并发与分布式协同进行了设计。
 
 ## 技术栈
 
-- **客户端**：C++ / Qt（信号槽、QSS 样式、自定义控件）
+- **客户端**：C++ / Qt（信号槽、QSS 样式、自定义控件、QNetworkAccessManager）
 - **服务端**：C++ / Boost.Asio（异步网络）、HTTP、TCP 长连接
 - **服务间通信**：gRPC + Protobuf
-- **数据存储**：MySQL（持久化）、Redis（缓存 / Token / 在线状态）
+- **数据存储**：MySQL（持久化）、Redis（缓存 / Token / 在线状态）、SQLite（客户端本地消息库）
 - **邮件服务**：Node.js（验证码下发）
-- **常用模式**：单例、线程池、连接池、IO 多线程模型
+- **AI 子系统**：Python 3.12 / FastAPI / LangGraph / DeepSeek（OpenAI 兼容 SDK）/ SSE 流式
+- **常用模式**：单例、线程池、连接池、IO 多线程模型、生产者-消费者、状态图编排
 
 ## 项目结构
 
 ```
 wChat/
-├── wChat_client/                 Qt 客户端
+├── wChat_client/                 Qt 客户端（含 AI 建议面板）
+├── wChat_AgentServer/            AI 智能回复子系统（Python 独立微服务）
+├── proto/                        统一 protobuf 定义（所有服务共享）
 └── wChat_server/
     ├── wChat_server_gate/        网关服务器（HTTP 接入、登录注册）
-    ├── wChat_StatusServer/       状态服务器（Token 分发、聊天服务器调度）
+    ├── wChat_StatusServer/       状态服务器（Token 分发、ChatServer + AgentServer 调度）
     ├── wChat_VarifyServer/       验证码服务器（Node.js 实现的邮件服务）
     ├── wChat_server_tcp/         聊天服务器（单一代码库，通过不同配置启动多个实例）
     │   ├── configs/
@@ -30,14 +33,15 @@ wChat/
 
 ## 服务端架构
 
-系统由四类相互协作的服务组成：
+系统由五类相互协作的服务组成：
 
 | 服务 | 职责 |
 | --- | --- |
 | **GateServer** | 接入客户端 HTTP 请求，处理注册 / 登录 / 找回密码等业务，向后端服务转发 gRPC 调用 |
-| **StatusServer** | 校验登录状态，生成 Token，按负载为客户端分配合适的聊天服务器 IP / 端口 |
+| **StatusServer** | 校验登录状态，生成 Token，登录时**同时下发** ChatServer 与 AgentServer 的地址给客户端 |
 | **VarifyServer** | Node.js 实现的邮件验证码服务，生成验证码并写入 Redis、通过 SMTP 发送 |
-| **ChatServer (tcp)** | 与客户端建立 TCP 长连接，处理好友申请、消息收发等实时业务；**同一份可执行文件通过不同配置文件启动多个实例**实现水平扩展，跨实例消息通过 gRPC 互转 |
+| **ChatServer (tcp)** | 与客户端建立 TCP 长连接，处理好友申请、消息收发等实时业务；**同一份可执行文件通过不同配置文件启动多个实例**实现水平扩展，跨实例消息通过 gRPC 互转；同端口额外承载 `AgentDataService` 供 AgentServer 读取聊天历史与好友资料 |
+| **AgentServer** | Python 独立微服务，FastAPI + LangGraph + DeepSeek；客户端直连请求 AI 智能回复建议；自身**不直连 MySQL**，通过 gRPC 调 ChatServer 复用鉴权与热缓存；直连 Redis 校验 `utoken_<uid>` + 会话记忆 + 日限流 |
 
 各 C++ 服务复用同一套基础组件：
 
@@ -90,6 +94,7 @@ wChat/
 6. **消息发送** — 消息持久化到 MySQL，再通过 Session 或 gRPC 推送到接收方所在的 ChatServer
 7. **历史消息懒加载** — 打开会话时先从本地 SQLite 读取最近 30 条消息（瞬时渲染），再通过 `ID_PULL_MESSAGES` 向服务端拉取增量并写入本地库；历史文件消息通过 `ID_GET_DOWNLOAD_TOKEN` 按需获取一次性下载凭证后从 FileServer 下载
 8. **图片收发** — 发送方通过 ChatServer 获取上传凭证后直连 FileServer 上传，源文件同时 copy 到本地缓存；FileServer 通过 gRPC 通知 ChatServer 写入消息记录并推送接收方；接收方自动下载并替换占位气泡为图片
+9. **AI 智能回复** — 客户端 `ChatPage` AI 面板直连 AgentServer（登录时 StatusServer 下发地址）`→` 带 Bearer Token 发起 HTTP 请求 `→` AgentServer 自己连 Redis 校验 token + 日限流 `→` LangGraph 状态图 `analyze_intent → 按需 fetch_profile/history/summary → generate_candidates`；每个 fetch 节点通过 gRPC 调 ChatServer 的 `AgentDataService` 拉取上下文；DeepSeek 返回多条候选；用户可**补充聊天记录之外的真实背景**（如"他是我领导"），也可对单条候选发起**润色迭代**（复用 `session_id` 快照）；可选 SSE 端点支持 LLM token 级流式推送
 
 ## 构建与运行
 
@@ -103,6 +108,7 @@ wChat/
 - MySQL Connector/C++
 - hiredis（Redis 客户端）
 - Node.js（VarifyServer）
+- Python 3.12（AgentServer，可选）
 
 大致步骤：
 
@@ -110,10 +116,19 @@ wChat/
 2. 启动 Redis；
 3. 在 `wChat_VarifyServer/` 下 `npm install` 后启动 Node 服务；
 4. 编译并启动 `GateServer`、`StatusServer`、一个或多个 `ChatServer`；
-5. 编译并启动 `wChat_client`，使用注册账号登录即可。
+5. （可选）启动 AgentServer 以启用 AI 智能回复：
+   ```powershell
+   cd wChat_AgentServer
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1
+   pip install -e ".[dev]"
+   # 填入 DeepSeek API key，详见 wChat_AgentServer/README.md
+   uvicorn app.main:app --port 8200
+   ```
+6. 编译并启动 `wChat_client`，使用注册账号登录即可。未配置 AgentServer 时客户端 AI 按钮自动隐藏。
 
-各服务的端口、数据库地址、Redis 地址、邮件账号等请在对应模块的 `config.ini` 中配置。
+各服务的端口、数据库地址、Redis 地址、邮件账号等请在对应模块的 `config.ini` 中配置。StatusServer 的 `[AgentServers]` 段控制是否向客户端下发 AgentServer 地址。
 
 ## 项目状态
 
-当前实现已覆盖账户体系、好友体系、文字与图片消息收发、历史消息懒加载与本地持久化的完整链路，并支持多个 ChatServer 实例之间通过 gRPC 互通。客户端通过 SQLite 实现消息本地镜像，登录时仅拉取会话摘要，打开会话时按需分页加载，离线期间收到的消息在下次登录后自动补齐。后续可扩展方向包括：消息送达回执 / 已读状态、大文件分片与断点续传、群聊等。
+当前实现已覆盖账户体系、好友体系、文字与图片消息收发、历史消息懒加载与本地持久化的完整链路，并支持多个 ChatServer 实例之间通过 gRPC 互通。客户端通过 SQLite 实现消息本地镜像，登录时仅拉取会话摘要，打开会话时按需分页加载，离线期间收到的消息在下次登录后自动补齐。AI 智能回复子系统已端到端打通：Qt 客户端 → AgentServer HTTP/SSE → ChatServer gRPC `AgentDataService` → DeepSeek，支持场景预设、用户补充真实背景、候选润色迭代等完整交互。后续可扩展方向包括：消息送达回执 / 已读状态、大文件分片与断点续传、群聊、RAG 跨会话记忆、AI 关系摘要背景预生成等。

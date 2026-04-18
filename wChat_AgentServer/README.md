@@ -1,20 +1,22 @@
 # wChat AgentServer
 
-LLM-powered smart reply suggestion service for the wChat IM system.
-Independent Python microservice. 本服务**不直连 MySQL**——业务数据通过
-gRPC 调 ChatServer 的 `AgentDataService` 拿；只**直连 Redis** 做 token
-校验和会话记忆。客户端经由 StatusServer 在登录时拿到的 `agent_host/port`
-直连本服务。
+wChat IM 系统的 AI 智能回复辅助子系统。独立 Python 微服务，给 Qt 客户端的
+`ChatPage` 提供"分析对方意图 → 按需拉取上下文 → 生成多条候选回复"的 AI 辅助。
+
+本服务**不直连 MySQL**——业务数据通过 gRPC 调 ChatServer 的 `AgentDataService`
+拿，复用主服务的 token 校验和 Redis 热缓存；只**直连 Redis** 做 Bearer Token
+校验、会话记忆、日限流。客户端经由 StatusServer 在登录时拿到的
+`agent_host/agent_port` 直连本服务。
 
 | 关系 | 协议 | 用途 |
 |---|---|---|
-| Client ↔ AgentServer | HTTP + SSE | 提建议、润色、流式 |
+| Client ↔ AgentServer | HTTP + SSE | 提建议、润色、流式推送 |
 | AgentServer ↔ ChatServer | gRPC `AgentDataService` | 取聊天历史、好友资料 |
 | AgentServer ↔ Redis | 直连 | 校验 `utoken_<uid>`、会话记忆、限流计数 |
-| AgentServer ↔ DeepSeek | HTTP | LLM 推理 |
+| AgentServer ↔ DeepSeek | HTTP (OpenAI 兼容) | LLM 推理 |
 
-M1 阶段以 `MockBackend` + fixture 替代 gRPC，可完全离线跑通。M2 进行中，
-分步骤接入真实网络链路，详见项目根 [CLAUDE.md](../CLAUDE.md) §13.9。
+支持两种后端模式：`mock`（fixture 驱动，离线开发）/ `grpc`（生产联调，接 ChatServer）。
+切换只需 `config/agent.ini` 里改一行 `[Backend] Mode=`。
 
 ## Quick start
 
@@ -47,23 +49,35 @@ uvicorn app.main:app --reload --port 8200
 
 Endpoints:
 
-| Method | Path                          | Status           |
-|--------|-------------------------------|------------------|
-| GET    | `/agent/health`               | implemented      |
-| GET    | `/agent/presets`              | implemented      |
-| POST   | `/agent/suggest_reply`        | implemented      |
-| POST   | `/agent/refine`               | implemented      |
-| POST   | `/agent/suggest_reply/stream` | implemented (SSE) |
+| Method | Path                          | 说明 |
+|--------|-------------------------------|------|
+| GET    | `/agent/health`               | 健康检查 |
+| GET    | `/agent/presets`              | 列出所有场景预设 |
+| POST   | `/agent/suggest_reply`        | 主入口：生成 N 条候选回复 |
+| POST   | `/agent/refine`               | 对某条候选发起润色迭代 |
+| POST   | `/agent/suggest_reply/stream` | SSE 流式变体，token 级增量推送 |
+
+除 `/agent/health` 外所有端点都要求请求头：
+- `Authorization: Bearer <token>` — 对应 Redis `utoken_<uid>`
+- `X-Self-Uid: <uid>` — 和 body 里的 `self_uid` 双向校验
 
 OpenAPI UI: `http://localhost:8200/docs`.
 
 ## Manual smoke test
 
-With the server running:
+先在 Redis 里塞一个测试 token（绕过真实登录流程）：
+
+```bash
+redis-cli -p 6380 -a 123456 SET utoken_1001 test-tok
+```
+
+然后发建议请求（注意 `Authorization` + `X-Self-Uid` 两个 header）：
 
 ```bash
 curl -X POST http://localhost:8200/agent/suggest_reply \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer test-tok" \
+  -H "X-Self-Uid: 1001" \
   -d '{
     "self_uid": 1001,
     "peer_uid": 2002,
@@ -73,16 +87,29 @@ curl -X POST http://localhost:8200/agent/suggest_reply \
       {"msg_db_id":"103","from_uid":2002,"to_uid":1001,"msg_type":1,"content":"能借我五千块不 下月还","send_time":1713150080,"direction":0}
     ],
     "preset_id": "polite_decline",
+    "custom_prompt": "他是我高中同学,关系一般",
     "num_candidates": 3
   }'
 ```
 
-Follow up with refine:
+润色某条候选：
 
 ```bash
 curl -X POST http://localhost:8200/agent/refine \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer test-tok" \
+  -H "X-Self-Uid: 1001" \
   -d '{"session_id":"<from-previous-response>","candidate_index":0,"instruction":"再简短些"}'
+```
+
+SSE 流式（用 `curl -N` 保持连接观察事件序列 `intent → candidate_delta*N → candidate_done*N → done`）：
+
+```bash
+curl -N -X POST http://localhost:8200/agent/suggest_reply/stream \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer test-tok" \
+  -H "X-Self-Uid: 1001" \
+  -d '{...同上...}'
 ```
 
 ## Testing
@@ -99,65 +126,71 @@ No DeepSeek quota is consumed by the suite.
 
 ```
 app/
-  api/         HTTP routes (FastAPI)
-  agent/       LangGraph nodes + compiled graph (AgentService)
-  tools/       Tool registry (get_chat_history / get_friend_profile /
-               get_relationship_summary / search_past_similar stub)
-  llm/         LLMProvider abstraction + DeepSeek implementation
+  api/         HTTP routes (FastAPI) — suggest / refine / stream / presets / health
+  agent/       LangGraph nodes + graph builders + AgentService facade
+  tools/       Tool registry + ChatBackend Protocol + MockBackend
+  rpc/         GrpcAgentDataClient + generated proto stubs (gen/)
+  llm/         LLMProvider abstraction + DeepSeek implementation + streaming utils
   presets/     Scenario preset loader (config/presets.yaml)
-  memory/      Short-term session store (in-memory dict; Redis in M2)
-  rpc/         Placeholder for gRPC client to ChatServer (see rpc/README.md)
+  memory/      Session store — in-memory dict or Redis-backed (settings switch)
+  security/    Bearer token auth (Redis-validated) + daily rate limit
   config/      Settings loader (.env + agent.ini)
   schemas/     Pydantic contracts (aligned with wChat_client TextChatData)
+  redis_client.py    Process-wide async Redis singleton
 ```
 
-Flow of a request:
+Blocking flow (`POST /agent/suggest_reply`):
 
 ```
-POST /agent/suggest_reply
-        │
-        ▼
-  AgentService.suggest_reply
-        │
-        ▼
-  LangGraph compiled once per (self_uid, peer_uid):
-    analyze_intent  → one LLM call, decides which tools to invoke
+HTTP POST → require_auth (Redis 校验 utoken_<uid>) → rate_limit check
+    │
+    ▼
+AgentService.suggest_reply(req, preset, auth_token=...)
+    │  (每请求新建 tool_factory → ToolRegistry，tools 各自携带本次 token)
+    ▼
+LangGraph full pipeline:
+  analyze_intent      → LLM call: returns intent + which tools needed
       │
       ▼
-    fetch_profile  → (conditional, no-op if not requested)
-    fetch_history  → (conditional)
-    fetch_summary  → (conditional)
+  fetch_profile       → conditional: GrpcAgentDataClient.fetch_profile(token)
+  fetch_history       → conditional: GrpcAgentDataClient.fetch_history(token)
+  fetch_summary       → conditional: LLM-backed relationship summary (stub)
       │
       ▼
-    generate       → one LLM call in JSON mode, emits N candidates
-        │
-        ▼
-  MemoryStore.put(session_id, state_snapshot)
-        │
-        ▼
-  SuggestReplyResponse
+  generate_candidates → LLM call (JSON mode): emits strategy + N candidates
+    │
+    ▼
+MemoryStore.put(session_id, state_snapshot) [Redis TTL 1h 或 in-memory]
+    │
+    ▼
+SuggestReplyResponse { session_id, candidates, intent_analysis, strategy, ... }
 ```
 
-## Milestone 2 路线（已对齐架构，分步推进）
+Streaming variant (`POST /agent/suggest_reply/stream`) runs a `build_prep_graph`
+(analyze_intent + fetch_*) blocking, emits `intent` SSE event, then
+streams the generate LLM call token-by-token as `candidate_delta` events,
+finally emits parsed `candidate_done` events and a `done` event.
 
-按这个顺序做，每步独立可跑测试：
+## 实现状态（M2 全部完成）
 
-1. **鉴权 + Redis memory + 限流**（纯 Python，C++ 侧零改动）
-   - `Authorization: Bearer <token>` → Agent 直连 Redis 查 `utoken_<uid>`
-   - `MemoryStore` Redis 实现（TTL 1h，key `agent_session:<sid>`）
-   - `agent_quota_<uid>_<date>` INCR + 日末过期
-2. **proto 扩展**：[proto/message.proto](../proto/message.proto) 新增 `AgentDataService` + 给 `GetChatServerRsp` 加 `agent_host/agent_port`
-3. **ChatServer 实现 `AgentDataService`**（C++）：`GetChatHistory` 复用 `MysqlDao::GetMessagesPage`；`GetFriendProfile` Redis → MySQL 兜底
-4. **StatusServer 下发 Agent 地址** + 客户端登录链路保存
-5. **Python `GrpcAgentDataClient`** 接替 `MockBackend`（接口形状已对齐，deps.py 一行切换）
-6. **SSE 流式**：`/agent/suggest_reply/stream` 从 501 改成真正流式（LangGraph `astream`）
-7. **客户端 `ChatPage` AI 面板 UI**
+7 步实施计划全部上线，51/51 测试用例通过：
 
-未来但不急：
-- 真 `get_relationship_summary`（当前是 stub）
-- RAG `search_past_similar`（当前返回空列表）
+| Step | 说明 |
+|---|---|
+| 1 | 鉴权（Redis Bearer Token）+ Redis 会话记忆 + 日限流 |
+| 2 | Proto 扩展：`AgentDataService` + `GetChatServerRsp.agent_host/agent_port` |
+| 3 | ChatServer `AgentDataServiceImpl`：`GetChatHistory` + `GetFriendProfile` |
+| 4 | StatusServer 下发 AgentServer 地址，Gate 透传，客户端 `UserMgr` 保存 |
+| 5 | `GrpcAgentDataClient` 接替 `MockBackend` |
+| 6 | SSE 流式端点 |
+| 7 | Qt 客户端 `ChatPage` AI 面板：场景预设 + 背景补充 + 候选采用 / 润色 |
 
-详细拆解见项目根 [CLAUDE.md](../CLAUDE.md) §13.9。
+未来扩展方向：
+- 真 `get_relationship_summary`（当前为 stub）
+- RAG `search_past_similar`（当前返回空）
+- 独立 AgentServer 集群与更丰富的调度策略
+
+详细设计见项目根 [CLAUDE.md](../CLAUDE.md) §13。
 
 ## Adding a preset
 

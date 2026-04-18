@@ -107,7 +107,7 @@ class GrpcAgentDataClient:
             peer_uid=peer_uid,
             limit=limit,
             before_msg_db_id=before_msg_db_id,
-            auth_token=auth_token,
+            auth_token=auth_token, # token 放在请求体字段中，而非 gRPC metadata
         )
         try:
             rsp = await stub.GetChatHistory(req)
