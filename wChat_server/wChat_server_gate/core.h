@@ -38,7 +38,7 @@
 #include <condition_variable>
 
 #define CODEPREFIX "code_"
-#define HEAD_NUM  5
+#define HEAD_NUM  6
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>

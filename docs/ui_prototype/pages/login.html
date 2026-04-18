@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>wChat · 登录</title>
+<link rel="stylesheet" href="../css/theme.css">
+</head>
+<body>
+
+<!-- 演示切换导航 (移植到 Qt 时删除) -->
+<div class="demo-nav">
+    <a href="login.html" class="is-active">登录</a>
+    <a href="register.html">注册</a>
+    <a href="reset-password.html">找回密码</a>
+    <a href="main.html">主界面</a>
+    <a href="dialogs.html">弹窗</a>
+</div>
+
+<!-- 外层半透明外框 + 内层正式界面 -->
+<div class="app-frame auth-shell">
+    <div class="titlebar">
+        <div class="titlebar__title">wChat</div>
+        <div class="titlebar__actions">
+            <button class="titlebar__btn" title="最小化">—</button>
+            <button class="titlebar__btn titlebar__btn--close" title="关闭">✕</button>
+        </div>
+    </div>
+
+    <div class="app-frame__inner">
+        <div class="auth-body">
+            <header class="auth-header">
+                <div class="auth-header__logo">w</div>
+                <h1 class="auth-header__title">wChat</h1>
+                <div class="auth-header__sub">让连接更轻松 · 樱语红粉</div>
+            </header>
+
+            <!-- 邮箱 -->
+            <div class="field">
+                <span class="field__icon">✉</span>
+                <input class="field__input" type="email" placeholder="邮箱" value="demo@wchat.io">
+            </div>
+
+            <!-- 密码 -->
+            <div class="field">
+                <span class="field__icon">🔒</span>
+                <input class="field__input" id="pwd" type="password" placeholder="密码 (6-15 位)">
+                <div class="field__suffix">
+                    <button class="field__suffix-btn" type="button"
+                        onclick="const p=document.getElementById('pwd');p.type=p.type==='password'?'text':'password';">
+                        显示
+                    </button>
+                </div>
+            </div>
+
+            <div class="field__error">&nbsp;</div>
+
+            <button class="btn btn--primary btn--block">登  录</button>
+
+            <div class="auth-links">
+                <a href="reset-password.html">忘记密码？</a>
+                <a href="register.html">注册新账号</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

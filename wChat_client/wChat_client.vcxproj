@@ -231,6 +231,8 @@
     <ClCompile Include="authenfriend.cpp" />
     <ClCompile Include="bubbleframe.cpp" />
     <ClCompile Include="chatdialog.cpp" />
+    <ClCompile Include="circleavatarlabel.cpp" />
+    <ClCompile Include="pinkmessagebox.cpp" />
     <ClCompile Include="chatitembase.cpp" />
     <ClCompile Include="chatpage.cpp" />
     <ClCompile Include="apppaths.cpp" />
@@ -266,6 +268,7 @@
     <ClCompile Include="tcpmgr.cpp" />
     <ClCompile Include="textbubble.cpp" />
     <ClCompile Include="timerbtn.cpp" />
+    <ClCompile Include="titlebar.cpp" />
     <ClCompile Include="userdata.cpp" />
     <ClCompile Include="usermgr.cpp" />
   </ItemGroup>
@@ -278,6 +281,9 @@
     <QtMoc Include="authenfriend.h" />
     <QtMoc Include="bubbleframe.h" />
     <QtMoc Include="chatdialog.h" />
+    <QtMoc Include="circleavatarlabel.h" />
+    <ClInclude Include="fluenticon.h" />
+    <QtMoc Include="pinkmessagebox.h" />
     <QtMoc Include="chatitembase.h" />
     <QtMoc Include="chatpage.h" />
     <QtMoc Include="filemgr.h" />
@@ -313,6 +319,7 @@
     <QtMoc Include="tcpmgr.h" />
     <QtMoc Include="textbubble.h" />
     <ClInclude Include="timerbtn.h" />
+    <QtMoc Include="titlebar.h" />
     <ClInclude Include="userdata.h" />
     <QtMoc Include="usermgr.h" />
   </ItemGroup>
@@ -358,13 +365,11 @@
     <None Include="asserts\add_friend_hover.png" />
     <None Include="asserts\add_friend_normal.png" />
     <None Include="asserts\addtip.png" />
-    <None Include="asserts\apple_tree.png" />
     <None Include="asserts\arowdown.png" />
     <QtRcc Include="asserts.qrc">
       <InitFuncName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">asserts</InitFuncName>
       <InitFuncName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">asserts</InitFuncName>
     </QtRcc>
-    <None Include="asserts\back_1.png" />
     <None Include="asserts\chat_icon.png" />
     <None Include="asserts\chat_icon_hover.png" />
     <None Include="asserts\chat_icon_press.png" />
@@ -384,7 +389,7 @@
     <None Include="asserts\head_3.jpg" />
     <None Include="asserts\head_4.jpg" />
     <None Include="asserts\head_5.jpg" />
-    <None Include="asserts\ice.png" />
+    <None Include="asserts\head_6.jpg" />
     <None Include="asserts\loading.gif" />
     <None Include="asserts\male.png" />
     <None Include="asserts\msg_chat_hover.png" />

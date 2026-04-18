@@ -21,6 +21,8 @@ SOURCES += \
     authenfriend.cpp \
     bubbleframe.cpp \
     chatdialog.cpp \
+    circleavatarlabel.cpp \
+    pinkmessagebox.cpp \
     chatitembase.cpp \
     chatpage.cpp \
     chatuserlist.cpp \
@@ -53,6 +55,7 @@ SOURCES += \
     tcpmgr.cpp \
     textbubble.cpp \
     timerbtn.cpp \
+    titlebar.cpp \
     userdata.cpp \
     usermgr.cpp
 
@@ -68,6 +71,9 @@ HEADERS += \
     authenfriend.h \
     bubbleframe.h \
     chatdialog.h \
+    circleavatarlabel.h \
+    fluenticon.h \
+    pinkmessagebox.h \
     chatitembase.h \
     chatpage.h \
     chatuserlist.h \
@@ -100,6 +106,7 @@ HEADERS += \
     tcpmgr.h \
     textbubble.h \
     timerbtn.h \
+    titlebar.h \
     userdata.h \
     usermgr.h
 

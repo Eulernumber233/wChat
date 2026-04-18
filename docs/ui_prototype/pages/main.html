@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>wChat · 主界面</title>
+<link rel="stylesheet" href="../css/theme.css">
+<style>
+    /* 列表/详情 视图切换 (仅演示, 移植到 Qt 时改用 QStackedWidget) */
+    .view { display: none; height: 100%; flex-direction: column; }
+    .view.is-on { display: flex; }
+</style>
+</head>
+<body>
+
+<div class="demo-nav">
+    <a href="login.html">登录</a>
+    <a href="register.html">注册</a>
+    <a href="reset-password.html">找回密码</a>
+    <a href="main.html" class="is-active">主界面</a>
+    <a href="dialogs.html">弹窗</a>
+</div>
+
+<!-- 外层半透明 + 内层列式布局 -->
+<div class="app-frame main-shell">
+    <div class="titlebar">
+        <div class="titlebar__title">wChat</div>
+        <div class="titlebar__actions">
+            <button class="titlebar__btn">—</button>
+            <button class="titlebar__btn">▢</button>
+            <button class="titlebar__btn titlebar__btn--close">✕</button>
+        </div>
+    </div>
+
+    <div class="app-frame__inner">
+        <!-- ============ 第 1 列: 侧边栏 ============ -->
+        <aside class="col col--sidebar">
+            <div class="sidebar-user">
+                <div class="avatar avatar--lg">E</div>
+                <div class="avatar__status"></div>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn is-active" title="会话"
+                        onclick="showList('chats'); showDetail('chat');">💬</button>
+                <button class="nav-btn" title="联系人"
+                        onclick="showList('contacts'); showDetail('profile');">👥</button>
+                <button class="nav-btn" title="好友申请"
+                        onclick="showList('apply'); showDetail('empty');">
+                    👋
+                    <span class="nav-btn__dot"></span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="nav-btn" title="设置">⚙</button>
+            </div>
+        </aside>
+
+        <!-- 间隔 1 (半透明) -->
+        <div class="gutter"></div>
+
+        <!-- ============ 第 2 列: 列表 (会话/联系人/申请) ============ -->
+        <section class="col col--list">
+
+            <!-- 头部: 搜索 -->
+            <div class="list-header">
+                <div class="search">
+                    <span class="search__icon">🔍</span>
+                    <input class="search__input" placeholder="搜索用户 UID">
+                    <button class="search__clear">✕</button>
+                </div>
+                <button class="icon-btn" title="添加好友">+</button>
+            </div>
+
+            <!-- 视图: 会话列表 -->
+            <div id="v-chats" class="view is-on">
+                <div class="list-scroll">
+                    <div class="row is-active">
+                        <div class="avatar">方</div>
+                        <div class="row__body">
+                            <div class="row__title">
+                                <span class="row__name">代办任务zzz</span>
+                                <span class="row__time">15:04</span>
+                            </div>
+                            <div class="row__preview">
+                                <span class="row__msg">[图片]</span>
+                                <span class="badge">3</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#b6d7f2,#6fa8dc);">软</div>
+                        <div class="row__body">
+                            <div class="row__title">
+                                <span class="row__name">软件2024级本科讨论组</span>
+                                <span class="row__time">13:25</span>
+                            </div>
+                            <div class="row__preview">
+                                <span class="row__msg">老师: 记得提交作业～</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#f9cfcf,#e89bb4);">樱</div>
+                        <div class="row__body">
+                            <div class="row__title">
+                                <span class="row__name">樱语红粉</span>
+                                <span class="row__time">11:08</span>
+                            </div>
+                            <div class="row__preview">
+                                <span class="row__msg">今天的配色终于定下来了呢 🌸</span>
+                                <span class="badge">1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#d7c8e8,#b39ddb);">明</div>
+                        <div class="row__body">
+                            <div class="row__title">
+                                <span class="row__name">明日方舟 · 作战小队</span>
+                                <span class="row__time">昨天</span>
+                            </div>
+                            <div class="row__preview"><span class="row__msg">博士, 今天有任务要做哦</span></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="avatar">E</div>
+                        <div class="row__body">
+                            <div class="row__title">
+                                <span class="row__name">Euler number</span>
+                                <span class="row__time">昨天</span>
+                            </div>
+                            <div class="row__preview"><span class="row__msg">又要去学校。。。</span></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#c4e4c8,#7cb982);">运</div>
+                        <div class="row__body">
+                            <div class="row__title">
+                                <span class="row__name">运动打卡</span>
+                                <span class="row__time">周一</span>
+                            </div>
+                            <div class="row__preview"><span class="row__msg">你已 3 天未打卡</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视图: 联系人 -->
+            <div id="v-contacts" class="view">
+                <div class="list-scroll">
+                    <!-- 固定的"新的朋友"入口 -->
+                    <div class="row" onclick="document.querySelectorAll('.nav-btn')[2].click();">
+                        <div class="avatar" style="background:linear-gradient(135deg,#ffd6ad,#ff9e6d);">👋</div>
+                        <div class="row__body">
+                            <div class="row__name">新的朋友</div>
+                            <div class="row__msg">查看好友申请</div>
+                        </div>
+                        <span class="badge">2</span>
+                    </div>
+
+                    <div class="group-label">我的好友 (4)</div>
+
+                    <div class="row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#f9cfcf,#e89bb4);">樱</div>
+                        <div class="row__body"><div class="row__name">樱语红粉</div><div class="row__msg">又是平平无奇的一天</div></div>
+                    </div>
+                    <div class="row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#b6d7f2,#6fa8dc);">小</div>
+                        <div class="row__body"><div class="row__name">小蓝</div><div class="row__msg">这个人很懒, 什么都没留下</div></div>
+                    </div>
+                    <div class="row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#d7c8e8,#b39ddb);">阿</div>
+                        <div class="row__body"><div class="row__name">阿米娅</div><div class="row__msg">博士, 早上好</div></div>
+                    </div>
+                    <div class="row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#c4e4c8,#7cb982);">绿</div>
+                        <div class="row__body"><div class="row__name">绿叶</div><div class="row__msg">一起运动吧</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视图: 好友申请 -->
+            <div id="v-apply" class="view">
+                <div class="list-scroll">
+                    <div class="group-label">待处理</div>
+
+                    <div class="apply-row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#ffd6ad,#ff9e6d);">桃</div>
+                        <div class="apply-row__main">
+                            <div class="apply-row__name">桃子酱</div>
+                            <div class="apply-row__reason">你好呀, 我是隔壁班同学</div>
+                        </div>
+                        <div class="apply-row__action">
+                            <button class="btn-small">同意</button>
+                        </div>
+                    </div>
+
+                    <div class="apply-row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#d7c8e8,#b39ddb);">Mi</div>
+                        <div class="apply-row__main">
+                            <div class="apply-row__name">Minor</div>
+                            <div class="apply-row__reason">做好朋友吧 ✨</div>
+                        </div>
+                        <div class="apply-row__action">
+                            <button class="btn-small">同意</button>
+                        </div>
+                    </div>
+
+                    <div class="group-label">已处理</div>
+
+                    <div class="apply-row">
+                        <div class="avatar" style="background:linear-gradient(135deg,#c4e4c8,#7cb982);">绿</div>
+                        <div class="apply-row__main">
+                            <div class="apply-row__name">绿叶</div>
+                            <div class="apply-row__reason">一起运动吧</div>
+                        </div>
+                        <div class="apply-row__action">
+                            <button class="btn-small is-done" disabled>已添加</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 间隔 2 (半透明) -->
+        <div class="gutter"></div>
+
+        <!-- ============ 第 3 列: 详情 / 聊天 ============ -->
+        <section class="col col--detail">
+
+            <!-- 视图: 聊天面板 -->
+            <div id="d-chat" class="view is-on">
+                <div class="chat-header">
+                    <div>
+                        <div class="chat-header__title">代办任务zzz</div>
+                        <div class="chat-header__sub">UID 10086</div>
+                    </div>
+                    <div class="chat-header__actions">
+                        <button class="toolbar-btn" title="语音">📞</button>
+                        <button class="toolbar-btn" title="视频">📹</button>
+                        <button class="toolbar-btn" title="共享">📤</button>
+                        <button class="toolbar-btn" title="更多">⋯</button>
+                    </div>
+                </div>
+
+                <div class="chat-body">
+                    <div class="msg__time">今天 14:50</div>
+
+                    <div class="msg">
+                        <div class="avatar avatar--sm">方</div>
+                        <div class="msg__bubble">会议时间: 2026/04/11 19:00-22:00 (GMT+08:00) 中国标准时间 - 北京<br>点击链接入会: https://meeting.tencent.com/dm/xxxx</div>
+                    </div>
+
+                    <div class="msg">
+                        <div class="avatar avatar--sm">方</div>
+                        <div class="msg__bubble" style="padding:6px;">
+                            <div class="msg__img" style="background:linear-gradient(135deg,#cbb9f0,#7db3f7);"></div>
+                        </div>
+                    </div>
+
+                    <div class="msg msg--me">
+                        <div class="avatar avatar--sm">E</div>
+                        <div class="msg__bubble">收到, 我会准时参加 ✨</div>
+                    </div>
+
+                    <div class="msg msg--me">
+                        <div class="avatar avatar--sm">E</div>
+                        <div class="msg__bubble">
+                            <div class="msg__file">
+                                <div class="msg__file-icon">📎</div>
+                                <div class="msg__file-meta">
+                                    <div class="msg__file-name">会议议程.pdf</div>
+                                    <div class="msg__file-size">2.4 MB · PDF</div>
+                                </div>
+                                <span class="msg__file-dl">下载</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="msg__time">15:04</div>
+
+                    <div class="msg">
+                        <div class="avatar avatar--sm">方</div>
+                        <div class="msg__bubble">收到, 辛苦啦～</div>
+                    </div>
+                </div>
+
+                <div class="chat-input">
+                    <div class="chat-toolbar">
+                        <button class="toolbar-btn" title="表情">😊</button>
+                        <button class="toolbar-btn" title="图片">🖼</button>
+                        <button class="toolbar-btn" title="文件">📎</button>
+                        <button class="toolbar-btn" title="AI 智能回复">✨</button>
+                    </div>
+                    <textarea class="chat-input__textarea" placeholder="输入消息 (Enter 发送 / Shift+Enter 换行)"></textarea>
+                    <div class="chat-input__bottom">
+                        <button class="btn btn--primary" style="height:34px;padding:0 22px;letter-spacing:1px;">发送</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视图: 好友资料 -->
+            <div id="d-profile" class="view">
+                <div class="profile">
+                    <div class="profile__cover"></div>
+                    <div class="profile__avatar">樱</div>
+                    <div class="profile__name">樱语红粉</div>
+                    <div class="profile__uid">UID · 202604</div>
+                    <div class="profile__sig">"又是平平无奇的一天"</div>
+
+                    <div class="profile__meta">
+                        <div class="profile__meta-row"><span class="profile__meta-label">用户名</span><span>sakura_pink</span></div>
+                        <div class="profile__meta-row"><span class="profile__meta-label">备注</span><span>小樱</span></div>
+                        <div class="profile__meta-row"><span class="profile__meta-label">标签</span><span>同学 · 设计</span></div>
+                        <div class="profile__meta-row"><span class="profile__meta-label">性别</span><span>女</span></div>
+                    </div>
+
+                    <div class="profile__actions">
+                        <button class="btn btn--primary" style="padding:0 22px;" onclick="showDetail('chat');">💬 发送消息</button>
+                        <button class="btn btn--ghost" style="padding:0 22px;">编辑备注</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视图: 空状态 -->
+            <div id="d-empty" class="view">
+                <div class="empty">
+                    <div class="empty__icon">✉</div>
+                    <div class="empty__title">选择一个会话开始聊天</div>
+                    <div class="empty__sub">或者通过左侧搜索添加新朋友</div>
+                </div>
+            </div>
+
+        </section>
+    </div>
+</div>
+
+<script>
+    function showList(which) {
+        ['chats','contacts','apply'].forEach(k => {
+            document.getElementById('v-'+k).classList.toggle('is-on', k === which);
+        });
+        document.querySelectorAll('.sidebar-nav .nav-btn').forEach((b,i) => {
+            b.classList.toggle('is-active',
+                (i===0 && which==='chats') ||
+                (i===1 && which==='contacts') ||
+                (i===2 && which==='apply'));
+        });
+    }
+    function showDetail(which) {
+        ['chat','profile','empty'].forEach(k => {
+            document.getElementById('d-'+k).classList.toggle('is-on', k === which);
+        });
+    }
+</script>
+
+</body>
+</html>

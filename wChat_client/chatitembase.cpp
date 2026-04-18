@@ -1,4 +1,30 @@
 #include "chatitembase.h"
+#include <QPainter>
+#include <QPainterPath>
+
+// Crop the largest centred square from `src`, scale to `side`x`side`,
+// then mask to a circle. Mirrors CircleAvatarLabel's algorithm so that
+// every avatar in the app uses identical "inscribed circle" geometry.
+static QPixmap roundAvatar(const QPixmap &src, int side) {
+    if (src.isNull() || side <= 0) return src;
+    const int sqSide = std::min(src.width(), src.height());
+    const int sx = (src.width()  - sqSide) / 2;
+    const int sy = (src.height() - sqSide) / 2;
+    const QPixmap sq = src.copy(sx, sy, sqSide, sqSide);
+    const QPixmap scaled = sq.scaled(QSize(side, side),
+                                     Qt::IgnoreAspectRatio,
+                                     Qt::SmoothTransformation);
+    QPixmap out(side, side);
+    out.fill(Qt::transparent);
+    QPainter p(&out);
+    p.setRenderHint(QPainter::Antialiasing, true);
+    p.setRenderHint(QPainter::SmoothPixmapTransform, true);
+    QPainterPath clip;
+    clip.addEllipse(0, 0, side, side);
+    p.setClipPath(clip);
+    p.drawPixmap(0, 0, scaled);
+    return out;
+}
 
 ChatItemBase::ChatItemBase(ChatRole role, QWidget *parent)
     : QWidget(parent), m_role(role)
@@ -11,7 +37,8 @@ ChatItemBase::ChatItemBase(ChatRole role, QWidget *parent)
     m_pNameLabel->setFixedHeight(20);
 
     m_pIconLabel = new QLabel();
-    m_pIconLabel->setScaledContents(true);
+    m_pIconLabel->setScaledContents(false);
+    m_pIconLabel->setAlignment(Qt::AlignCenter);
     m_pIconLabel->setFixedSize(42, 42);
 
     // 消息气泡容器（用于显示消息内容，后续可能添加文本/图片等）
@@ -57,7 +84,9 @@ void ChatItemBase::setUserName(const QString &name)
 }
 void ChatItemBase::setUserIcon(const QPixmap &icon)
 {
-    m_pIconLabel->setPixmap(icon);
+    // Render the bubble avatar as a centered round portrait so it
+    // matches the rest of the app's avatar style.
+    m_pIconLabel->setPixmap(roundAvatar(icon, m_pIconLabel->width()));
 }
 
 void ChatItemBase::setWidget(QWidget *w)

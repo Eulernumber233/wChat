@@ -91,6 +91,12 @@
     <ClCompile Include="chatdialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="circleavatarlabel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pinkmessagebox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="chatitembase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -187,6 +193,9 @@
     <ClCompile Include="timerbtn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="titlebar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="userdata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -217,6 +226,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="chatdialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="circleavatarlabel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClInclude Include="fluenticon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="pinkmessagebox.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="chatitembase.h">
@@ -315,6 +333,9 @@
     <ClInclude Include="timerbtn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <QtMoc Include="titlebar.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
     <ClInclude Include="userdata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -402,18 +423,12 @@
     <None Include="asserts\addtip.png">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="asserts\apple_tree.png">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="asserts\arowdown.png">
       <Filter>Resource Files</Filter>
     </None>
     <QtRcc Include="asserts.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
-    <None Include="asserts\back_1.png">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="asserts\chat_icon.png">
       <Filter>Resource Files</Filter>
     </None>
@@ -471,7 +486,7 @@
     <None Include="asserts\head_5.jpg">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="asserts\ice.png">
+    <None Include="asserts\head_6.jpg">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="asserts\loading.gif">

@@ -28,6 +28,15 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     qInstallMessageHandler(customMessageHandler);
+
+    // Pink selection palette (QPalette is the only reliable way for
+    // QTextEdit / QPlainTextEdit text-selection colors on Windows;
+    // QSS `selection-background-color` doesn't always reach those).
+    QPalette appPal = QApplication::palette();
+    appPal.setColor(QPalette::Highlight,        QColor(0xf6, 0xcf, 0xdd));  // --pink-200
+    appPal.setColor(QPalette::HighlightedText,  QColor(0x6b, 0x3a, 0x4a));  // --pink-ink
+    QApplication::setPalette(appPal);
+
     QFile qss(":/style/stylesheet.qss");
     if(qss.open(QFile::ReadOnly)){
         qDebug("Open success");

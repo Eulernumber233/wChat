@@ -1,6 +1,6 @@
 #include "MessageTextEdit.h"
+#include "pinkmessagebox.h"
 #include <QDebug>
-#include <QMessageBox>
 
 // MIME（Multipurpose Internet Mail Extensions，多用途互联网邮件扩展）
 // 最初是为解决邮件中无法传输非文本数据（如图片、文件）而设计的标准，
@@ -9,12 +9,17 @@
 MessageTextEdit::MessageTextEdit(QWidget *parent)
     : QTextEdit(parent)
 {
-
-    //this->setStyleSheet("border: none;");
     this->setMaximumHeight(60);
 
-    //    connect(this,SIGNAL(textChanged()),this,SLOT(textEditChanged()));
-
+    // Placeholder shown when the compose box is empty. QSS's
+    // `placeholder-text-color` doesn't apply to QTextEdit on all Qt
+    // versions — set PlaceholderText role on the palette as a reliable
+    // fallback.
+    this->setPlaceholderText(
+        QStringLiteral("输入消息 (Enter 发送 / Shift+Enter 换行)"));
+    QPalette pal = this->palette();
+    pal.setColor(QPalette::PlaceholderText, QColor(0xc3, 0xbe, 0xc8));
+    this->setPalette(pal);
 }
 
 MessageTextEdit::~MessageTextEdit()
@@ -136,13 +141,13 @@ void MessageTextEdit::insertTextFile(const QString &url)
     QFileInfo fileInfo(url);
     if(fileInfo.isDir())// 若拖拽的是文件夹
     {
-        QMessageBox::information(this,"提示","只允许拖拽单个文件!");
+        PinkMessageBox::info(this,"提示","只允许拖拽单个文件!");
         return;
     }
 
     if(fileInfo.size()>100*1024*1024)
     {
-        QMessageBox::information(this,"提示","发送的文件大小不能大于100M");
+        PinkMessageBox::info(this,"提示","发送的文件大小不能大于100M");
         return;
     }
 

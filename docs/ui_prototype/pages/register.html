@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>wChat · 注册</title>
+<link rel="stylesheet" href="../css/theme.css">
+</head>
+<body>
+
+<div class="demo-nav">
+    <a href="login.html">登录</a>
+    <a href="register.html" class="is-active">注册</a>
+    <a href="reset-password.html">找回密码</a>
+    <a href="main.html">主界面</a>
+    <a href="dialogs.html">弹窗</a>
+</div>
+
+<div class="app-frame auth-shell auth-shell--tall">
+    <div class="titlebar">
+        <div class="titlebar__title">wChat · 注册</div>
+        <div class="titlebar__actions">
+            <button class="titlebar__btn">—</button>
+            <button class="titlebar__btn titlebar__btn--close">✕</button>
+        </div>
+    </div>
+
+    <div class="app-frame__inner">
+        <div class="auth-body">
+            <header class="auth-header" style="margin-bottom:0;">
+                <h1 class="auth-header__title">创建账号</h1>
+                <div class="auth-header__sub">欢迎加入 wChat</div>
+            </header>
+
+            <div class="field">
+                <span class="field__icon">👤</span>
+                <input class="field__input" placeholder="用户名">
+            </div>
+
+            <div class="field">
+                <span class="field__icon">✉</span>
+                <input class="field__input" type="email" placeholder="邮箱">
+            </div>
+
+            <div class="field">
+                <span class="field__icon">🔒</span>
+                <input class="field__input" id="pwd1" type="password" placeholder="密码 (6-15 位)">
+                <div class="field__suffix">
+                    <button class="field__suffix-btn" type="button"
+                        onclick="const p=document.getElementById('pwd1');p.type=p.type==='password'?'text':'password';">显示</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <span class="field__icon">🔒</span>
+                <input class="field__input" id="pwd2" type="password" placeholder="确认密码">
+                <div class="field__suffix">
+                    <button class="field__suffix-btn" type="button"
+                        onclick="const p=document.getElementById('pwd2');p.type=p.type==='password'?'text':'password';">显示</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <span class="field__icon">#</span>
+                <input class="field__input" maxlength="4" placeholder="4 位邮箱验证码">
+                <div class="field__suffix">
+                    <button class="field__suffix-btn field__suffix-btn--code">获取验证码</button>
+                </div>
+            </div>
+
+            <div class="field__error">&nbsp;</div>
+
+            <button class="btn btn--primary btn--block">确定注册</button>
+            <button class="btn btn--ghost btn--block" onclick="location.href='login.html'">返回登录</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

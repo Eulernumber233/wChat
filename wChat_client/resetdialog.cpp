@@ -4,12 +4,23 @@
 #include <QRegularExpression>
 #include "global.h"
 #include "httpmgr.h"
+#include "fluenticon.h"
 
 ResetDialog::ResetDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ResetDialog)
 {
     ui->setupUi(this);
+    setObjectName("ResetDialog");
+
+    FIC::applyIconFont(ui->user_icon,   16); ui->user_icon->setText(QString(FIC::Contact));
+    FIC::applyIconFont(ui->email_icon,  16); ui->email_icon->setText(QString(FIC::Mail));
+    FIC::applyIconFont(ui->pwd_icon,    16); ui->pwd_icon->setText(QString(FIC::Lock));
+    FIC::applyIconFont(ui->varify_icon, 16); ui->varify_icon->setText(QString(FIC::NumberSign));
+
+    ui->varify_btn->setCursor(Qt::PointingHandCursor);
+    ui->sure_btn->setCursor(Qt::PointingHandCursor);
+    ui->return_btn->setCursor(Qt::PointingHandCursor);
 
     connect(ui->user_edit,&QLineEdit::editingFinished,this,[this](){
         checkUserValid();

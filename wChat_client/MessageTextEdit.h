@@ -25,6 +25,8 @@ public:
     QVector<MsgInfo> getMsgList();
 
     void insertFileFromUrl(const QStringList &urls);
+    // Public image insertion entry for the "choose image" button.
+    void insertImageFromPath(const QString &url) { insertImages(url); }
 signals:
     void send();
 

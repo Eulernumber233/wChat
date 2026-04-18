@@ -2,10 +2,20 @@
 #include "ui_registdialog.h"
 #include "global.h"
 #include "httpmgr.h"
+#include "fluenticon.h"
 RegistDialog::RegistDialog(QWidget *parent)
     : QDialog(parent), ui(new Ui::RegistDialog),_countdown(5)
 {
     ui->setupUi(this);
+    setObjectName("RegistDialog");
+
+    // Leading icons inside each input field.
+    FIC::applyIconFont(ui->user_icon,    16); ui->user_icon->setText(QString(FIC::Contact));
+    FIC::applyIconFont(ui->email_icon,   16); ui->email_icon->setText(QString(FIC::Mail));
+    FIC::applyIconFont(ui->pass_icon,    16); ui->pass_icon->setText(QString(FIC::Lock));
+    FIC::applyIconFont(ui->confirm_icon, 16); ui->confirm_icon->setText(QString(FIC::Lock));
+    FIC::applyIconFont(ui->varify_icon,  16); ui->varify_icon->setText(QString(FIC::NumberSign));
+
     ui->pass_edit->setEchoMode(QLineEdit::Password);
     ui->confirm_edit->setEchoMode(QLineEdit::Password);
     ui->err_tip->setProperty("state","normal");
@@ -32,12 +42,13 @@ RegistDialog::RegistDialog(QWidget *parent)
     });
 
 
-    ui->pass_visible->setCursor(Qt::PointingHandCursor);
-    ui->pass_visible->setCursor(Qt::PointingHandCursor);
-
     //设置浮动显示手形状
     ui->pass_visible->setCursor(Qt::PointingHandCursor);
     ui->confirm_visible->setCursor(Qt::PointingHandCursor);
+    ui->get_code->setCursor(Qt::PointingHandCursor);
+    ui->sure_btn->setCursor(Qt::PointingHandCursor);
+    ui->cancel_btn->setCursor(Qt::PointingHandCursor);
+    ui->ret_btn->setCursor(Qt::PointingHandCursor);
 
     ui->pass_visible->SetState("unvisible","unvisible_hover","","visible",
                                "visible_hover","");

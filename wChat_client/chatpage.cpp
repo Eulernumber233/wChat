@@ -15,14 +15,45 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QScrollArea>
+#include <QFileDialog>
+#include <QStandardPaths>
+#include "fluenticon.h"
 ChatPage::ChatPage(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ChatPage)
 {
     ui->setupUi(this);
     ui->send_btn->SetState("normal","hover","press");
+    ui->send_btn->setCursor(Qt::PointingHandCursor);
     ui->emo_lb->SetState("normal","hover","press","normal","hover","press");
     ui->file_lb->SetState("normal","hover","press","normal","hover","press");
+
+    // Toolbar icons: Fluent Icons (installed on Win10+).
+    FIC::applyIconFont(ui->emo_lb,  18); ui->emo_lb->setText(QString(FIC::Emoji));
+    FIC::applyIconFont(ui->file_lb, 18); ui->file_lb->setText(QString(FIC::Picture));
+
+    // New UI: emoji panel is not implemented — hide its trigger.
+    ui->emo_lb->hide();
+
+    // file_lb becomes a dedicated "choose image" entry: clicking it opens a
+    // native file picker limited to image formats, and inserts the picked
+    // images into the message edit as image tokens (reusing the existing
+    // "paste image" path already supported by MessageTextEdit).
+    ui->file_lb->setCursor(Qt::PointingHandCursor);
+    ui->file_lb->setToolTip(QStringLiteral("选择图片"));
+    connect(ui->file_lb, &ClickedLabel::clicked, this, [this]() {
+        static const QString kImgFilter =
+            QStringLiteral("图片 (*.png *.jpg *.jpeg *.gif *.bmp *.webp)");
+        QString start = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+        QStringList paths = QFileDialog::getOpenFileNames(
+            this, QStringLiteral("选择图片"), start, kImgFilter);
+        for (const QString& p : paths) {
+            if (p.isEmpty()) continue;
+            QPixmap pm(p);
+            if (pm.isNull()) continue;
+            ui->chatEdit->insertImageFromPath(p);
+        }
+    });
 
     connect(ui->chatEdit,&MessageTextEdit::send,this,&ChatPage::on_send_btn_clicked);
 
@@ -203,10 +234,20 @@ void ChatPage::RefreshFromLocalDb()
     const int self_uid = UserMgr::GetInstance()->GetUid();
 
     auto rows = LocalDb::Inst().LoadRecent(peer_uid, kPageSize);
+
+    // Suppress per-row repaints while we batch-append messages. Without
+    // this, every AppendChatMsg triggers a layout/paint cycle, and each
+    // freshly constructed TextBubble paints its default-styled state for
+    // a brief moment before its stylesheet + height kick in. The user
+    // sees a flicker of "white box / black text" boxes scrolling past.
+    // Disabling updates ensures only ONE paint after the loop completes.
+    ui->chat_data_list->setUpdatesEnabled(false);
     for (const auto& row : rows) {
         auto tds = LocalDb::RowToTextChatData(row, self_uid);
         for (const auto& td : tds) AppendChatMsg(td);
     }
+    ui->chat_data_list->setUpdatesEnabled(true);
+    ui->chat_data_list->update();
 }
 
 void ChatPage::AppendChatMsg(std::shared_ptr<TextChatData> msg)
@@ -371,36 +412,42 @@ void ChatPage::AppendImageBubble(const QString& image_path, ChatRole role,
 // AI Suggestion Panel (M2 Step 7)
 // ================================================================
 
+// Cherry-pink AI action button style (inline used for per-candidate buttons).
 static const char* AI_BTN_STYLE =
-    "QPushButton { background: #7c5cfc; color: white; border-radius: 3px; font-size: 11px; }"
-    "QPushButton:hover { background: #6a4de0; }"
-    "QPushButton:disabled { background: #cccccc; }";
+    "QPushButton { background: qlineargradient(x1:0,y1:0,x2:1,y2:1,"
+    "  stop:0 #e89bb4, stop:1 #c25978); color: white; border: none;"
+    "  border-radius: 4px; font-size: 11px; padding: 2px 6px; letter-spacing: 1px; }"
+    "QPushButton:hover { background: qlineargradient(x1:0,y1:0,x2:1,y2:1,"
+    "  stop:0 #d97a95, stop:1 #c25978); }"
+    "QPushButton:disabled { background: #dcd8e0; }";
 
 void ChatPage::setupAiPanel()
 {
     auto* toolLayout = qobject_cast<QHBoxLayout*>(ui->tool_wid->layout());
     if (!toolLayout) return;
 
-    _ai_toggle_btn = new QPushButton("AI", ui->tool_wid);
+    _ai_toggle_btn = new QPushButton(ui->tool_wid);
     _ai_toggle_btn->setObjectName("ai_toggle_btn");
-    _ai_toggle_btn->setFixedSize(36, 25);
-    _ai_toggle_btn->setStyleSheet(
-        "QPushButton { background: #7c5cfc; color: white; border-radius: 4px;"
-        "  font-size: 12px; font-weight: bold; }"
-        "QPushButton:hover { background: #6a4de0; }"
-        "QPushButton:pressed { background: #5a3ec0; }"
-        "QPushButton:disabled { background: #cccccc; }"
-    );
+    _ai_toggle_btn->setFixedSize(56, 26);
+    _ai_toggle_btn->setCursor(Qt::PointingHandCursor);
+    _ai_toggle_btn->setToolTip(QStringLiteral("AI 智能回复建议"));
+    _ai_toggle_btn->setText(QString(FIC::Sparkle) + QStringLiteral(" AI"));
+    // Use the icon font so the spark glyph renders as a true icon.
+    {
+        QFont f = _ai_toggle_btn->font();
+        FIC::applyIconFont(_ai_toggle_btn, 12);
+        QFont mix = _ai_toggle_btn->font();
+        _ai_toggle_btn->setFont(mix);
+    }
+    // Visual style is provided by the global stylesheet (#ai_toggle_btn).
     _ai_toggle_btn->setVisible(false);
     toolLayout->insertWidget(toolLayout->count() - 1, _ai_toggle_btn);
     connect(_ai_toggle_btn, &QPushButton::clicked, this, &ChatPage::onAiToggleClicked);
 
     _ai_panel = new QWidget(this);
     _ai_panel->setObjectName("ai_panel");
-    _ai_panel->setStyleSheet(
-        "#ai_panel { background: #f8f7ff; border: 1px solid #e0ddf5; border-radius: 6px;"
-        "  margin: 2px 4px; padding: 6px; }"
-    );
+    _ai_panel->setAttribute(Qt::WA_StyledBackground, true);
+    // Visual style comes from the global stylesheet (#ai_panel).
     _ai_panel->setVisible(false);
 
     auto* panelLayout = new QVBoxLayout(_ai_panel);
@@ -424,23 +471,31 @@ void ChatPage::setupAiPanel()
     _ai_custom_prompt = new QLineEdit;
     _ai_custom_prompt->setFixedHeight(26);
     _ai_custom_prompt->setPlaceholderText(QString::fromUtf8("补充背景（可选）如：我们昨天刚吵过架 / 他是我领导"));
-    _ai_custom_prompt->setStyleSheet("QLineEdit { font-size: 11px; padding: 2px 4px; }");
+    _ai_custom_prompt->setStyleSheet(
+        "QLineEdit { font-size: 11px; padding: 2px 8px; border: 1px solid #ece7ee;"
+        "  border-radius: 6px; background: #ffffff; }"
+        "QLineEdit:focus { border: 1px solid #e89bb4; }"
+    );
     topRow->addWidget(_ai_custom_prompt, 1);
 
     _ai_request_btn = new QPushButton(QString::fromUtf8("获取建议"));
-    _ai_request_btn->setFixedSize(70, 26);
+    _ai_request_btn->setFixedSize(76, 26);
     _ai_request_btn->setStyleSheet(AI_BTN_STYLE);
     topRow->addWidget(_ai_request_btn);
 
-    auto* closeBtn = new QPushButton("X");
+    auto* closeBtn = new QPushButton(QStringLiteral("✕"));
     closeBtn->setFixedSize(26, 26);
-    closeBtn->setStyleSheet("QPushButton { border: none; font-weight: bold; }");
+    closeBtn->setStyleSheet(
+        "QPushButton { background: transparent; color: #8a838f; border: none;"
+        "  font-weight: bold; font-size: 12px; }"
+        "QPushButton:hover { color: #c25978; }"
+    );
     topRow->addWidget(closeBtn);
 
     panelLayout->addLayout(topRow);
 
     _ai_status_label = new QLabel;
-    _ai_status_label->setStyleSheet("QLabel { color: #888; font-size: 11px; }");
+    _ai_status_label->setStyleSheet("QLabel { color: #8a838f; font-size: 11px; padding-left: 4px; }");
     _ai_status_label->setVisible(false);
     panelLayout->addWidget(_ai_status_label);
 
@@ -532,11 +587,13 @@ void ChatPage::renderCandidates(const QJsonArray& candidates)
 
         auto* label = new QLabel(QString("[%1] %2").arg(style, content));
         label->setWordWrap(true);
-        label->setStyleSheet("QLabel { font-size: 12px; color: #333; }");
+        label->setStyleSheet(
+            "QLabel { font-size: 12px; color: #26222b; padding: 6px 8px;"
+            "  background: #ffffff; border: 1px solid #f6cfdd; border-radius: 6px; }");
         rowLayout->addWidget(label, 1);
 
         auto* refineBtn = new QPushButton(QString::fromUtf8("润色"));
-        refineBtn->setFixedSize(40, 24);
+        refineBtn->setFixedSize(44, 24);
         refineBtn->setStyleSheet(AI_BTN_STYLE);
         int idx = i;
         connect(refineBtn, &QPushButton::clicked, [this, idx]() {
@@ -545,7 +602,7 @@ void ChatPage::renderCandidates(const QJsonArray& candidates)
         rowLayout->addWidget(refineBtn);
 
         auto* useBtn = new QPushButton(QString::fromUtf8("采用"));
-        useBtn->setFixedSize(40, 24);
+        useBtn->setFixedSize(44, 24);
         useBtn->setStyleSheet(AI_BTN_STYLE);
         connect(useBtn, &QPushButton::clicked, [this, idx]() {
             onCandidateUseClicked(idx);

@@ -31,36 +31,41 @@ void BubbleFrame::setMargin(int margin)
 
 void BubbleFrame::paintEvent(QPaintEvent *e)
 {
+    // Cherry-pink theme:
+    //  - Other side: solid white bubble (with subtle border / shadow feel)
+    //  - Self side:  pink gradient (light to mid-pink) with deep pink text
+    // Rounded corners match the design (14px for main body, 4px on the
+    // "pointer" side to anchor visually to the avatar).
     QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setPen(Qt::NoPen);
-    if(m_role == ChatRole::Other)
-    {
-        //画气泡
-        QColor bk_color(Qt::white);
-        painter.setBrush(QBrush(bk_color));
-        QRect bk_rect = QRect(WIDTH_SANJIAO, 0, this->width()-WIDTH_SANJIAO, this->height());
-        painter.drawRoundedRect(bk_rect,5,5);
-        //画小三角
+
+    const int radius = 14;
+
+    if (m_role == ChatRole::Other) {
+        painter.setBrush(QBrush(QColor(0xff, 0xff, 0xff)));
+        QRect bk_rect(WIDTH_SANJIAO, 0, this->width() - WIDTH_SANJIAO, this->height());
+        painter.drawRoundedRect(bk_rect, radius, radius);
         QPointF points[3] = {
             QPointF(bk_rect.x(), 12),
-            QPointF(bk_rect.x(), 10+WIDTH_SANJIAO +2),
-            QPointF(bk_rect.x()-WIDTH_SANJIAO, 10+WIDTH_SANJIAO-WIDTH_SANJIAO/2),
+            QPointF(bk_rect.x(), 10 + WIDTH_SANJIAO + 2),
+            QPointF(bk_rect.x() - WIDTH_SANJIAO, 10 + WIDTH_SANJIAO - WIDTH_SANJIAO/2),
         };
         painter.drawPolygon(points, 3);
-    }
-    else
-    {
-        QColor bk_color(158,234,106);
-        painter.setBrush(QBrush(bk_color));
-        //画气泡
-        QRect bk_rect = QRect(0, 0, this->width()-WIDTH_SANJIAO, this->height());
-        painter.drawRoundedRect(bk_rect,5,5);
-        //画三角
+    } else {
+        QRect bk_rect(0, 0, this->width() - WIDTH_SANJIAO, this->height());
+        QLinearGradient grad(bk_rect.topLeft(), bk_rect.bottomRight());
+        grad.setColorAt(0.0, QColor(0xf6, 0xcf, 0xdd));  // --pink-200
+        grad.setColorAt(1.0, QColor(0xef, 0xb7, 0xc9));  // --pink-300
+        painter.setBrush(QBrush(grad));
+        painter.drawRoundedRect(bk_rect, radius, radius);
         QPointF points[3] = {
-            QPointF(bk_rect.x()+bk_rect.width(), 12),
-            QPointF(bk_rect.x()+bk_rect.width(), 12+WIDTH_SANJIAO +2),
-            QPointF(bk_rect.x()+bk_rect.width()+WIDTH_SANJIAO, 10+WIDTH_SANJIAO-WIDTH_SANJIAO/2),
+            QPointF(bk_rect.x() + bk_rect.width(), 12),
+            QPointF(bk_rect.x() + bk_rect.width(), 12 + WIDTH_SANJIAO + 2),
+            QPointF(bk_rect.x() + bk_rect.width() + WIDTH_SANJIAO,
+                    10 + WIDTH_SANJIAO - WIDTH_SANJIAO/2),
         };
+        painter.setBrush(QBrush(QColor(0xef, 0xb7, 0xc9)));
         painter.drawPolygon(points, 3);
     }
     return QFrame::paintEvent(e);

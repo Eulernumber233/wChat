@@ -1,314 +1,214 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>ResetDialog</class>
- <widget class="QDialog" name="ResetDialog">
+ <widget class="QWidget" name="ResetDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>354</width>
-    <height>538</height>
+    <width>430</width>
+    <height>640</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>Dialog</string>
+  <property name="minimumSize">
+   <size><width>430</width><height>640</height></size>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <property name="maximumSize">
+   <size><width>430</width><height>640</height></size>
+  </property>
+  <layout class="QVBoxLayout" name="page_layout">
+   <property name="leftMargin"><number>40</number></property>
+   <property name="topMargin"><number>30</number></property>
+   <property name="rightMargin"><number>40</number></property>
+   <property name="bottomMargin"><number>36</number></property>
+   <property name="spacing"><number>14</number></property>
+
+   <item alignment="Qt::AlignHCenter">
+    <widget class="QLabel" name="auth_title">
+     <property name="text"><string>找回密码</string></property>
+     <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
+    </widget>
+   </item>
+   <item alignment="Qt::AlignHCenter">
+    <widget class="QLabel" name="auth_sub">
+     <property name="text"><string>通过邮箱验证码重置</string></property>
+     <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
+    </widget>
+   </item>
+
    <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
+    <spacer name="vs_before_fields">
+     <property name="orientation"><enum>Qt::Orientation::Vertical</enum></property>
+     <property name="sizeType"><enum>QSizePolicy::Policy::Fixed</enum></property>
+     <property name="sizeHint" stdset="0"><size><width>20</width><height>4</height></size></property>
     </spacer>
    </item>
+
+   <!-- Username -->
    <item>
-    <widget class="QLabel" name="err_tip">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QWidget" name="widget_2" native="true">
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <widget class="QWidget" name="user_field" native="true">
+     <property name="minimumSize"><size><width>0</width><height>42</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>42</height></size></property>
+     <layout class="QHBoxLayout" name="user_field_layout">
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <property name="spacing"><number>0</number></property>
       <item>
-       <widget class="QLabel" name="email_lb">
-        <property name="minimumSize">
-         <size>
-          <width>48</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>48</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>邮箱：</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="email_edit">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>25</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QWidget" name="widget_3" native="true">
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QLabel" name="varify_lb">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>验证码：</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="varify_edit">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>25</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="TimerBtn" name="varify_btn">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>获取</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QWidget" name="widget_4" native="true">
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
-      <item>
-       <widget class="QLabel" name="pwd_lb">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>新密码：</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="pwd_edit">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>25</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QWidget" name="widget" native="true">
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QLabel" name="user_lb">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>用户名：</string>
-        </property>
+       <widget class="QLabel" name="user_icon">
+        <property name="minimumSize"><size><width>36</width><height>42</height></size></property>
+        <property name="maximumSize"><size><width>36</width><height>42</height></size></property>
+        <property name="text"><string/></property>
+        <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
        </widget>
       </item>
       <item>
        <widget class="QLineEdit" name="user_edit">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>25</height>
-         </size>
-        </property>
+        <property name="minimumSize"><size><width>0</width><height>42</height></size></property>
+        <property name="placeholderText"><string>用户名</string></property>
        </widget>
       </item>
      </layout>
     </widget>
    </item>
+
+   <!-- Email -->
    <item>
-    <spacer name="verticalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item>
-    <widget class="QWidget" name="widget_5" native="true">
-     <layout class="QHBoxLayout" name="horizontalLayout_5">
+    <widget class="QWidget" name="email_field" native="true">
+     <property name="minimumSize"><size><width>0</width><height>42</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>42</height></size></property>
+     <layout class="QHBoxLayout" name="email_field_layout">
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <property name="spacing"><number>0</number></property>
       <item>
-       <widget class="QPushButton" name="sure_btn">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>确认</string>
-        </property>
+       <widget class="QLabel" name="email_icon">
+        <property name="minimumSize"><size><width>36</width><height>42</height></size></property>
+        <property name="maximumSize"><size><width>36</width><height>42</height></size></property>
+        <property name="text"><string/></property>
+        <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="return_btn">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>返回</string>
-        </property>
+       <widget class="QLineEdit" name="email_edit">
+        <property name="minimumSize"><size><width>0</width><height>42</height></size></property>
+        <property name="placeholderText"><string>注册邮箱</string></property>
        </widget>
       </item>
      </layout>
     </widget>
    </item>
+
+   <!-- New password -->
    <item>
-    <spacer name="verticalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
+    <widget class="QWidget" name="pwd_field" native="true">
+     <property name="minimumSize"><size><width>0</width><height>42</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>42</height></size></property>
+     <layout class="QHBoxLayout" name="pwd_field_layout">
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <property name="spacing"><number>0</number></property>
+      <item>
+       <widget class="QLabel" name="pwd_icon">
+        <property name="minimumSize"><size><width>36</width><height>42</height></size></property>
+        <property name="maximumSize"><size><width>36</width><height>42</height></size></property>
+        <property name="text"><string/></property>
+        <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="pwd_edit">
+        <property name="minimumSize"><size><width>0</width><height>42</height></size></property>
+        <property name="placeholderText"><string>新密码 (6-15 位)</string></property>
+        <property name="echoMode"><enum>QLineEdit::Password</enum></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+   <!-- Verify code field -->
+   <item>
+    <widget class="QWidget" name="varify_field" native="true">
+     <property name="minimumSize"><size><width>0</width><height>42</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>42</height></size></property>
+     <layout class="QHBoxLayout" name="varify_field_layout">
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <property name="spacing"><number>0</number></property>
+      <item>
+       <widget class="QLabel" name="varify_icon">
+        <property name="minimumSize"><size><width>36</width><height>42</height></size></property>
+        <property name="maximumSize"><size><width>36</width><height>42</height></size></property>
+        <property name="text"><string/></property>
+        <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="varify_edit">
+        <property name="minimumSize"><size><width>0</width><height>42</height></size></property>
+        <property name="maxLength"><number>4</number></property>
+        <property name="placeholderText"><string>4 位邮箱验证码</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="TimerBtn" name="varify_btn">
+        <property name="minimumSize"><size><width>100</width><height>42</height></size></property>
+        <property name="maximumSize"><size><width>110</width><height>42</height></size></property>
+        <property name="text"><string>获取验证码</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QLabel" name="err_tip">
+     <property name="minimumSize"><size><width>0</width><height>18</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>18</height></size></property>
+     <property name="text"><string/></property>
+     <property name="alignment"><set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set></property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QPushButton" name="sure_btn">
+     <property name="minimumSize"><size><width>0</width><height>42</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>42</height></size></property>
+     <property name="text"><string>重置密码</string></property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QPushButton" name="return_btn">
+     <property name="minimumSize"><size><width>0</width><height>42</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>42</height></size></property>
+     <property name="text"><string>返回登录</string></property>
+    </widget>
+   </item>
+
+   <item>
+    <spacer name="vs_bottom">
+     <property name="orientation"><enum>Qt::Orientation::Vertical</enum></property>
+     <property name="sizeType"><enum>QSizePolicy::Policy::Expanding</enum></property>
+     <property name="sizeHint" stdset="0"><size><width>20</width><height>10</height></size></property>
     </spacer>
    </item>
+
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
    <class>TimerBtn</class>
    <extends>QPushButton</extends>
-   <header location="global">timerbtn.h</header>
+   <header>timerbtn.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

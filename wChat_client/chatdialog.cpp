@@ -5,39 +5,94 @@
 #include "picturebubble.h"
 #include "chatitembase.h"
 #include "localdb.h"
+#include "fluenticon.h"
 #include <QDateTime>
+#include <QPainter>
+#include <QPainterPath>
+#include <QFontDatabase>
+
+// Render a Segoe Fluent Icons glyph to a QPixmap at the given pixel size
+// and color. Used when a control only accepts QIcon (QLineEdit::addAction,
+// QAbstractButton::setIcon) and we still want font-based icons.
+static QPixmap glyphToPixmap(const QString &glyph, int pixelSize, const QColor &color) {
+    QPixmap pm(pixelSize, pixelSize);
+    pm.fill(Qt::transparent);
+    QPainter p(&pm);
+    p.setRenderHint(QPainter::Antialiasing, true);
+    QFont f;
+    const auto fams = QFontDatabase::families();
+    if (fams.contains("Segoe Fluent Icons"))       f.setFamily("Segoe Fluent Icons");
+    else if (fams.contains("Segoe MDL2 Assets"))   f.setFamily("Segoe MDL2 Assets");
+    else                                            f.setFamily("Segoe UI Symbol");
+    f.setPixelSize(pixelSize - 2);
+    p.setFont(f);
+    p.setPen(color);
+    p.drawText(QRect(0, 0, pixelSize, pixelSize), Qt::AlignCenter, glyph);
+    return pm;
+}
+
+// Clip a square pixmap to a circle of the same size (keeps storage
+// rectangular as per user requirement). Used for avatar rendering on
+// QLabel targets that can't easily be swapped to CircleAvatarLabel.
+static QPixmap clipToCircle(const QPixmap &src, int side) {
+    if (src.isNull() || side <= 0) return src;
+    const QPixmap scaled = src.scaled(QSize(side, side),
+                                      Qt::KeepAspectRatioByExpanding,
+                                      Qt::SmoothTransformation);
+    QPixmap out(side, side);
+    out.fill(Qt::transparent);
+    QPainter p(&out);
+    p.setRenderHint(QPainter::Antialiasing, true);
+    p.setRenderHint(QPainter::SmoothPixmapTransform, true);
+    QPainterPath clip;
+    clip.addEllipse(0, 0, side, side);
+    p.setClipPath(clip);
+    const int sx = (scaled.width()  - side) / 2;
+    const int sy = (scaled.height() - side) / 2;
+    p.drawPixmap(0, 0, scaled, sx, sy, side, side);
+    return out;
+}
 ChatDialog::ChatDialog(QWidget *parent):
     QDialog(parent), ui(new Ui::ChatDialog),_mode(ChatUIMode::ChatMode),
     _state(ChatUIMode::ChatMode),_b_loading(false),_cur_chat_uid(0),_last_widget(nullptr)
 {
     ui->setupUi(this);
+    setObjectName("ChatDialog");
+
+    // add-friend button: Fluent plus glyph (replaces old png + border-image)
+    FIC::applyIconFont(ui->add_btn, 16);
+    ui->add_btn->setText(QString(FIC::Add));
     ui->add_btn->SetState("normal","hover","press");
     ui->add_btn->setProperty("state","normal");
+    ui->add_btn->setCursor(Qt::PointingHandCursor);
+
+    // Sidebar nav: Fluent glyphs inside StateWidget
+    ui->side_chat_lb->SetGlyph(QString(FIC::Chat), 20);
+    ui->side_contact_lb->SetGlyph(QString(FIC::People), 20);
+    ui->side_chat_lb->setCursor(Qt::PointingHandCursor);
+    ui->side_contact_lb->setCursor(Qt::PointingHandCursor);
 
     ui->search_edit->SetMaxLength(15);
-    QAction *searchAction =new QAction(ui->search_edit);
-    searchAction->setIcon(QIcon(":/asserts/search.png"));
-    ui->search_edit->addAction(searchAction,QLineEdit::LeadingPosition);
-    ui->search_edit->setPlaceholderText(QStringLiteral("搜索"));
+    // Leading magnifier glyph (Fluent Icons rendered to pixmap).
+    QAction *searchAction = new QAction(ui->search_edit);
+    searchAction->setIcon(QIcon(glyphToPixmap(QString(FIC::Search), 16, QColor("#8a838f"))));
+    ui->search_edit->addAction(searchAction, QLineEdit::LeadingPosition);
+    ui->search_edit->setPlaceholderText(QStringLiteral("搜索用户 UID"));
 
-    QAction*clearAction = new QAction(ui->search_edit);
-    clearAction->setIcon(QIcon(":/asserts/close_transparent.png"));
+    // Trailing clear glyph: shown only when there's text.
+    const QIcon clearIconOn  = QIcon(glyphToPixmap(QString(FIC::Close), 14, QColor("#8a838f")));
+    const QIcon clearIconOff = QIcon(QPixmap(1, 1));  // invisible placeholder
+    QAction *clearAction = new QAction(ui->search_edit);
+    clearAction->setIcon(clearIconOff);
     ui->search_edit->addAction(clearAction, QLineEdit::TrailingPosition);
 
-    // 当需要显示清除图标时，更改为实际的清除图标
-    connect(ui->search_edit, &QLineEdit::textChanged, [clearAction](const QString &text) {
-        if (!text.isEmpty()) {
-            clearAction->setIcon(QIcon(":/asserts/close_search.png"));
-        } else {
-            clearAction->setIcon(QIcon(":/asserts/close_transparent.png")); // 文本为空时，切换回透明图标
-        }
+    connect(ui->search_edit, &QLineEdit::textChanged, [clearAction, clearIconOn, clearIconOff](const QString &text) {
+        clearAction->setIcon(text.isEmpty() ? clearIconOff : clearIconOn);
     });
-    // 连接清除动作的触发信号到槽函数，用于清除文本
-    connect(clearAction, &QAction::triggered, [this, clearAction]() {
+    connect(clearAction, &QAction::triggered, [this, clearAction, clearIconOff]() {
         ui->search_edit->clear();
-        clearAction->setIcon(QIcon(":/asserts/close_transparent.png")); // 清除文本后，切换回透明图标
+        clearAction->setIcon(clearIconOff);
         ui->search_edit->clearFocus();
-        //清除按钮被按下则不显示搜索框
         ShowSearch(false);
     });
     // 当搜索框输入时
@@ -61,12 +116,9 @@ ChatDialog::ChatDialog(QWidget *parent):
 
     addChatUserList();
     QString icon = UserMgr::GetInstance()->GetUserInfo()->_icon;
-    qDebug()<<"--------------ChatDialog icon :"<<icon<<"----------------";
-    QPixmap pixmap(icon);
-    ui->side_head_lb->setPixmap(pixmap); // 将图片设置到QLabel上
-    QPixmap scaledPixmap = pixmap.scaled( ui->side_head_lb->size(), Qt::KeepAspectRatio); // 将图片缩放到label的大小
-    ui->side_head_lb->setPixmap(scaledPixmap); // 将缩放后的图片设置到QLabel上
-    ui->side_head_lb->setScaledContents(true); // 设置QLabel自动缩放图片内容以适应大小
+    // CircleAvatarLabel handles cropping + centring internally so the
+    // source image can stay rectangular and display as a centred circle.
+    ui->side_head_lb->setImagePath(icon);
 
     ui->side_chat_lb->setProperty("state","normal");
     ui->side_chat_lb->SetState("normal","hover","pressed","selected_normal","selected_hover","selected_pressed");
@@ -202,16 +254,31 @@ void ChatDialog::addChatUserList()
     //先按照好友列表加载聊天记录，等以后客户端实现聊天记录数据库之后再按照最后信息排序
     auto friend_list = UserMgr::GetInstance()->GetChatListPerPage();
     if (friend_list.empty() == false) {
+        const int self_uid = UserMgr::GetInstance()->GetUid();
         for(auto & friend_ele : friend_list){
             auto find_iter = _chat_items_added.find(friend_ele->_uid);
             if(find_iter != _chat_items_added.end()){
                 continue;
             }
-            auto *chat_user_wid = new ChatUserWid();
             auto user_info = std::make_shared<UserInfo>(friend_ele);
+
+            // Fallback: if the server summary didn't fill _last_msg yet,
+            // ask LocalDb for the most recent message with this peer and
+            // show it as the preview. This makes the conv list actually
+            // reflect local history on first render (req #7).
+            if (user_info->_last_msg.isEmpty()) {
+                auto rows = LocalDb::Inst().LoadRecent(friend_ele->_uid, 1);
+                if (!rows.isEmpty()) {
+                    auto tds = LocalDb::RowToTextChatData(rows.back(), self_uid);
+                    if (!tds.isEmpty()) {
+                        user_info->_last_msg = tds.back()->_msg_content;
+                    }
+                }
+            }
+
+            auto *chat_user_wid = new ChatUserWid();
             chat_user_wid->SetInfo(user_info);
             QListWidgetItem *item = new QListWidgetItem;
-            //qDebug()<<"chat_user_wid sizeHint is " << chat_user_wid->sizeHint();
             item->setSizeHint(chat_user_wid->sizeHint());
             ui->chat_user_list->addItem(item);
             ui->chat_user_list->setItemWidget(item, chat_user_wid);
@@ -726,6 +793,9 @@ void ChatDialog::slot_append_send_chat_msg(std::shared_ptr<TextChatData> msgdata
         msg_vec.push_back(msgdata);
         // 将消息放入用户的好友信息里
         UserMgr::GetInstance()->AppendFriendChatMsg(_cur_chat_uid,msg_vec);
+        // Also refresh the conv-list row's last_msg preview (req #7: show
+        // last message in the sidebar list and keep it in sync on send).
+        con_item->updateLastMsg(msg_vec);
         return;
     }
 }

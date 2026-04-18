@@ -18,12 +18,17 @@ public:
     void SetSelected(bool bselected);
     void AddRedPoint();
     void ShowRedPoint(bool show=true);
+    // Set a glyph (e.g. a Segoe Fluent Icons codepoint) to render inside
+    // the state widget. Call before SetState so the child label sits in
+    // the layout correctly.
+    void SetGlyph(const QString &glyph, int pixelSize = 20);
 protected:
     void paintEvent(QPaintEvent* event) override;
     virtual void mousePressEvent(QMouseEvent *ev) override;
     virtual void mouseReleaseEvent(QMouseEvent *ev) override;
     virtual void enterEvent(QEnterEvent *event)override;
     virtual void leaveEvent(QEvent* event) override;
+    void resizeEvent(QResizeEvent *event) override;
 private:
     QString _normal;
     QString _normal_hover;
@@ -33,6 +38,7 @@ private:
     QString _selected_press;
     ClickLbState _curstate;
     QLabel * _red_point;
+    QLabel * _glyph_lb = nullptr;
 signals:
     void clicked(void);
 signals:

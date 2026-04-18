@@ -30,7 +30,20 @@
       "Bash(ls -la d:/CPP/network/wChat/proto/*.pb.*)",
       "Read(//d/CPP/network/wChat/**)",
       "Read(//d/library/grpc/visualpro/Debug/**)",
-      "Read(//d/CPP/network/wChat/wChat_client/build/Desktop_Qt_6_9_1_MinGW_64_bit-Debug/**)"
+      "Read(//d/CPP/network/wChat/wChat_client/build/Desktop_Qt_6_9_1_MinGW_64_bit-Debug/**)",
+      "Bash(qtpaths --version)",
+      "Read(//d/vscode/**)",
+      "Bash(find d:/Qt* -maxdepth 5 -iname \"qmake.exe\")",
+      "Bash(find /c/Qt* -maxdepth 5 -iname \"qmake.exe\")",
+      "Read(//c//**)",
+      "Read(//d//**)",
+      "Bash(/d/Qt/6.9.1/mingw_64/bin/qmake.exe ../../wChat_client.pro)",
+      "Bash(mingw32-make debug *)",
+      "Bash(mkdir -p \"d:/CPP/network/wChat/wChat_client/build/mgw1310\")",
+      "Bash(qmake.exe ../../wChat_client.pro)",
+      "Bash(mingw32-make.exe debug *)",
+      "Bash(/d/Qt/6.9.1/msvc2022_64/bin/uic.exe mainwindow.ui -o ui_mainwindow.h)",
+      "Bash(/d/CPP/network/wChat/wChat_AgentServer/.venv/Scripts/python -c ' *)"
     ]
   }
 }

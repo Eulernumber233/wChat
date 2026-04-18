@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>wChat · 弹窗一览</title>
+<link rel="stylesheet" href="../css/theme.css">
+<style>
+    .dialogs-grid {
+        padding: 80px 20px 40px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 26px;
+        justify-content: center;
+    }
+    .dialog-card {
+        background: rgba(255,255,255,0.55);
+        backdrop-filter: blur(8px);
+        padding: 18px;
+        border-radius: var(--r-lg);
+        border: 1px solid var(--glass-border);
+    }
+    .dialog-card__caption {
+        text-align: center;
+        color: var(--gray-700);
+        font-size: var(--fs-sm);
+        margin-bottom: 10px;
+        letter-spacing: 1px;
+    }
+    .modal-static {
+        position: static;
+        box-shadow: var(--shadow-md);
+    }
+    .mini-loading {
+        width: 300px;
+        padding: 40px;
+        text-align: center;
+    }
+    .spinner {
+        width: 40px; height: 40px;
+        border: 3px solid var(--pink-100);
+        border-top-color: var(--pink-500);
+        border-radius: 50%;
+        margin: 0 auto 14px;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="demo-nav">
+    <a href="login.html">登录</a>
+    <a href="register.html">注册</a>
+    <a href="reset-password.html">找回密码</a>
+    <a href="main.html">主界面</a>
+    <a href="dialogs.html" class="is-active">弹窗</a>
+</div>
+
+<div class="dialogs-grid">
+
+    <!-- 搜索结果 · 用户存在 -->
+    <div class="dialog-card">
+        <div class="dialog-card__caption">8.1 搜索结果 · 用户存在</div>
+        <div class="modal modal-static">
+            <div class="modal__header">
+                搜索结果
+                <button class="modal__close">✕</button>
+            </div>
+            <div class="modal__body" style="align-items:center;text-align:center;">
+                <div class="avatar avatar--lg" style="width:72px;height:72px;font-size:28px;">樱</div>
+                <div style="font-size:var(--fs-lg);font-weight:600;margin-top:4px;">樱语红粉</div>
+                <div style="color:var(--gray-500);font-size:var(--fs-sm);">UID · 202604</div>
+                <div style="color:var(--gray-500);font-size:var(--fs-sm);">又是平平无奇的一天</div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" style="padding:0 18px;">关闭</button>
+                <button class="btn btn--primary" style="padding:0 18px;">添加好友</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜索结果 · 未找到 -->
+    <div class="dialog-card">
+        <div class="dialog-card__caption">8.2 搜索结果 · 未找到</div>
+        <div class="modal modal-static">
+            <div class="modal__header">
+                搜索结果
+                <button class="modal__close">✕</button>
+            </div>
+            <div class="modal__body" style="align-items:center;text-align:center;padding:30px 20px;">
+                <div style="font-size:42px;color:var(--pink-200);">😕</div>
+                <div style="color:var(--gray-700);font-weight:500;">未找到该用户</div>
+                <div style="color:var(--gray-500);font-size:var(--fs-sm);">请确认 UID 是否输入正确</div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" style="padding:0 18px;">知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 申请好友 -->
+    <div class="dialog-card">
+        <div class="dialog-card__caption">8.3 申请好友</div>
+        <div class="modal modal-static">
+            <div class="modal__header">
+                申请好友
+                <button class="modal__close">✕</button>
+            </div>
+            <div class="modal__body">
+                <div>
+                    <label class="label">申请理由</label>
+                    <textarea class="textarea" placeholder="你好, 我是…"></textarea>
+                </div>
+                <div>
+                    <label class="label">备注名</label>
+                    <input class="field__input" style="padding:0 12px;" placeholder="(可选)">
+                </div>
+                <div>
+                    <label class="label">标签</label>
+                    <div class="chip-group">
+                        <span class="chip is-selected">同学</span>
+                        <span class="chip">同事</span>
+                        <span class="chip is-selected">设计</span>
+                        <span class="chip">游戏</span>
+                        <span class="chip">+ 自定义</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" style="padding:0 18px;">取消</button>
+                <button class="btn btn--primary" style="padding:0 18px;">发送申请</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 同意好友 -->
+    <div class="dialog-card">
+        <div class="dialog-card__caption">8.4 同意好友</div>
+        <div class="modal modal-static">
+            <div class="modal__header">
+                同意好友申请
+                <button class="modal__close">✕</button>
+            </div>
+            <div class="modal__body">
+                <div style="display:flex;gap:12px;align-items:center;padding:8px 0;">
+                    <div class="avatar avatar--lg">桃</div>
+                    <div>
+                        <div style="font-weight:500;">桃子酱</div>
+                        <div style="color:var(--gray-500);font-size:var(--fs-sm);">"你好呀, 我是隔壁班同学"</div>
+                    </div>
+                </div>
+                <div>
+                    <label class="label">对方备注名</label>
+                    <input class="field__input" style="padding:0 12px;" placeholder="(可选)" value="桃子">
+                </div>
+                <div>
+                    <label class="label">标签</label>
+                    <div class="chip-group">
+                        <span class="chip is-selected">同学</span>
+                        <span class="chip">邻居</span>
+                        <span class="chip">+ 自定义</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" style="padding:0 18px;">取消</button>
+                <button class="btn btn--primary" style="padding:0 18px;">同意</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div class="dialog-card">
+        <div class="dialog-card__caption">8.5 加载提示</div>
+        <div class="modal modal-static mini-loading">
+            <div class="spinner"></div>
+            <div style="color:var(--gray-700);">正在搜索用户…</div>
+        </div>
+    </div>
+
+    <!-- 全局通知 · 下线 -->
+    <div class="dialog-card">
+        <div class="dialog-card__caption">G4/G5 全局通知 · 下线提示</div>
+        <div class="modal modal-static" style="width:360px;">
+            <div class="modal__header">
+                连接已断开
+                <button class="modal__close">✕</button>
+            </div>
+            <div class="modal__body" style="text-align:center;padding:24px 20px;">
+                <div style="font-size:36px;color:var(--pink-400);">⚠</div>
+                <div style="color:var(--gray-700);font-weight:500;margin-top:6px;">账号在其他设备登录</div>
+                <div style="color:var(--gray-500);font-size:var(--fs-sm);">即将返回登录页</div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--primary" style="padding:0 18px;">好的</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Toast 示例 (未读新消息等) -->
+<div class="toast">💬 收到来自"桃子酱"的新好友申请</div>
+
+</body>
+</html>

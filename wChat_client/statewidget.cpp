@@ -1,4 +1,5 @@
 #include "statewidget.h"
+#include "fluenticon.h"
 
 StateWidget::StateWidget(QWidget *parent): QWidget(parent),_curstate(ClickLbState::Normal)
 {
@@ -45,20 +46,48 @@ void StateWidget::SetSelected(bool bselected)
 }
 void StateWidget::AddRedPoint()
 {
-    //添加红点示意图
-    _red_point = new QLabel();
+    // Create a centred glyph label (empty by default) + a small red dot
+    // badge in the top-right corner. The glyph label holds a Fluent Icon
+    // codepoint when SetGlyph() is called.
+    auto *layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    _glyph_lb = new QLabel(this);
+    _glyph_lb->setAlignment(Qt::AlignCenter);
+    _glyph_lb->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    _glyph_lb->setObjectName("nav_glyph");
+    layout->addWidget(_glyph_lb);
+
+    // Red-dot badge floats on top; it's positioned via the child widget's
+    // default top-right corner (8x8 circle rendered by QSS).
+    _red_point = new QLabel(this);
     _red_point->setObjectName("red_point");
-    QVBoxLayout* layout2 = new QVBoxLayout;
-    _red_point->setAlignment(Qt::AlignCenter);
-    layout2->addWidget(_red_point);
-    layout2->setContentsMargins(0, 0, 0, 0);
-    this->setLayout(layout2);
+    _red_point->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    _red_point->setFixedSize(10, 10);
     _red_point->setVisible(false);
+    _red_point->raise();
+}
+
+void StateWidget::SetGlyph(const QString &glyph, int pixelSize)
+{
+    if (!_glyph_lb) return;
+    FIC::applyIconFont(_glyph_lb, pixelSize);
+    _glyph_lb->setText(glyph);
 }
 void StateWidget::ShowRedPoint(bool show)
 {
     _red_point->setVisible(true);
 }
+void StateWidget::resizeEvent(QResizeEvent *event)
+{
+    QWidget::resizeEvent(event);
+    if (_red_point) {
+        const int sz = 10;
+        _red_point->setGeometry(width() - sz - 2, 2, sz, sz);
+    }
+}
+
 void StateWidget::paintEvent(QPaintEvent *event)
 {
     QStyleOption opt;

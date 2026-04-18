@@ -29,6 +29,7 @@ private:
     void AddTipErr(TipErr te,QString tips);
     void DelTipErr(TipErr te);
     void showTip(QString str, bool b_ok);
+    void showLoadingTip(QString str);
 private slots:
     void slot_forget_pwd();
     void on_login_btn_clicked();

@@ -1,21 +1,32 @@
 #include "textbubble.h"
 
 TextBubble::TextBubble(ChatRole role, const QString &text, QWidget *parent)
-    :BubbleFrame(role, parent)
+    :BubbleFrame(role, parent), m_role(role)
 {
     m_pTextEdit = new QTextEdit();
-    m_pTextEdit->setLineWrapMode(QTextEdit::WidgetWidth); // 按控件宽度自动换行
-
-    m_pTextEdit->setReadOnly(true);//只读
+    m_pTextEdit->setLineWrapMode(QTextEdit::WidgetWidth);
+    m_pTextEdit->setReadOnly(true);
     m_pTextEdit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTextEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTextEdit->installEventFilter(this);
+
     QFont font("Microsoft YaHei");
     font.setPointSize(12);
     m_pTextEdit->setFont(font);
+
+    // Apply the (transparent + correct text color) stylesheet BEFORE any
+    // text is set so the very first paint already shows the final look.
+    // Without this we briefly render the default Qt QTextEdit chrome
+    // (white box, black text) on top of the bubble during batch loads.
+    initStyleSheet();
     setPlainText(text);
     setWidget(m_pTextEdit);
-    initStyleSheet();
+    initStyleSheet();   // re-apply in case setWidget reset palette inheritance
+
+    // Force initial height computation now instead of waiting for the
+    // first paintEvent. Eliminates the "tall blank bubble for one frame"
+    // flicker visible during batch loads from LocalDb.
+    adjustTextHeight();
 }
 
 
@@ -47,7 +58,12 @@ void TextBubble::adjustTextHeight()
 
 void TextBubble::initStyleSheet()
 {
-    m_pTextEdit->setStyleSheet("QTextEdit{background:transparent;border:none}");
+    // Other-side bubbles are white → near-black text.
+    // Self-side bubbles are pink gradient → deep-pink ink for contrast.
+    const QString color = (m_role == ChatRole::Self) ? "#6b3a4a" : "#26222b";
+    m_pTextEdit->setStyleSheet(
+        QString("QTextEdit { background: transparent; border: none; color: %1; }")
+            .arg(color));
 }
 
 void TextBubble::setPlainText(const QString &text)

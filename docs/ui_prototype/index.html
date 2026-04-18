@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>wChat UI 原型入口</title>
+<link rel="stylesheet" href="css/theme.css">
+<style>
+    .index-shell { width: 520px; margin: 60px auto; }
+    .index-body { padding: 30px; display:flex; flex-direction:column; gap:12px; }
+    .index-link {
+        display:flex; justify-content:space-between; align-items:center;
+        padding: 14px 18px;
+        background: #fff;
+        border:1px solid var(--panel-border);
+        border-radius: var(--r-md);
+        text-decoration:none; color: var(--gray-900);
+        transition: background .15s;
+    }
+    .index-link:hover { background: var(--pink-50); border-color: var(--pink-200); }
+    .index-link__arrow { color: var(--pink-500); }
+</style>
+</head>
+<body>
+
+<div class="app-frame index-shell">
+    <div class="titlebar">
+        <div class="titlebar__title">wChat UI 原型</div>
+        <div class="titlebar__actions">
+            <button class="titlebar__btn">—</button>
+            <button class="titlebar__btn titlebar__btn--close">✕</button>
+        </div>
+    </div>
+    <div class="app-frame__inner">
+        <div class="index-body">
+            <h2 style="margin:0 0 4px;color:var(--pink-ink);letter-spacing:2px;">wChat · 樱语红粉</h2>
+            <p style="margin:0 0 12px;color:var(--gray-500);font-size:var(--fs-sm);">
+                HTML/CSS 静态原型 · 灰底透粉 · 双层边框 · 三列主界面
+            </p>
+
+            <a class="index-link" href="pages/login.html">
+                <span>🔐  登录页  <small style="color:var(--gray-500);">· 430×560</small></span>
+                <span class="index-link__arrow">→</span>
+            </a>
+            <a class="index-link" href="pages/register.html">
+                <span>📝  注册页  <small style="color:var(--gray-500);">· 430×640</small></span>
+                <span class="index-link__arrow">→</span>
+            </a>
+            <a class="index-link" href="pages/reset-password.html">
+                <span>🔑  找回密码  <small style="color:var(--gray-500);">· 430×640</small></span>
+                <span class="index-link__arrow">→</span>
+            </a>
+            <a class="index-link" href="pages/main.html">
+                <span>💬  主聊天页  <small style="color:var(--gray-500);">· 1180×760 · 三列</small></span>
+                <span class="index-link__arrow">→</span>
+            </a>
+            <a class="index-link" href="pages/dialogs.html">
+                <span>🪟  弹窗一览</span>
+                <span class="index-link__arrow">→</span>
+            </a>
+
+            <div style="margin-top:18px;font-size:var(--fs-xs);color:var(--gray-500);">
+                Qt 移植说明见同目录下的 <code>QT_PORT_GUIDE.md</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

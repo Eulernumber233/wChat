@@ -113,7 +113,7 @@ int MysqlDao::RegUser(const std::string& name, const std::string& email, const s
         }
         // 生成随机头像
         i_icon = (i_icon + 1) % HEAD_NUM + 1;
-        std::string icon = ":/asserts/head_" + std::to_string(i_icon) + ".jpg";
+        std::string icon = ":/asserts/head_" + std::to_string(i_icon) + ".jpg"; // TODO
         // 准备调用存储过程
         std::unique_ptr < sql::PreparedStatement > stmt(con->_con->prepareStatement("CALL reg_user(?,?,?,?,@result)"));
         // 设置输入参数

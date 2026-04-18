@@ -1,151 +1,210 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QMessageBox>
+#include "titlebar.h"
+#include "usermgr.h"
+#include "pinkmessagebox.h"
+#include <QVBoxLayout>
+#include <QPainter>
+#include <QPainterPath>
+
+namespace {
+// Fixed inner-panel sizes per new UI spec (ui_prototype). No resizing.
+constexpr int kLoginW  = 430, kLoginH  = 560;
+constexpr int kRegistW = 430, kRegistH = 640;
+constexpr int kResetW  = 430, kResetH  = 640;
+constexpr int kChatW   = 1180, kChatH  = 760;
+
+// Glass-frame padding (translucent outer ring that lets wallpaper show through).
+constexpr int kOuterPad   = 10;
+constexpr int kTitleBarH  = 36;
+constexpr int kOuterRadius = 24;   // outer translucent pill radius
+constexpr int kInnerRadius = 18;   // inner white panel radius
+} // namespace
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    _login_dlg = new LoginDialog(this);
-    _login_dlg->setWindowFlags(Qt::CustomizeWindowHint|Qt::FramelessWindowHint);
-    setCentralWidget(_login_dlg);
-    //_login_dlg->show();
 
-    connect(_login_dlg,&::LoginDialog::switchRegist,this,&MainWindow::slotSwitchRegist);
-    connect(_login_dlg, &LoginDialog::switchReset, this, &MainWindow::slotSwitchReset);
-    connect(TcpMgr::GetInstance().get(),&TcpMgr::sig_switch_chatdlg,this,&MainWindow::slotSwitchchat);
+    // A bare QMainWindow includes a menuBar/statusBar by default; remove
+    // both so the central widget fills the entire client area.
+    setMenuBar(nullptr);
+    setStatusBar(nullptr);
 
-    // 被踢下线 → 弹窗 + 回登录界面
-    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_kick_user, this, [this](QString reason) {
-        slotBackToLogin(QString::fromUtf8("您的账号在其他设备登录，当前设备已被迫下线。"));
+    // True frameless + translucent background so the paintEvent can paint
+    // a half-transparent pill visible over the desktop wallpaper.
+    setWindowFlags(Qt::FramelessWindowHint | Qt::Window);
+    setAttribute(Qt::WA_TranslucentBackground, true);
+
+    // Central widget is just a transparent container — all visible glass
+    // and inner panel are painted by this MainWindow's paintEvent.
+    _shell_root = new QWidget(this);
+    _shell_root->setAttribute(Qt::WA_TranslucentBackground, true);
+
+    _titlebar = new TitleBar(_shell_root);
+    _page_host = new QWidget(_shell_root);
+    _page_host->setObjectName("PageHost");
+    _page_host->setAttribute(Qt::WA_TranslucentBackground, true);
+
+    auto *root_v = new QVBoxLayout(_shell_root);
+    root_v->setContentsMargins(kOuterPad, kOuterPad, kOuterPad, kOuterPad);
+    root_v->setSpacing(0);
+    root_v->addWidget(_titlebar);
+    root_v->addWidget(_page_host, 1);
+
+    setCentralWidget(_shell_root);
+
+    // First page: login.
+    _login_dlg = new LoginDialog(_page_host);
+    installPage(_login_dlg, kLoginW, kLoginH, QStringLiteral("wChat"));
+
+    connect(_login_dlg, &LoginDialog::switchRegist, this, &MainWindow::slotSwitchRegist);
+    connect(_login_dlg, &LoginDialog::switchReset,  this, &MainWindow::slotSwitchReset);
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_switch_chatdlg,
+            this, &MainWindow::slotSwitchchat);
+
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_kick_user, this, [this](QString) {
+        slotBackToLogin(QStringLiteral("您的账号在其他设备登录，当前设备已被迫下线。"));
     });
-
-    // TCP 断线（非踢人）→ 弹窗 + 回登录界面
     connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_connection_lost, this, [this]() {
-        slotBackToLogin(QString::fromUtf8("与服务器断开连接，请重新登录。"));
+        slotBackToLogin(QStringLiteral("与服务器断开连接，请重新登录。"));
     });
-
-    // test
-    //emit TcpMgr::GetInstance()->sig_switch_chatdlg();
 }
 
-MainWindow::~MainWindow()
+MainWindow::~MainWindow() { delete ui; }
+
+void MainWindow::paintEvent(QPaintEvent *)
 {
-    // All dialogs are created with 'this' as parent,
-    // Qt's parent-child mechanism deletes them automatically.
-    delete ui;
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing, true);
+
+    const QRect full = rect();
+
+    // Outer translucent pill: rgba(255,255,255,0.42) + hairline border.
+    // Because WA_TranslucentBackground is on, regions we don't paint stay
+    // fully transparent and show the desktop/next window behind.
+    QPainterPath outer;
+    outer.addRoundedRect(full, kOuterRadius, kOuterRadius);
+    p.fillPath(outer, QColor(255, 255, 255, 107));
+    p.setPen(QPen(QColor(255, 255, 255, 165), 1));
+    p.drawPath(outer);
+
+    if (_auth_mode) {
+        // Draw a solid white inner panel for auth pages (it covers title
+        // bar + page host so the glass pad only appears as a ring).
+        QRect inner = full.adjusted(kOuterPad, kOuterPad, -kOuterPad, -kOuterPad);
+        QPainterPath innerPath;
+        innerPath.addRoundedRect(inner, kInnerRadius, kInnerRadius);
+        p.fillPath(innerPath, QColor(255, 255, 255, 255));
+    }
+    // Chat mode: no inner fill. Child columns paint their own solid
+    // backgrounds and the gaps between them stay translucent (glass ring
+    // color bleeds through, showing the wallpaper).
+}
+
+void MainWindow::installPage(QWidget *page, int inner_w, int inner_h, const QString &title)
+{
+    // Detect mode from the page type so paintEvent picks the right look.
+    _auth_mode = (qobject_cast<ChatDialog *>(page) == nullptr);
+
+    // Remove + deleteLater any previous page still living inside _page_host.
+    QLayout *old = _page_host->layout();
+    if (old) {
+        QLayoutItem *item;
+        while ((item = old->takeAt(0)) != nullptr) {
+            if (QWidget *w = item->widget()) {
+                if (w != page) {
+                    w->hide();
+                    w->setParent(nullptr);
+                    w->deleteLater();
+                }
+            }
+            delete item;
+        }
+        delete old;
+    }
+
+    auto *v = new QVBoxLayout(_page_host);
+    v->setContentsMargins(0, 0, 0, 0);
+    v->setSpacing(0);
+    // Page must render as a plain child widget, not a top-level dialog.
+    page->setParent(_page_host);
+    page->setWindowFlags(Qt::Widget);
+    v->addWidget(page);
+    page->show();
+    page->raise();
+
+    _titlebar->setTitle(title);
+
+    // Window size = outer padding + titlebar + inner panel size.
+    const int total_w = inner_w + kOuterPad * 2;
+    const int total_h = inner_h + kOuterPad * 2 + kTitleBarH;
+    setFixedSize(total_w, total_h);
+
+    update();  // trigger repaint so the auth/chat mode choice is reflected.
 }
 
 void MainWindow::slotSwitchRegist()
 {
-    _regist_dlg =new RegistDialog(this);
-    _regist_dlg->setWindowFlags(Qt::CustomizeWindowHint|Qt::FramelessWindowHint);
-//    _regist_dlg->hide();
-    //注册界面返回登录界面
-    connect(_regist_dlg,&RegistDialog::sigSwitchLogin,this,&MainWindow::slotSwitchLogin);
-
-    setCentralWidget(_regist_dlg);
-    _login_dlg->hide();
-    _regist_dlg->show();
+    _regist_dlg = new RegistDialog(_page_host);
+    connect(_regist_dlg, &RegistDialog::sigSwitchLogin,
+            this, &MainWindow::slotSwitchLogin);
+    installPage(_regist_dlg, kRegistW, kRegistH, QStringLiteral("wChat · 注册"));
+    _login_dlg = nullptr;  // destroyed inside installPage
 }
 
-//从注册界面返回登录界面
 void MainWindow::slotSwitchLogin()
 {
-    //创建一个CentralWidget, 并将其设置为MainWindow的中心部件
-    _login_dlg = new LoginDialog(this);
-    _login_dlg->setWindowFlags(Qt::CustomizeWindowHint|Qt::FramelessWindowHint);
-    setCentralWidget(_login_dlg);
-
-    _regist_dlg->hide();
-    _login_dlg->show();
-    //连接登录界面忘记密码信号
-    connect(_login_dlg, &LoginDialog::switchReset, this, &MainWindow::slotSwitchReset);
-    //连接登录界面注册信号
+    _login_dlg = new LoginDialog(_page_host);
+    connect(_login_dlg, &LoginDialog::switchReset,  this, &MainWindow::slotSwitchReset);
     connect(_login_dlg, &LoginDialog::switchRegist, this, &MainWindow::slotSwitchRegist);
-
-
+    installPage(_login_dlg, kLoginW, kLoginH, QStringLiteral("wChat"));
+    _regist_dlg = nullptr;
 }
 
-// 忘记密码
 void MainWindow::slotSwitchReset()
 {
-    //创建一个CentralWidget, 并将其设置为MainWindow的中心部件
-    _reset_dlg = new ResetDialog(this);
-    _reset_dlg->setWindowFlags(Qt::CustomizeWindowHint|Qt::FramelessWindowHint);
-    setCentralWidget(_reset_dlg);
-
-    _login_dlg->hide();
-    _reset_dlg->show();
-    //注册返回登录信号和槽函数
-    connect(_reset_dlg, &ResetDialog::switchLogin, this, &MainWindow::slotSwitchLogin2);
+    _reset_dlg = new ResetDialog(_page_host);
+    connect(_reset_dlg, &ResetDialog::switchLogin,
+            this, &MainWindow::slotSwitchLogin2);
+    installPage(_reset_dlg, kResetW, kResetH, QStringLiteral("wChat · 找回密码"));
+    _login_dlg = nullptr;
 }
 
-//从重置界面返回登录界面
 void MainWindow::slotSwitchLogin2()
 {
-    //创建一个CentralWidget, 并将其设置为MainWindow的中心部件
-    _login_dlg = new LoginDialog(this);
-    _login_dlg->setWindowFlags(Qt::CustomizeWindowHint|Qt::FramelessWindowHint);
-    setCentralWidget(_login_dlg);
-
-    _reset_dlg->hide();
-    _login_dlg->show();
-    //连接登录界面忘记密码信号
-    connect(_login_dlg, &LoginDialog::switchReset, this, &MainWindow::slotSwitchReset);
-    //连接登录界面注册信号
+    _login_dlg = new LoginDialog(_page_host);
+    connect(_login_dlg, &LoginDialog::switchReset,  this, &MainWindow::slotSwitchReset);
     connect(_login_dlg, &LoginDialog::switchRegist, this, &MainWindow::slotSwitchRegist);
+    installPage(_login_dlg, kLoginW, kLoginH, QStringLiteral("wChat"));
+    _reset_dlg = nullptr;
 }
 
 void MainWindow::slotSwitchchat()
 {
-    _chat_dlg =new ChatDialog();
-    _chat_dlg->setWindowFlags(Qt::CustomizeWindowHint|Qt::FramelessWindowHint);
-    setCentralWidget(_chat_dlg);
-    _chat_dlg->show();
-    _login_dlg->hide();
-    this->setMinimumSize(QSize(1050,900));
-    this->setMaximumSize(QSize(1050,900));
+    _chat_dlg = new ChatDialog(_page_host);
+    installPage(_chat_dlg, kChatW, kChatH, QStringLiteral("wChat"));
+    _login_dlg = nullptr;
 }
 
 void MainWindow::slotBackToLogin(QString reason)
 {
-    // 防止重入：sig_kick_user 和 sig_connection_lost 可能同时或先后触发，
-    // 而且 CloseConnection() 本身会触发 disconnected 信号导致递归调用
-    if (_switching_to_login || !_chat_dlg) {
-        return;
-    }
+    if (_switching_to_login || !_chat_dlg) return;
     _switching_to_login = true;
 
-    // 关闭 TCP 连接（会触发 disconnected，但上面的 flag 挡住了重入）
     TcpMgr::GetInstance()->CloseConnection();
 
-    // 恢复登录界面尺寸（先解除聊天界面的固定尺寸约束）
-    this->setMinimumSize(QSize(0, 0));
-    this->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-
-    // 先切换界面：setCentralWidget 会销毁旧的 _chat_dlg（停掉心跳 timer），
-    // 必须在 UserMgr::Reset() 之前完成，否则 timer 可能在 Reset 后触发访问已清空的数据
-    _login_dlg = new LoginDialog(this);
-    _login_dlg->setWindowFlags(Qt::CustomizeWindowHint|Qt::FramelessWindowHint);
-    setCentralWidget(_login_dlg);  // 旧 _chat_dlg 在此被销毁
-    _login_dlg->show();
+    _login_dlg = new LoginDialog(_page_host);
+    installPage(_login_dlg, kLoginW, kLoginH, QStringLiteral("wChat"));
     _chat_dlg = nullptr;
 
-    // ChatDialog 已销毁，现在可以安全清理缓存
     UserMgr::GetInstance()->Reset();
 
-    // 设置为登录窗口固定尺寸 400x500
-    this->setFixedSize(QSize(400, 500));
-
-    // 重新连接登录界面的信号
-    connect(_login_dlg, &LoginDialog::switchReset, this, &MainWindow::slotSwitchReset);
+    connect(_login_dlg, &LoginDialog::switchReset,  this, &MainWindow::slotSwitchReset);
     connect(_login_dlg, &LoginDialog::switchRegist, this, &MainWindow::slotSwitchRegist);
 
     _switching_to_login = false;
 
-    // 弹窗放最后：QMessageBox::warning 是模态的，会重入事件循环，
-    // 此时 ChatDialog 和心跳 timer 已销毁，不会再触发 UserMgr::GetUid()
-    QMessageBox::warning(this, QString::fromUtf8("下线通知"), reason);
+    PinkMessageBox::warn(this, QStringLiteral("下线通知"), reason);
 }

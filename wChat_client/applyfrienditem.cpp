@@ -1,5 +1,27 @@
 #include "applyfrienditem.h"
 #include "ui_applyfrienditem.h"
+#include <QPainter>
+#include <QPainterPath>
+
+static QPixmap afi_round(const QPixmap &src, int side) {
+    if (src.isNull() || side <= 0) return src;
+    const int sq = std::min(src.width(), src.height());
+    const int sx = (src.width()  - sq) / 2;
+    const int sy = (src.height() - sq) / 2;
+    const QPixmap cropped = src.copy(sx, sy, sq, sq);
+    const QPixmap scaled  = cropped.scaled(QSize(side, side),
+                                           Qt::IgnoreAspectRatio,
+                                           Qt::SmoothTransformation);
+    QPixmap out(side, side);
+    out.fill(Qt::transparent);
+    QPainter p(&out);
+    p.setRenderHint(QPainter::Antialiasing, true);
+    p.setRenderHint(QPainter::SmoothPixmapTransform, true);
+    QPainterPath clip; clip.addEllipse(0, 0, side, side);
+    p.setClipPath(clip);
+    p.drawPixmap(0, 0, scaled);
+    return out;
+}
 
 ApplyFriendItem::ApplyFriendItem(QWidget *parent) :
     ListItemBase(parent), _added(false),
@@ -20,11 +42,11 @@ ApplyFriendItem::~ApplyFriendItem()
 void ApplyFriendItem::SetInfo(std::shared_ptr<ApplyInfo> apply_info)
 {
     _apply_info = apply_info;
-    // 加载图片
     QPixmap pixmap(_apply_info->_icon);
-    // 设置图片自动缩放
-    ui->icon_lb->setPixmap(pixmap.scaled(ui->icon_lb->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    ui->icon_lb->setScaledContents(true);
+    const int side = std::min(ui->icon_lb->width(), ui->icon_lb->height());
+    ui->icon_lb->setScaledContents(false);
+    ui->icon_lb->setAlignment(Qt::AlignCenter);
+    ui->icon_lb->setPixmap(afi_round(pixmap, side > 0 ? side : 44));
     ui->user_name_lb->setText(_apply_info->_name);
     ui->user_chat_lb->setText(_apply_info->_desc);
 }

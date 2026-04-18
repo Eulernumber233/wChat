@@ -20,6 +20,7 @@ private:
     void initStyleSheet();
 private:
     QTextEdit *m_pTextEdit;
+    ChatRole   m_role;
 };
 
 #endif // TEXTBUBBLE_H
