@@ -1,4 +1,4 @@
-#include "tcpmgr.h"
+﻿#include "tcpmgr.h"
 #include "apppaths.h"
 #include "filemgr.h"
 #include "localdb.h"

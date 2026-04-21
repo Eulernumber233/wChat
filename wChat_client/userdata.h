@@ -1,4 +1,4 @@
-#ifndef USERDATA_H
+﻿#ifndef USERDATA_H
 #define USERDATA_H
 
 #include <QString>

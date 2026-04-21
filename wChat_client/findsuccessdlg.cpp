@@ -1,4 +1,4 @@
-#include "findsuccessdlg.h"
+﻿#include "findsuccessdlg.h"
 #include "ui_findsuccessdlg.h"
 #include <QPainter>
 #include <QPainterPath>

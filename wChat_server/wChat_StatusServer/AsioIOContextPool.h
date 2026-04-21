@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "core.h"
 //#include <boost/asio.hpp>
 //#include <boost/asio/executor_work_guard.hpp>
@@ -13,7 +13,7 @@ public:
 	~AsioIOContextPool();
 	AsioIOContextPool(const AsioIOContextPool&) = delete;
 	AsioIOContextPool& operator=(const AsioIOContextPool&) = delete;
-	// Ê¹ÓÃ round-robin µÄ·½Ê½·µ»ØÒ»¸ö io_service
+	// ä½¿ç”¨ round-robin çš„æ–¹å¼è¿”å›ä¸€ä¸ª io_service
 	boost::asio::io_context& GetIOContext();
 	void Stop();
 private:

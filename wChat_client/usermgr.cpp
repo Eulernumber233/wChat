@@ -1,4 +1,4 @@
-#include "usermgr.h"
+﻿#include "usermgr.h"
 #include "filemgr.h"
 UserMgr::~UserMgr()
 {

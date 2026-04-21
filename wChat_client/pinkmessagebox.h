@@ -1,4 +1,4 @@
-#ifndef PINKMESSAGEBOX_H
+﻿#ifndef PINKMESSAGEBOX_H
 #define PINKMESSAGEBOX_H
 
 #include <QDialog>

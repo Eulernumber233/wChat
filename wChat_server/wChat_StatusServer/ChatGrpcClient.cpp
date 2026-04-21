@@ -1,4 +1,4 @@
-#include "ChatGrpcClient.h"
+ï»¿#include "ChatGrpcClient.h"
 #include "RedisMgr.h"
 #include "ConfigMgr.h"
 
@@ -10,7 +10,7 @@ ChatConPool::ChatConPool(size_t poolSize, std::string host, std::string port)
 {
     for (size_t i = 0;i < poolSize_;++i) {
         std::shared_ptr<Channel>channel = grpc::CreateChannel(host + ":" + port, grpc::InsecureChannelCredentials());
-        connections_.push(ChatService::NewStub(channel));// newstub ·µ»ØÓÒÖµ
+        connections_.push(ChatService::NewStub(channel));// newstub è¿”å›å³å€¼
     }
 }
 
@@ -31,7 +31,7 @@ std::unique_ptr<ChatService::Stub>ChatConPool::getConnection() {
         }
         return !connections_.empty();
         });
-    //Èç¹ûÍ£Ö¹ÔòÖ±½Ó·µ»Ø¿ÕÖ¸Õë
+    //å¦‚æœåœæ­¢åˆ™ç›´æ¥è¿”å›ç©ºæŒ‡é’ˆ
     if (b_stop_) {
         return  nullptr;
     }

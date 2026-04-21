@@ -1,4 +1,4 @@
-#ifndef FLUENTICON_H
+﻿#ifndef FLUENTICON_H
 #define FLUENTICON_H
 
 // Segoe Fluent Icons (Windows 10+) — all single-codepoint glyphs in the

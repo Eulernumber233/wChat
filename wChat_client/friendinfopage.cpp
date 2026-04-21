@@ -1,4 +1,4 @@
-#include "friendinfopage.h"
+﻿#include "friendinfopage.h"
 #include "ui_friendinfopage.h"
 #include "fluenticon.h"
 #include <QDebug>

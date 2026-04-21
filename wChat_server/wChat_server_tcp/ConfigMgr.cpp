@@ -1,4 +1,4 @@
-#include "ConfigMgr.h"
+﻿#include "ConfigMgr.h"
 
 // 定义静态成员
 std::string ConfigMgr::_s_config_path;
@@ -42,7 +42,6 @@ ConfigMgr::ConfigMgr()
 		_config_map[section_name] = sectionInfo;
 	}
 
-	// ������е�section��key-value��  
 	for (const auto& section_entry : _config_map) {
 		const std::string& section_name = section_entry.first;
 		SectionInfo section_config = section_entry.second;

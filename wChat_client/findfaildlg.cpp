@@ -1,4 +1,4 @@
-#include "findfaildlg.h"
+﻿#include "findfaildlg.h"
 #include "ui_findfaildlg.h"
 #include <QDebug>
 

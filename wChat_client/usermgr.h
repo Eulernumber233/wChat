@@ -1,4 +1,4 @@
-#ifndef USERMGR_H
+﻿#ifndef USERMGR_H
 #define USERMGR_H
 #include <QObject>
 #include <memory>

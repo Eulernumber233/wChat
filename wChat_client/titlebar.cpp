@@ -1,4 +1,4 @@
-#include "titlebar.h"
+﻿#include "titlebar.h"
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <QWindow>

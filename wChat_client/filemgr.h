@@ -1,4 +1,4 @@
-#ifndef FILEMGR_H
+﻿#ifndef FILEMGR_H
 #define FILEMGR_H
 
 #include "global.h"

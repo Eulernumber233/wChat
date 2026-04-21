@@ -1,4 +1,4 @@
-#ifndef APPPATHS_H
+﻿#ifndef APPPATHS_H
 #define APPPATHS_H
 
 #include <QString>

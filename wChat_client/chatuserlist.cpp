@@ -1,4 +1,4 @@
-#include "chatuserlist.h"
+﻿#include "chatuserlist.h"
 #include <QTimer>
 #include <QCoreApplication>
 #include "usermgr.h"

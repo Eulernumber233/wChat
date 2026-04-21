@@ -1,4 +1,4 @@
-#ifndef SEARCHLIST_H
+﻿#ifndef SEARCHLIST_H
 #define SEARCHLIST_H
 
 #include <QListWidget>

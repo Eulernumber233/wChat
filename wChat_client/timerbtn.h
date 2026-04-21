@@ -1,4 +1,4 @@
-#ifndef TIMERBTN_H
+﻿#ifndef TIMERBTN_H
 #define TIMERBTN_H
 #include <QPushButton>
 #include <QTimer>

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "core.h"
 #include "data.h"
 #include "message.grpc.pb.h"

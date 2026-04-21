@@ -1,4 +1,4 @@
-#ifndef CHATDIALOG_H
+﻿#ifndef CHATDIALOG_H
 #define CHATDIALOG_H
 
 #include "global.h"

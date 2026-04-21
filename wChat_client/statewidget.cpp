@@ -1,4 +1,4 @@
-#include "statewidget.h"
+﻿#include "statewidget.h"
 #include "fluenticon.h"
 
 StateWidget::StateWidget(QWidget *parent): QWidget(parent),_curstate(ClickLbState::Normal)

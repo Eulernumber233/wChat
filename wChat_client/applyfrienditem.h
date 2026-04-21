@@ -1,4 +1,4 @@
-#ifndef APPLYFRIENDITEM_H
+﻿#ifndef APPLYFRIENDITEM_H
 #define APPLYFRIENDITEM_H
 
 #include <QWidget>

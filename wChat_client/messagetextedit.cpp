@@ -1,4 +1,4 @@
-#include "MessageTextEdit.h"
+﻿#include "MessageTextEdit.h"
 #include "pinkmessagebox.h"
 #include <QDebug>
 

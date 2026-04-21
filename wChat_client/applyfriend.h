@@ -1,4 +1,4 @@
-#ifndef APPLYFRIEND_H
+﻿#ifndef APPLYFRIEND_H
 #define APPLYFRIEND_H
 
 #include <QDialog>

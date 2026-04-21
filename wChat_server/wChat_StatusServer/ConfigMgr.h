@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "core.h"
 struct SectionInfo
 {
@@ -35,7 +35,7 @@ public:
 		return _config_map[section];
 	}
 	static ConfigMgr& Inst() {
-		static ConfigMgr cfg_mgr;// 11���̰߳�ȫ
+		static ConfigMgr cfg_mgr;// 11后线程安全
 		return cfg_mgr;
 	}
 

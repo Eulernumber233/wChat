@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "core.h"
 struct SectionInfo {
 	SectionInfo() {}
@@ -24,7 +24,6 @@ struct SectionInfo {
 		if (_section_datas.find(key) == _section_datas.end()) {
 			return "";
 		}
-		// �����������һЩ�߽���  
 		return _section_datas[key];
 	}
 
@@ -32,7 +31,6 @@ struct SectionInfo {
 		if (_section_datas.find(key) == _section_datas.end()) {
 			return "";
 		}
-		// �����������һЩ�߽���  
 		return _section_datas[key];
 	}
 };
@@ -76,7 +74,6 @@ public:
 	std::string GetValue(const std::string& section, const std::string& key);
 private:
 	ConfigMgr();
-	// �洢section��key-value�Ե�map
 	std::map<std::string, SectionInfo> _config_map;
 	// 由 SetConfigPath 写入；ConfigMgr 构造时读取此路径
 	static std::string _s_config_path;

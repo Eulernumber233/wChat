@@ -1,4 +1,4 @@
-#include "timerbtn.h"
+﻿#include "timerbtn.h"
 #include <QMouseEvent>
 #include <QDebug>
 

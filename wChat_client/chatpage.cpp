@@ -1,4 +1,4 @@
-#include "chatpage.h"
+﻿#include "chatpage.h"
 #include "ui_chatpage.h"
 #include "chatitembase.h"
 #include "TextBubble.h"

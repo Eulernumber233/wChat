@@ -1,4 +1,4 @@
-#include "applyfriendpage.h"
+﻿#include "applyfriendpage.h"
 #include "ui_applyfriendpage.h"
 #include <QPainter>
 #include <QPaintEvent>

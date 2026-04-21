@@ -1,4 +1,4 @@
-#include "authenfriend.h"
+﻿#include "authenfriend.h"
 #include "ui_authenfriend.h"
 #include "clickedlabel.h"
 #include "friendlabel.h"

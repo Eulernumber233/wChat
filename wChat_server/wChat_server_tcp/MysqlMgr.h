@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "core.h"
 #include "MysqlDao.h"
 #include "Singleton.h"
@@ -14,13 +14,9 @@ public:
 	bool UpdatePwd(const std::string& name, const std::string& email);
 	bool CheckPwd(const std::string& name, const std::string& pwd, UserInfo& userInfo);
 	bool AddFriendApply(const int& from, const int& to, const std::string& back, const std::string& certification);
-	// ������ͬ����޸����ݿ�
 	bool AuthFriendApply(const int& from, const int& to);
-	// ���Ӻ���
 	bool AddFriend(const int& from, const int& to, std::string back_name);
-	// ���ӷ��͵���Ϣ; returns chat_messages.id on success, 0 on failure.
 	int AddMessage(const int& from, const int& to, std::string message);
-	// ��ѯ��Ϣ��
 	bool GetMessages(const int& from, const int& to, Json::Value& messages);
 
 	// STAGE-C: lazy-loading history support

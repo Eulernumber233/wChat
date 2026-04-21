@@ -1,4 +1,4 @@
-#include "textbubble.h"
+﻿#include "textbubble.h"
 
 TextBubble::TextBubble(ChatRole role, const QString &text, QWidget *parent)
     :BubbleFrame(role, parent), m_role(role)

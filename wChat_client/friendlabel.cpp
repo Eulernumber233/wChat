@@ -1,4 +1,4 @@
-#include "friendlabel.h"
+﻿#include "friendlabel.h"
 #include "ui_friendlabel.h"
 
 FriendLabel::FriendLabel(QWidget *parent) :

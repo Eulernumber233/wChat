@@ -1,4 +1,4 @@
-#include "chatview.h"
+﻿#include "chatview.h"
 
 ChatView::ChatView(QWidget *parent):QWidget(parent)
     ,isAppended(false)

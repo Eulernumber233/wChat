@@ -1,4 +1,4 @@
-#include "applyfriendlist.h"
+﻿#include "applyfriendlist.h"
 
 ApplyFriendList::ApplyFriendList(QWidget *parent)
 {

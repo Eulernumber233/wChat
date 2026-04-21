@@ -1,4 +1,4 @@
-#include "clickedoncelabel.h"
+﻿#include "clickedoncelabel.h"
 
 
 ClickedOnceLabel::ClickedOnceLabel(QWidget *parent)

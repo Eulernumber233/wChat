@@ -1,4 +1,4 @@
-#include "filemgr.h"
+﻿#include "filemgr.h"
 #include "apppaths.h"
 #include <QThread>
 #include <QJsonDocument>

@@ -1,4 +1,4 @@
-#include "bubbleframe.h"
+﻿#include "bubbleframe.h"
 
 const int WIDTH_SANJIAO  = 8;  //三角宽
 BubbleFrame::BubbleFrame(ChatRole role, QWidget *parent)

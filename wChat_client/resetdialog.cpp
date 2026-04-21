@@ -1,4 +1,4 @@
-#include "resetdialog.h"
+﻿#include "resetdialog.h"
 #include "ui_resetdialog.h"
 #include <QDebug>
 #include <QRegularExpression>

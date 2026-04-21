@@ -1,4 +1,4 @@
-#ifndef CHATUSERWID_H
+﻿#ifndef CHATUSERWID_H
 #define CHATUSERWID_H
 
 #include <QWidget>

@@ -1,4 +1,4 @@
-#include "httpmgr.h"
+﻿#include "httpmgr.h"
 
 HttpMgr::~HttpMgr()
 {

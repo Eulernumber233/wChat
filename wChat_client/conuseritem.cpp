@@ -1,4 +1,4 @@
-#include "conuseritem.h"
+﻿#include "conuseritem.h"
 #include "ui_conuseritem.h"
 #include "fluenticon.h"
 #include <QPainter>

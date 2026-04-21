@@ -43,7 +43,14 @@
       "Bash(qmake.exe ../../wChat_client.pro)",
       "Bash(mingw32-make.exe debug *)",
       "Bash(/d/Qt/6.9.1/msvc2022_64/bin/uic.exe mainwindow.ui -o ui_mainwindow.h)",
-      "Bash(/d/CPP/network/wChat/wChat_AgentServer/.venv/Scripts/python -c ' *)"
+      "Bash(/d/CPP/network/wChat/wChat_AgentServer/.venv/Scripts/python -c ' *)",
+      "PowerShell(git log --oneline --follow -- 'wChat_server/wChat_server_tcp/LogicSystem.cpp' | Select-Object -First 10)",
+      "Bash(echo \"exit=$?\")",
+      "Read(//e/opengl/iMc/scr/collision/**)",
+      "Read(//e/opengl/iMc/**)"
+    ],
+    "additionalDirectories": [
+      "E:\\opengl\\iMc"
     ]
   }
 }

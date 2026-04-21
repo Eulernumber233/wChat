@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "core.h"
 #include "MsgNode.h"
 #include <atomic>
@@ -42,10 +42,8 @@ private:
 	std::atomic<bool> _b_close;
 	std::queue<std::shared_ptr<SendNode>> _send_que;
 	std::mutex _send_lock;
-	//�յ�����Ϣ�ṹ
 	std::shared_ptr<RecvNode> _recv_msg_node;
 	bool _b_head_parse;
-	//�յ���ͷ���ṹ
 	std::shared_ptr<MsgNode> _recv_head_node;
 	int _user_id;
 	std::atomic<int64_t> _last_heartbeat{0};

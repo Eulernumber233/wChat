@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "core.h"
 #include "hiredis.h"
 #include <queue>
@@ -21,15 +21,13 @@ public:
 
 			auto reply = (redisReply*)redisCommand(context, "AUTH %s", pwd);
 			if (reply->type == REDIS_REPLY_ERROR) {
-				std::cout << "��֤ʧ��" << std::endl;
-				//ִ�гɹ� �ͷ�redisCommandִ�к󷵻ص�redisReply��ռ�õ��ڴ�
+				std::cout << "Redis auth failed" << std::endl;
 				freeReplyObject(reply);
 				continue;
 			}
 
-			//ִ�гɹ� �ͷ�redisCommandִ�к󷵻ص�redisReply��ռ�õ��ڴ�
 			freeReplyObject(reply);
-			std::cout << "��֤�ɹ�" << std::endl;
+			std::cout << "Redis auth ok" << std::endl;
 			connections_.push(context);
 		}
 
@@ -41,7 +39,7 @@ public:
 					counter_ = 0;
 				}
 
-				std::this_thread::sleep_for(std::chrono::seconds(1)); // ÿ�� 30 �뷢��һ�� PING ����
+				std::this_thread::sleep_for(std::chrono::seconds(1));
 			}	
 		});
 
@@ -68,7 +66,6 @@ public:
 			}
 			return !connections_.empty(); 
 			});
-		//���ֹͣ��ֱ�ӷ��ؿ�ָ��
 		if (b_stop_) {
 			return  nullptr;
 		}
@@ -120,16 +117,14 @@ private:
 
 		auto reply = (redisReply*)redisCommand(context, "AUTH %s", pwd_);
 		if (reply->type == REDIS_REPLY_ERROR) {
-			std::cout << "��֤ʧ��" << std::endl;
-			//ִ�гɹ� �ͷ�redisCommandִ�к󷵻ص�redisReply��ռ�õ��ڴ�
+			std::cout << "Redis auth failed" << std::endl;
 			freeReplyObject(reply);
 			redisFree(context);
 			return false;
 		}
 
-		//ִ�гɹ� �ͷ�redisCommandִ�к󷵻ص�redisReply��ռ�õ��ڴ�
 		freeReplyObject(reply);
-		std::cout << "��֤�ɹ�" << std::endl;
+		std::cout << "Redis auth ok" << std::endl;
 		returnConnection(context);
 		return true;
 	}
@@ -137,7 +132,6 @@ private:
 	void checkThreadPro() {
 			size_t pool_size;
 			{
-				// ���õ���ǰ������
 				std::lock_guard<std::mutex> lock(mutex_);
 				pool_size = connections_.size();
 			}
@@ -145,7 +139,6 @@ private:
 			
 			for (int i = 0; i < pool_size && !b_stop_; ++i) {
 				redisContext* ctx = nullptr;
-				// 1) ȡ��һ������(������)
 				bool bsuccess = false;
 				auto * context = getConNonBlock();
 				if (context == nullptr) {
@@ -155,7 +148,6 @@ private:
 				redisReply* reply = nullptr;
 				try {
 					reply = (redisReply*)redisCommand(context, "PING");
-					// 2. �ȿ��ײ� I/O��Э�����û�д�
 					if (context->err) {
 						std::cout << "Connection error: " << context->err << std::endl;
 						if (reply) {
@@ -166,7 +158,6 @@ private:
 						continue;
 					}
 
-					// 3. �ٿ� Redis �������ص��ǲ��� ERROR
 					if (!reply || reply->type == REDIS_REPLY_ERROR) {
 						std::cout << "reply is null, redis ping failed: " << std::endl;
 						if (reply) {
@@ -176,7 +167,6 @@ private:
 						fail_count_++;
 						continue;
 					}
-					// 4. �����û���⣬�򻹻�ȥ
 					//std::cout << "connection alive" << std::endl;
 					freeReplyObject(reply);
 					returnConnection(context);
@@ -192,14 +182,13 @@ private:
 							
 			}
 
-			//ִ����������
+			//ִ
 			while (fail_count_ > 0) {
 				auto res = reconnect();
 				if(res){
 					fail_count_--;
 				}
 				else {
-					//�����´�������
 					break;
 				}
 			}
@@ -238,15 +227,13 @@ private:
 
 				auto reply = (redisReply*)redisCommand(context, "AUTH %s", pwd_);
 				if (reply->type == REDIS_REPLY_ERROR) {
-					std::cout << "��֤ʧ��" << std::endl;
-					//ִ�гɹ� �ͷ�redisCommandִ�к󷵻ص�redisReply��ռ�õ��ڴ�
+					std::cout << "Redis auth failed" << std::endl;
 					freeReplyObject(reply);
 					continue;
 				}
 
-				//ִ�гɹ� �ͷ�redisCommandִ�к󷵻ص�redisReply��ռ�õ��ڴ�
 				freeReplyObject(reply);
-				std::cout << "��֤�ɹ�" << std::endl;
+				std::cout << "Redis auth ok" << std::endl;
 				connections_.push(context);
 			}
 		}

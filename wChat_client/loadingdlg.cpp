@@ -1,4 +1,4 @@
-#include "loadingdlg.h"
+﻿#include "loadingdlg.h"
 #include "ui_loadingdlg.h"
 #include <QLabel>
 #include <QMovie>

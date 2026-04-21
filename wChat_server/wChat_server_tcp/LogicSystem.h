@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Singleton.h"
 #include "CSession.h"
 #include "core.h"
@@ -21,11 +21,8 @@ private:
 	bool ValidateSession(std::shared_ptr<CSession> session);
 	void LoginHandler(std::shared_ptr<CSession> session, const short &msg_id, const std::string &msg_data);
 	void SearchInfo(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
-	// �������Ӻ�������
 	void AddFriendApply(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
-	// ͬ��Է�����
 	void AuthFriendApply(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
-	// ������Ϣ
 	void DealChatTextMsg(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
 	void HeartBeatHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
 	void FileUploadReqHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
@@ -39,11 +36,8 @@ public:
 	bool isPureDigit(const std::string& str);
 	void GetUserByUid(std::string uid_str, Json::Value& rtvalue);
 	void GetUserByName(std::string name, Json::Value& rtvalue);
-	// ��ȡ�û�������Ϣ
 	bool GetBaseInfo(std::string base_key, int uid, std::shared_ptr<UserInfo> &userinfo);
-	// ��ȡ���������б�
 	bool GetFriendApplyInfo(int to_uid, std::vector<std::shared_ptr<ApplyInfo>>& list);
-	// ��ȡ�����б�
 	bool GetFriendList(int self_id, std::vector<std::shared_ptr<UserInfo>> & user_list);
 	std::thread _worker_thread;
 	std::queue<std::shared_ptr<LogicNode>> _msg_que;

@@ -1,4 +1,4 @@
-#include "contactuserlist.h"
+﻿#include "contactuserlist.h"
 #include "global.h"
 #include "listitembase.h"
 #include "grouptipitem.h"

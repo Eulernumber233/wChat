@@ -1,4 +1,4 @@
-#include "applyfriend.h"
+﻿#include "applyfriend.h"
 #include "ui_applyfriend.h"
 #include "tcpmgr.h"
 #include "userdata.h"

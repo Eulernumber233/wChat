@@ -1,4 +1,4 @@
-#include "searchlist.h"
+﻿#include "searchlist.h"
 #include "customizeedit.h"
 
 SearchList::SearchList(QWidget *parent):QListWidget(parent),_find_dlg(nullptr), _search_edit(nullptr), _send_pending(false)

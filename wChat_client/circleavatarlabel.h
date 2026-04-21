@@ -1,4 +1,4 @@
-#ifndef CIRCLEAVATARLABEL_H
+﻿#ifndef CIRCLEAVATARLABEL_H
 #define CIRCLEAVATARLABEL_H
 
 #include <QLabel>

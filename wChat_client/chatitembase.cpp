@@ -1,4 +1,4 @@
-#include "chatitembase.h"
+﻿#include "chatitembase.h"
 #include <QPainter>
 #include <QPainterPath>
 

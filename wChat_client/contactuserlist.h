@@ -1,4 +1,4 @@
-#ifndef CONTACTUSERLIST_H
+﻿#ifndef CONTACTUSERLIST_H
 #define CONTACTUSERLIST_H
 
 // 联系人列表

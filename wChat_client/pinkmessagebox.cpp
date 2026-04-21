@@ -1,4 +1,4 @@
-#include "pinkmessagebox.h"
+﻿#include "pinkmessagebox.h"
 #include "fluenticon.h"
 #include <QPainter>
 #include <QPainterPath>

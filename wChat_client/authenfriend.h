@@ -1,4 +1,4 @@
-#ifndef AUTHENFRIEND_H
+﻿#ifndef AUTHENFRIEND_H
 #define AUTHENFRIEND_H
 
 #include <QDialog>

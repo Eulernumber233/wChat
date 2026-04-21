@@ -1,12 +1,10 @@
-#include "StatusServiceImpl.h"
+﻿#include "StatusServiceImpl.h"
 #include "ConfigMgr.h"
 #include "core.h"
 #include "RedisMgr.h"
 
 std::string generate_unique_string() {
-    // ����UUID����
     boost::uuids::uuid uuid = boost::uuids::random_generator()();
-    // ��UUIDת��Ϊ�ַ���
     std::string unique_string = to_string(uuid);
     return unique_string;
 }
@@ -19,13 +17,11 @@ ChatServer StatusServiceImpl::getChatServer() {
     //auto minServer = _servers.begin()->second;
     //auto count_str = RedisMgr::GetInstance()->HGet(LOGIN_COUNT, minServer.name);
     //if (count_str.empty()) {
-    //    //��������Ĭ������Ϊ���
     //    minServer.con_count = INT_MAX;
     //}
     //else {
     //    minServer.con_count = std::stoi(count_str);
     //}
-    //// ʹ�÷�Χ����forѭ��
     //for (auto& server : _servers) {
     //    if (server.second.name == minServer.name) {
     //        continue;

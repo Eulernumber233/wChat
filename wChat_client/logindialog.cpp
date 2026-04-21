@@ -1,4 +1,4 @@
-#include "logindialog.h"
+﻿#include "logindialog.h"
 #include "ui_logindialog.h"
 #include "httpmgr.h"
 #include "tcpmgr.h"
