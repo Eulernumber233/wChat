@@ -31,7 +31,7 @@ LoginDialog::LoginDialog(QWidget *parent) : QDialog(parent)
     connect(ui->reg_btn, &QPushButton::clicked, this, &LoginDialog::switchRegist);
     ui->reg_btn->setCursor(Qt::PointingHandCursor);
     ui->login_btn->setCursor(Qt::PointingHandCursor);
-    connect(ui->login_btn, &QPushButton::clicked, this, &LoginDialog::on_login_btn_clicked);
+    connect(ui->login_btn, &QPushButton::clicked, this, &LoginDialog::slot_login_btn_clicked);
 
     ui->forget_label->SetState("normal", "hover", "", "selected", "selected_hover", "");
     ui->forget_label->setCursor(Qt::PointingHandCursor);
@@ -88,7 +88,7 @@ bool LoginDialog::enableBtn(bool enabled)
     return true;
 }
 
-void LoginDialog::on_login_btn_clicked()
+void LoginDialog::slot_login_btn_clicked()
 {
     if (!checkUserValid() || !checkPwdValid()) return;
 
@@ -133,19 +133,23 @@ void LoginDialog::showLoadingTip(QString str)
     ui->err_tip->setText(str);
     repolish(ui->err_tip);
 
-    static QMovie *sMovie = nullptr;
-    if (!sMovie) {
-        sMovie = new QMovie(":/asserts/loading.gif", QByteArray(), this);
-        sMovie->setScaledSize(QSize(16, 16));
+    // Member (not static): a static pointer survives LoginDialog deletion
+    // but the QMovie behind it, parented to the previous dialog, gets
+    // auto-deleted with that dialog → the second login's access to the
+    // stale pointer crashes inside isValid(). Owning it per-instance keeps
+    // lifetime correct.
+    if (!_loading_movie) {
+        _loading_movie = new QMovie(":/asserts/loading.gif", QByteArray(), this);
+        _loading_movie->setScaledSize(QSize(16, 16));
     }
-    if (!sMovie->isValid()) {
+    if (!_loading_movie->isValid()) {
         // Asset missing / unreadable — fall back to pink text only.
         ui->err_tip_icon->hide();
         return;
     }
-    ui->err_tip_icon->setMovie(sMovie);
+    ui->err_tip_icon->setMovie(_loading_movie);
     ui->err_tip_icon->show();
-    sMovie->start();
+    _loading_movie->start();
 }
 
 void LoginDialog::initHttpHandlers()

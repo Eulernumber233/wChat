@@ -47,7 +47,9 @@
       "PowerShell(git log --oneline --follow -- 'wChat_server/wChat_server_tcp/LogicSystem.cpp' | Select-Object -First 10)",
       "Bash(echo \"exit=$?\")",
       "Read(//e/opengl/iMc/scr/collision/**)",
-      "Read(//e/opengl/iMc/**)"
+      "Read(//e/opengl/iMc/**)",
+      "Bash(git remote *)",
+      "Bash(git push *)"
     ],
     "additionalDirectories": [
       "E:\\opengl\\iMc"
