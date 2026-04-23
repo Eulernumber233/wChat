@@ -108,7 +108,7 @@ void RegistDialog::on_get_code_clicked()
         json_obj["email"]=email;
         HttpMgr::GetInstance()->PostHttpReq("/get_varifycode",
                                             json_obj,ReqId::ID_GET_VARIFY_CODE,Modules::REGISTERMOD);
-        qDebug()<<gate_url_prefix<<"/get_verifycode"<<Qt::endl;
+        qDebug()<<gate_url_prefix<<"/get_varifycode"<<Qt::endl;
     }else{
         showTip(tr("邮箱地址不正确"),false);
     }

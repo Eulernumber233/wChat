@@ -31,8 +31,14 @@ private:
 	void PullMessagesHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
 	void GetDownloadTokenHandler(std::shared_ptr<CSession> session, const short& msg_id, const std::string& msg_data);
 public:
-	// Called by FileServiceImpl when FileServer reports upload done
-	void HandleFileUploadDone(const std::string& file_id, const std::string& file_path, const std::string& md5);
+	// Called by FileServiceImpl when FileServer reports upload done.
+	// rpc_fromuid is the sender uid carried by the gRPC request (added so
+	// FileServer can route this callback to the exact ChatServer instance
+	// where the sender is connected); we cross-check it against the Redis
+	// file_meta:<file_id> entry. Pass 0 if unavailable / legacy callers.
+	void HandleFileUploadDone(const std::string& file_id,
+		const std::string& file_path, const std::string& md5,
+		int rpc_fromuid = 0);
 	bool isPureDigit(const std::string& str);
 	void GetUserByUid(std::string uid_str, Json::Value& rtvalue);
 	void GetUserByName(std::string name, Json::Value& rtvalue);

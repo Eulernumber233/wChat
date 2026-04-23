@@ -42,7 +42,7 @@ LogicSystem::LogicSystem()
 		}
 		});
 
-	RegPost("/get_verifycode", [](std::shared_ptr<HttpConnection>connection) {
+	RegPost("/get_varifycode", [](std::shared_ptr<HttpConnection>connection) {
 		std::string body_str = boost::beast::buffers_to_string(connection->_request.body().data());
 		std::cout << "receive body is" << body_str << std::endl;
 		connection->_response.set(http::field::content_type, "text/json");

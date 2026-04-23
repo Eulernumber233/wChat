@@ -1,4 +1,4 @@
-#include "localdb.h"
+﻿#include "localdb.h"
 #include "apppaths.h"
 #include "userdata.h"
 #include "filemgr.h"
@@ -331,7 +331,7 @@ bool LocalDb::SetLastSyncedMsgId(int peer_uid, qint64 msg_id) {
 // ==========================================================================
 // Static helpers: server JSON <-> MsgRow <-> TextChatData
 // ==========================================================================
-
+// 服务端行格式 → 客户端行格式
 int LocalDb::RowsFromServerMessages(const QJsonArray& in_msgs, int self_uid,
                                      QVector<MsgRow>& out_rows) {
     int before = out_rows.size();

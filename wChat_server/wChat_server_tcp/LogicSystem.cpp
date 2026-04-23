@@ -644,10 +644,12 @@ void LogicSystem::FileUploadReqHandler(std::shared_ptr<CSession> session,
 // is notified — ONLY after the file is fully stored on disk.
 // =====================================================================
 void LogicSystem::HandleFileUploadDone(const std::string& file_id,
-	const std::string& file_path, const std::string& md5) {
+	const std::string& file_path, const std::string& md5,
+	int rpc_fromuid) {
 
 	std::cout << "HandleFileUploadDone: file_id=" << file_id
-		<< " path=" << file_path << std::endl;
+		<< " path=" << file_path
+		<< " rpc_fromuid=" << rpc_fromuid << std::endl;
 
 	// FileServer has already updated chat_files to status=2 via UpdateFileComplete
 	// before calling this gRPC. Do NOT update here to avoid MySQL lock contention.
@@ -678,6 +680,17 @@ void LogicSystem::HandleFileUploadDone(const std::string& file_id,
 	int touid = meta["touid"].asInt();
 	int file_type = meta["file_type"].asInt();
 	RedisMgr::GetInstance()->Del(meta_key); // clean up
+
+	// Defence-in-depth: if the gRPC caller supplied a fromuid, it must match
+	// what we stored in file_meta. A mismatch would mean the file_id space
+	// got crossed (e.g. a stale/forged notify), so we bail out rather than
+	// persist a chat message under the wrong sender.
+	if (rpc_fromuid != 0 && rpc_fromuid != fromuid) {
+		std::cerr << "HandleFileUploadDone: fromuid mismatch for " << file_id
+			<< " (rpc=" << rpc_fromuid << " meta=" << fromuid << "), abort"
+			<< std::endl;
+		return;
+	}
 
 	// 3. Build message content JSON
 	auto msg_uuid = boost::uuids::random_generator()();
@@ -954,6 +967,7 @@ bool LogicSystem::GetFriendList(int self_id, std::vector<std::shared_ptr<UserInf
 // STAGE-C: lazy-loading history handlers
 // =====================================================================
 
+// 拉会话摘要
 // Client expects: { "uid": N }
 // Server replies: { "error": 0, "summaries": [ {peer_uid, last_msg_db_id,
 //                    last_msg_type, last_msg_preview, last_msg_time,

@@ -191,7 +191,7 @@ void ChatPage::on_send_btn_clicked()
 }
 
 
-
+// 切换到聊天窗口
 void ChatPage::SetUserInfo(std::shared_ptr<UserInfo> user_info)
 {
     _user_info = user_info;
@@ -322,6 +322,9 @@ void ChatPage::AppendChatMsg(std::shared_ptr<TextChatData> msg)
 
     // QPointer tracks the chat item and becomes null if the item is destroyed
     // (e.g. user switched chats and ChatView::removeAllItem ran).
+	// 当前 item 是一个占位文本气泡，等待下载完成后替换成图片气泡。
+	// 如果用户在下载过程中切换了聊天对象，这个占位气泡就会被销毁。
+	// 使用 QPointer 来跟踪这个气泡，如果它被销毁了，我们就不再尝试更新它，避免访问野指针导致崩溃。
     QPointer<ChatItemBase> itemGuard(pChatItem);
     QString target_file_id = msg->_file_id;
 
@@ -335,26 +338,26 @@ void ChatPage::AppendChatMsg(std::shared_ptr<TextChatData> msg)
         file_data->_file_port = msg->_file_port;
         file_data->_file_token = msg->_file_token;
 
-        auto conn = std::make_shared<QMetaObject::Connection>();
-        *conn = connect(FileMgr::GetInstance().get(), &FileMgr::sig_download_done,
-                        this, [itemGuard, msg, target_file_id, role, conn]
-                        (QString dl_file_id, QString local_path, int error) {
-            if (dl_file_id != target_file_id) return;
-            QObject::disconnect(*conn);
+		auto conn = std::make_shared<QMetaObject::Connection>();
+		*conn = connect(FileMgr::GetInstance().get(), &FileMgr::sig_download_done, this
+			, [itemGuard, msg, target_file_id, role, conn](QString dl_file_id, QString local_path, int error
+				) {
+					if (dl_file_id != target_file_id) return;
+					QObject::disconnect(*conn);
 
-            msg->_download_pending = false;
-            if (error != 0) {
-                qDebug() << "history image download failed: file_id=" << target_file_id
-                         << " error=" << error;
-                return;
-            }
-            msg->_local_path = local_path;
-            if (!itemGuard) return;
-            itemGuard->setWidget(new PictureBubble(QPixmap(local_path), role));
-        });
+					msg->_download_pending = false;
+					if (error != 0) {
+						qDebug() << "history image download failed: file_id=" << target_file_id
+							<< " error=" << error;
+						return;
+					}
+					msg->_local_path = local_path;
+					if (!itemGuard) return;
+					itemGuard->setWidget(new PictureBubble(QPixmap(local_path), role));
+			});
 
-        FileMgr::GetInstance()->StartDownload(file_data);
-    };
+		FileMgr::GetInstance()->StartDownload(file_data);
+		};
 
     // Fast path: we already have routing info (e.g. realtime file_msg_notify
     // delivered the token inline). Skip the extra roundtrip.

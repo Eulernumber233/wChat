@@ -690,6 +690,7 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_message_2eproto::offsets[] PRO
   PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneReq, file_id_),
   PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneReq, file_path_),
   PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneReq, md5_),
+  PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneReq, fromuid_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::message::FileUploadDoneRsp, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -782,14 +783,14 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOB
   { 138, -1, sizeof(::message::KickUserReq)},
   { 145, -1, sizeof(::message::KickUserRsp)},
   { 152, -1, sizeof(::message::FileUploadDoneReq)},
-  { 160, -1, sizeof(::message::FileUploadDoneRsp)},
-  { 166, -1, sizeof(::message::FileDownloadAuthReq)},
-  { 174, -1, sizeof(::message::FileDownloadAuthRsp)},
-  { 180, -1, sizeof(::message::AgentChatMessageRow)},
-  { 192, -1, sizeof(::message::GetChatHistoryReq)},
-  { 202, -1, sizeof(::message::GetChatHistoryRsp)},
-  { 210, -1, sizeof(::message::GetFriendProfileReq)},
-  { 218, -1, sizeof(::message::GetFriendProfileRsp)},
+  { 161, -1, sizeof(::message::FileUploadDoneRsp)},
+  { 167, -1, sizeof(::message::FileDownloadAuthReq)},
+  { 175, -1, sizeof(::message::FileDownloadAuthRsp)},
+  { 181, -1, sizeof(::message::AgentChatMessageRow)},
+  { 193, -1, sizeof(::message::GetChatHistoryReq)},
+  { 203, -1, sizeof(::message::GetChatHistoryRsp)},
+  { 211, -1, sizeof(::message::GetFriendProfileReq)},
+  { 219, -1, sizeof(::message::GetFriendProfileRsp)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -856,51 +857,52 @@ const char descriptor_table_protodef_message_2eproto[] PROTOBUF_SECTION_VARIABLE
   "\004 \003(\0132\025.message.TextChatData\"*\n\013KickUser"
   "Req\022\013\n\003uid\030\001 \001(\005\022\016\n\006reason\030\002 \001(\t\"0\n\013Kick"
   "UserRsp\022\r\n\005error\030\001 \001(\005\022\022\n\nwas_online\030\002 \001"
-  "(\010\"D\n\021FileUploadDoneReq\022\017\n\007file_id\030\001 \001(\t"
-  "\022\021\n\tfile_path\030\002 \001(\t\022\013\n\003md5\030\003 \001(\t\"\"\n\021File"
-  "UploadDoneRsp\022\r\n\005error\030\001 \001(\005\"G\n\023FileDown"
-  "loadAuthReq\022\017\n\007file_id\030\001 \001(\t\022\022\n\nfile_tok"
-  "en\030\002 \001(\t\022\013\n\003uid\030\003 \001(\005\"$\n\023FileDownloadAut"
-  "hRsp\022\r\n\005error\030\001 \001(\005\"\223\001\n\023AgentChatMessage"
-  "Row\022\021\n\tmsg_db_id\030\001 \001(\003\022\020\n\010from_uid\030\002 \001(\005"
-  "\022\016\n\006to_uid\030\003 \001(\005\022\020\n\010msg_type\030\004 \001(\005\022\017\n\007co"
-  "ntent\030\005 \001(\t\022\021\n\tsend_time\030\006 \001(\003\022\021\n\tdirect"
-  "ion\030\007 \001(\005\"t\n\021GetChatHistoryReq\022\020\n\010self_u"
-  "id\030\001 \001(\005\022\020\n\010peer_uid\030\002 \001(\005\022\r\n\005limit\030\003 \001("
-  "\005\022\030\n\020before_msg_db_id\030\004 \001(\003\022\022\n\nauth_toke"
-  "n\030\005 \001(\t\"d\n\021GetChatHistoryRsp\022\r\n\005error\030\001 "
-  "\001(\005\022.\n\010messages\030\002 \003(\0132\034.message.AgentCha"
-  "tMessageRow\022\020\n\010has_more\030\003 \001(\010\"M\n\023GetFrie"
-  "ndProfileReq\022\020\n\010self_uid\030\001 \001(\005\022\020\n\010peer_u"
-  "id\030\002 \001(\005\022\022\n\nauth_token\030\003 \001(\t\"v\n\023GetFrien"
-  "dProfileRsp\022\r\n\005error\030\001 \001(\005\022\013\n\003uid\030\002 \001(\005\022"
-  "\014\n\004name\030\003 \001(\t\022\014\n\004nick\030\004 \001(\t\022\013\n\003sex\030\005 \001(\005"
-  "\022\014\n\004desc\030\006 \001(\t\022\014\n\004icon\030\007 \001(\t2P\n\rVarifySe"
-  "rvice\022\?\n\rGetVarifyCode\022\025.message.GetVari"
-  "fyReq\032\025.message.GetVarifyRsp\"\0002\207\001\n\rStatu"
-  "sService\022G\n\rGetChatServer\022\031.message.GetC"
-  "hatServerReq\032\031.message.GetChatServerRsp\""
-  "\000\022-\n\005Login\022\021.message.LoginReq\032\021.message."
-  "LoginRsp2\245\003\n\013ChatService\022A\n\017NotifyAddFri"
-  "end\022\025.message.AddFriendReq\032\025.message.Add"
-  "FriendRsp\"\000\022A\n\rRplyAddFriend\022\026.message.R"
-  "plyFriendReq\032\026.message.RplyFriendRsp\"\000\022A"
-  "\n\013SendChatMsg\022\027.message.SendChatMsgReq\032\027"
-  ".message.SendChatMsgRsp\"\000\022D\n\020NotifyAuthF"
-  "riend\022\026.message.AuthFriendReq\032\026.message."
-  "AuthFriendRsp\"\000\022G\n\021NotifyTextChatMsg\022\027.m"
-  "essage.TextChatMsgReq\032\027.message.TextChat"
-  "MsgRsp\"\000\022>\n\016NotifyKickUser\022\024.message.Kic"
-  "kUserReq\032\024.message.KickUserRsp\"\0002\261\001\n\013Fil"
-  "eService\022L\n\020NotifyUploadDone\022\032.message.F"
-  "ileUploadDoneReq\032\032.message.FileUploadDon"
-  "eRsp\"\000\022T\n\024RegisterDownloadAuth\022\034.message"
-  ".FileDownloadAuthReq\032\034.message.FileDownl"
-  "oadAuthRsp\"\0002\260\001\n\020AgentDataService\022J\n\016Get"
-  "ChatHistory\022\032.message.GetChatHistoryReq\032"
-  "\032.message.GetChatHistoryRsp\"\000\022P\n\020GetFrie"
-  "ndProfile\022\034.message.GetFriendProfileReq\032"
-  "\034.message.GetFriendProfileRsp\"\000b\006proto3"
+  "(\010\"U\n\021FileUploadDoneReq\022\017\n\007file_id\030\001 \001(\t"
+  "\022\021\n\tfile_path\030\002 \001(\t\022\013\n\003md5\030\003 \001(\t\022\017\n\007from"
+  "uid\030\004 \001(\005\"\"\n\021FileUploadDoneRsp\022\r\n\005error\030"
+  "\001 \001(\005\"G\n\023FileDownloadAuthReq\022\017\n\007file_id\030"
+  "\001 \001(\t\022\022\n\nfile_token\030\002 \001(\t\022\013\n\003uid\030\003 \001(\005\"$"
+  "\n\023FileDownloadAuthRsp\022\r\n\005error\030\001 \001(\005\"\223\001\n"
+  "\023AgentChatMessageRow\022\021\n\tmsg_db_id\030\001 \001(\003\022"
+  "\020\n\010from_uid\030\002 \001(\005\022\016\n\006to_uid\030\003 \001(\005\022\020\n\010msg"
+  "_type\030\004 \001(\005\022\017\n\007content\030\005 \001(\t\022\021\n\tsend_tim"
+  "e\030\006 \001(\003\022\021\n\tdirection\030\007 \001(\005\"t\n\021GetChatHis"
+  "toryReq\022\020\n\010self_uid\030\001 \001(\005\022\020\n\010peer_uid\030\002 "
+  "\001(\005\022\r\n\005limit\030\003 \001(\005\022\030\n\020before_msg_db_id\030\004"
+  " \001(\003\022\022\n\nauth_token\030\005 \001(\t\"d\n\021GetChatHisto"
+  "ryRsp\022\r\n\005error\030\001 \001(\005\022.\n\010messages\030\002 \003(\0132\034"
+  ".message.AgentChatMessageRow\022\020\n\010has_more"
+  "\030\003 \001(\010\"M\n\023GetFriendProfileReq\022\020\n\010self_ui"
+  "d\030\001 \001(\005\022\020\n\010peer_uid\030\002 \001(\005\022\022\n\nauth_token\030"
+  "\003 \001(\t\"v\n\023GetFriendProfileRsp\022\r\n\005error\030\001 "
+  "\001(\005\022\013\n\003uid\030\002 \001(\005\022\014\n\004name\030\003 \001(\t\022\014\n\004nick\030\004"
+  " \001(\t\022\013\n\003sex\030\005 \001(\005\022\014\n\004desc\030\006 \001(\t\022\014\n\004icon\030"
+  "\007 \001(\t2P\n\rVarifyService\022\?\n\rGetVarifyCode\022"
+  "\025.message.GetVarifyReq\032\025.message.GetVari"
+  "fyRsp\"\0002\207\001\n\rStatusService\022G\n\rGetChatServ"
+  "er\022\031.message.GetChatServerReq\032\031.message."
+  "GetChatServerRsp\"\000\022-\n\005Login\022\021.message.Lo"
+  "ginReq\032\021.message.LoginRsp2\245\003\n\013ChatServic"
+  "e\022A\n\017NotifyAddFriend\022\025.message.AddFriend"
+  "Req\032\025.message.AddFriendRsp\"\000\022A\n\rRplyAddF"
+  "riend\022\026.message.RplyFriendReq\032\026.message."
+  "RplyFriendRsp\"\000\022A\n\013SendChatMsg\022\027.message"
+  ".SendChatMsgReq\032\027.message.SendChatMsgRsp"
+  "\"\000\022D\n\020NotifyAuthFriend\022\026.message.AuthFri"
+  "endReq\032\026.message.AuthFriendRsp\"\000\022G\n\021Noti"
+  "fyTextChatMsg\022\027.message.TextChatMsgReq\032\027"
+  ".message.TextChatMsgRsp\"\000\022>\n\016NotifyKickU"
+  "ser\022\024.message.KickUserReq\032\024.message.Kick"
+  "UserRsp\"\0002\261\001\n\013FileService\022L\n\020NotifyUploa"
+  "dDone\022\032.message.FileUploadDoneReq\032\032.mess"
+  "age.FileUploadDoneRsp\"\000\022T\n\024RegisterDownl"
+  "oadAuth\022\034.message.FileDownloadAuthReq\032\034."
+  "message.FileDownloadAuthRsp\"\0002\260\001\n\020AgentD"
+  "ataService\022J\n\016GetChatHistory\022\032.message.G"
+  "etChatHistoryReq\032\032.message.GetChatHistor"
+  "yRsp\"\000\022P\n\020GetFriendProfile\022\034.message.Get"
+  "FriendProfileReq\032\034.message.GetFriendProf"
+  "ileRsp\"\000b\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_message_2eproto_deps[1] = {
 };
@@ -936,7 +938,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_mes
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_message_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_message_2eproto = {
-  false, false, descriptor_table_protodef_message_2eproto, "message.proto", 3079,
+  false, false, descriptor_table_protodef_message_2eproto, "message.proto", 3096,
   &descriptor_table_message_2eproto_once, descriptor_table_message_2eproto_sccs, descriptor_table_message_2eproto_deps, 28, 0,
   schemas, file_default_instances, TableStruct_message_2eproto::offsets,
   file_level_metadata_message_2eproto, 28, file_level_enum_descriptors_message_2eproto, file_level_service_descriptors_message_2eproto,
@@ -6025,6 +6027,7 @@ FileUploadDoneReq::FileUploadDoneReq(const FileUploadDoneReq& from)
     md5_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_md5(),
       GetArena());
   }
+  fromuid_ = from.fromuid_;
   // @@protoc_insertion_point(copy_constructor:message.FileUploadDoneReq)
 }
 
@@ -6033,6 +6036,7 @@ void FileUploadDoneReq::SharedCtor() {
   file_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   file_path_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   md5_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  fromuid_ = 0;
 }
 
 FileUploadDoneReq::~FileUploadDoneReq() {
@@ -6072,6 +6076,7 @@ void FileUploadDoneReq::Clear() {
   file_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   file_path_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   md5_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  fromuid_ = 0;
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -6107,6 +6112,13 @@ const char* FileUploadDoneReq::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
           auto str = _internal_mutable_md5();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "message.FileUploadDoneReq.md5"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // int32 fromuid = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+          fromuid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -6168,6 +6180,12 @@ failure:
         3, this->_internal_md5(), target);
   }
 
+  // int32 fromuid = 4;
+  if (this->fromuid() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(4, this->_internal_fromuid(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -6203,6 +6221,13 @@ size_t FileUploadDoneReq::ByteSizeLong() const {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_md5());
+  }
+
+  // int32 fromuid = 4;
+  if (this->fromuid() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_fromuid());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -6245,6 +6270,9 @@ void FileUploadDoneReq::MergeFrom(const FileUploadDoneReq& from) {
   if (from.md5().size() > 0) {
     _internal_set_md5(from._internal_md5());
   }
+  if (from.fromuid() != 0) {
+    _internal_set_fromuid(from._internal_fromuid());
+  }
 }
 
 void FileUploadDoneReq::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
@@ -6271,6 +6299,7 @@ void FileUploadDoneReq::InternalSwap(FileUploadDoneReq* other) {
   file_id_.Swap(&other->file_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   file_path_.Swap(&other->file_path_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   md5_.Swap(&other->md5_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  swap(fromuid_, other->fromuid_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata FileUploadDoneReq::GetMetadata() const {

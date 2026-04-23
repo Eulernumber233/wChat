@@ -162,6 +162,9 @@ void FileLogicSystem::HandleAuthReq(std::shared_ptr<FileSession> session, short 
 		int64_t expected_size = static_cast<int64_t>(token_json["file_size"].asDouble());
 		std::string file_name = token_json.get("file_name", "unknown").asString();
 		session->file_size = expected_size;
+		// Remember the sender uid for later NotifyUploadDone routing.
+		// The token was minted by ChatServer with uid = fromuid.
+		session->fromuid = token_json.get("uid", 0).asInt();
 
 		// Update DB status to uploading FIRST (before touching disk)
 		if (!MysqlMgr::GetInstance()->UpdateFileStatus(file_id, FILE_UPLOADING)) {
@@ -282,8 +285,12 @@ void FileLogicSystem::HandleData(std::shared_ptr<FileSession> session, short msg
 		done["status"] = "ok";
 		session->SendJson(ID_FSVR_DONE, done.toStyledString());
 
-		// gRPC notify ChatServer that upload is done
+		// gRPC notify ChatServer that upload is done.
+		// Pass fromuid so the client can route to the specific ChatServer
+		// instance where the sender is connected (via Redis uip_<fromuid>),
+		// otherwise the NOTIFY_COMPLETE back to the sender would be lost in
+		// a multi-ChatServer deployment.
 		ChatServerClient::GetInstance()->NotifyUploadDone(
-			session->file_id, session->file_path, "");
+			session->file_id, session->file_path, "", session->fromuid);
 	}
 }

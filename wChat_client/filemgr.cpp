@@ -67,6 +67,8 @@ void FileMgr::StartUpload(const QString& file_id, const QString& file_token,
     QThread* thread = new QThread();
     auto* worker = new QObject();
     worker->moveToThread(thread);
+
+	// 将这个槽函数放到worker对象所在的线程里执行
     connect(thread, &QThread::started, worker, [this, file_id, file_token, host, p, local_path, worker]() {
         DoUpload(file_id, file_token, host, p, local_path);
         worker->thread()->quit();

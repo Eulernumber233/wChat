@@ -3455,6 +3455,7 @@ class FileUploadDoneReq PROTOBUF_FINAL :
     kFileIdFieldNumber = 1,
     kFilePathFieldNumber = 2,
     kMd5FieldNumber = 3,
+    kFromuidFieldNumber = 4,
   };
   // string file_id = 1;
   void clear_file_id();
@@ -3504,6 +3505,15 @@ class FileUploadDoneReq PROTOBUF_FINAL :
   std::string* _internal_mutable_md5();
   public:
 
+  // int32 fromuid = 4;
+  void clear_fromuid();
+  ::PROTOBUF_NAMESPACE_ID::int32 fromuid() const;
+  void set_fromuid(::PROTOBUF_NAMESPACE_ID::int32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::int32 _internal_fromuid() const;
+  void _internal_set_fromuid(::PROTOBUF_NAMESPACE_ID::int32 value);
+  public:
+
   // @@protoc_insertion_point(class_scope:message.FileUploadDoneReq)
  private:
   class _Internal;
@@ -3514,6 +3524,7 @@ class FileUploadDoneReq PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr file_id_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr file_path_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr md5_;
+  ::PROTOBUF_NAMESPACE_ID::int32 fromuid_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_message_2eproto;
 };
@@ -7132,6 +7143,26 @@ inline void FileUploadDoneReq::set_allocated_md5(std::string* md5) {
   md5_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), md5,
       GetArena());
   // @@protoc_insertion_point(field_set_allocated:message.FileUploadDoneReq.md5)
+}
+
+// int32 fromuid = 4;
+inline void FileUploadDoneReq::clear_fromuid() {
+  fromuid_ = 0;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 FileUploadDoneReq::_internal_fromuid() const {
+  return fromuid_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 FileUploadDoneReq::fromuid() const {
+  // @@protoc_insertion_point(field_get:message.FileUploadDoneReq.fromuid)
+  return _internal_fromuid();
+}
+inline void FileUploadDoneReq::_internal_set_fromuid(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  
+  fromuid_ = value;
+}
+inline void FileUploadDoneReq::set_fromuid(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  _internal_set_fromuid(value);
+  // @@protoc_insertion_point(field_set:message.FileUploadDoneReq.fromuid)
 }
 
 // -------------------------------------------------------------------

@@ -159,6 +159,12 @@ message FileUploadDoneReq {
   string file_id   = 1;
   string file_path = 2;
   string md5       = 3;
+  // fromuid is used by FileServer to route this notification to the
+  // specific ChatServer instance where the sender currently has a session
+  // (looked up via Redis uip_<fromuid>). Without it, FileServer would have
+  // to blind-broadcast and the "notify sender" path could silently miss the
+  // right instance in a multi-ChatServer deployment.
+  int32  fromuid   = 4;
 }
 
 message FileUploadDoneRsp {

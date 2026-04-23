@@ -26,6 +26,10 @@ public:
 	int64_t     file_size = 0;  // expected total size
 	int64_t     bytes_received = 0;
 	bool        is_upload = true; // true=upload session, false=download session
+	// Sender uid, captured from the upload token at auth time so we can
+	// route the eventual NotifyUploadDone gRPC call to the ChatServer
+	// instance the sender is actually connected to (via Redis uip_<fromuid>).
+	int         fromuid = 0;
 
 private:
 	// Read the 14-byte header, then dispatch
